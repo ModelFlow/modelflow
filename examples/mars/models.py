@@ -1,8 +1,36 @@
 from modelflow.modelflow import Model, ModelParam, ModelState
 
+# class Habitat(Model):
+#     pass
+
+class PotableWaterStorage(Model):
+    def setup(self):
+        # TODO: make automatic naming
+        # Think about how all these configurations need
+        # to be scaled during setup.
+        self.name = "potable_water_storage"
+        self.states = [
+            ModelState(
+                key="h2o",
+                units="kg",
+                value=1341
+            )
+        ]
+
+class FoodStorage(Model):
+    def setup(self):
+        self.name = "food_storage"
+        self.states = [
+            ModelState(
+                key="food",
+                units="kg",
+                value=100 # TODO: This number does not seem realistic
+                # Implement comment system
+            )
+        ]
 
 class HabitatAtmosphere(Model):
-    def __init__(self):
+    def setup(self):
 
         self.name = "habitat_atmosphere"
 
@@ -10,44 +38,233 @@ class HabitatAtmosphere(Model):
         # self.depends_on = ["habitat"]
 
         self.params = [
-            ModelParam(
-                key="initial_co2",
-                label="Initial CO2",
-                description="This is the amount of CO2 consumped",
-                units="kg",
-                minimum=0,
-                value=1000,
-                maximum=10000,
-                notes="not sure about this",
-                required=True
-            )
+            # ModelParam(
+            #     key="initial_co2",
+            #     label="Initial CO2",
+            #     description="This is the amount of CO2 consumped",
+            #     units="kg",
+            #     value=0.7698085,
+            #     notes="not sure about this",
+            #     required=True
+            # )
         ]
 
+        # "atmo_o2": 390.11925,
+        # "atmo_co2": 0.7698085,
+        # "atmo_n2": 1454.3145000000002,
+        # "atmo_ch4": 0.003482875,
+        # "atmo_h2": 0.0010243750000000001,
+        # "atmo_h2o": 18.625
+        # TODO: Make atmospheric concentration based on
+        # size of the habitat instead of hard coded
+
+        # TODO: Handle initialization of model states better
+        # Maybe make every first model state a parameter
         self.states = [
             ModelState(
                 key="co2",
                 units="kg",
-                value=1000
+                value=0.7698085
                 # error_if_below=0. # TODO: Implement
             ),
             ModelState(
                 key="o2",
                 units="kg",
-                value=1000
+                value=390.11925
+            ),
+            ModelState(
+                key="n2",
+                units="kg",
+                value=1454.3145000000002
+            ),
+            ModelState(
+                key="h2o",  # water vapor
+                units="kg",
+                value=1454.3145000000002
             )
         ]
+
+        # TODO: Concept of calculated states. Ex: concentration of co2
+
     # TODO: Handle case for like initial sizing based on size of habitat
     # def setup():
 
 
-class Plant(Model):
-    def __init__(self):
+class Human(Model):
+    def setup(self):
+        self.name = "human"
+        self.parent = "habitat"
+        self.inputs = [
+            "habitat_atmosphere.co2",
+            "habitat_atmosphere.o2",
+            "potable_water_storage.h2o",
+            "food_storage.food"
+        ]
+
+        self.params = [
+            ModelParam(
+                key="atmo_o2_consumption",
+                units="kg/hr",
+                value=0.021583,
+                source="simoc",
+            ),
+            ModelParam(
+                key="h2o_consumption",
+                units="kg/hr",
+                value=0.165833,
+                source="simoc",
+            ),
+            ModelParam(
+                key="atmo_co2_output",
+                units="kg/hr",
+                value=0.025916,
+                source="simoc",
+            ),
+            ModelParam(
+                key="atmo_h2o_output",
+                units="kg/hr",
+                value=0.079167,
+                source="simoc",
+            ),
+            ModelParam(
+                key="atmo_h2o_urin",
+                units="kg/hr",
+                value=0.0625,
+                source="simoc",
+            ),
+            ModelParam(
+                key="h2o_waste",
+                units="kg/hr",
+                value=0.087083,
+                source="simoc",
+            ),
+            ModelParam(
+                key="food_consumption",
+                units="kg/hr",
+                value=0.062917,
+                source="simoc",
+            ),
+            ModelParam(
+                key="max_hrs_survivable_with_no_water",
+                units="hr",
+                value=72,
+                source="simoc",
+            ),
+            ModelParam(
+                key="max_hrs_survivable_with_no_food",
+                units="hr",
+                value=480,
+                source="simoc",
+            ),
+            ModelParam(
+                key="min_survivable_percent_atmo_o2",
+                units="decimal_percent",
+                value=0.08,
+                source="simoc",
+            ),
+            ModelParam(
+                key="max_survivable_percent_atmo_o2",
+                units="decimal_percent",
+                value=0.25,
+                source="simoc",
+            ),
+            ModelParam(
+                key="max_survivable_percent_atmo_co2",
+                units="decimal_percent",
+                value=0.01,
+                source="simoc",
+            ),
+            ModelParam(
+                key="max_hrs_survivable_with_no_food",
+                units="hr",
+                value=480,
+                source="simoc",
+            )
+        ]
+
+        self.states = [
+            ModelState(
+                key="is_alive",
+                units="boolean",
+                value=1
+            ),
+            ModelState(
+                key="hours_without_food",
+                units="hours",
+                value=0
+            ),
+            ModelState(
+                key="hours_without_water",
+                units="hours",
+                value=0
+            )
+
+        ]
+
+
+    def run_step(self, models, params, states):
+        # Dead humans don't do anything. Convert to food if canibal=True lol?!?
+        if states.is_alive == 0:
+            print('dead')
+            return
+
+        # TODO: Make constraint checks abstracted
+        if states.hours_without_water > params.max_hrs_survivable_with_no_water:
+            # TODO: Support logging
+            # self.log("died from lack of water")
+            print('died due to lack of water')
+            states.is_alive = 0
+            return
+
+        if states.hours_without_food > params.max_hrs_survivable_with_no_food:
+            states.is_alive = 0
+            print('died due to lack of food')
+            return
+
+        atmosphere_total = models.habitat_atmosphere.o2 + \
+                           models.habitat_atmosphere.co2 + \
+                           models.habitat_atmosphere.n2
+        o2_concentration = models.habitat_atmosphere.o2 / atmosphere_total 
+        if models.habitat_atmosphere.o2 == 0:
+            states.is_alive = 0
+            print('died due to no o2')
+            return
+
+        if o2_concentration < params.min_survivable_percent_atmo_o2:
+            states.is_alive = 0
+            print('died due to min_survivable_percent_atmo_o2')
+            return
+
+        if o2_concentration > params.max_survivable_percent_atmo_o2:
+            states.is_alive = 0
+            print('died due to min_survivable_percent_atmo_o2')
+            return
+        co2_concentration = models.habitat_atmosphere.co2 / atmosphere_total 
+        if co2_concentration > params.max_survivable_percent_atmo_co2:
+            states.is_alive = 0
+            print('died due to too much co2')
+            return
+
+        if models.food_storage.food == 0:
+            states.hours_without_food += 1
+        models.food_storage.food -= min(params.food_consumption, models.food_storage.food)
+
+        if models.potable_water_storage.h2o == 0:
+            states.hours_without_water += 1
+        models.potable_water_storage.h2o -= min(params.h2o_consumption, models.potable_water_storage.h2o)
+
+        models.habitat_atmosphere.o2 -= min(params.atmo_o2_consumption, models.habitat_atmosphere.o2)
+        models.habitat_atmosphere.co2 += params.atmo_co2_output
+
+
+class DayNightPlant(Model):
+    def setup(self):
         # TODO: Support this heirarchy
         # self.belongs_to = ["habitat", "mars"]
         self.name = "plant"
         self.parent = "location"
 
-        # NOTE: This might be able to be auto-generated
+        # TODO: Auto-generate these connections
         self.inputs = [
             "habitat_atmosphere.co2",
             "habitat_atmosphere.o2",
@@ -62,46 +279,40 @@ class Plant(Model):
 
         self.params = [
             ModelParam(
-                key="day_time_co2_input_per_hour",
+                key="day_time_co2_input",
                 label="Day Time CO2 Consumption",
                 description="This is the amount of CO2 consumped",
                 units="kg/hr",
-                value=10,
-                # TODO: Add default value
                 minimum=0,
                 maximum=10,
                 notes="not sure about this",
                 required=True
             ),
             ModelParam(
-                key="day_time_co2_output_per_hour",
+                key="day_time_o2_output",
                 label="Day Time O2 Output",
                 description="This is the amount of O2 output during the day",
                 units="kg/hr",
-                value=10,
                 minimum=0,
                 maximum=10,
                 source="https://www.google.com",
                 required=False
             ),
             ModelParam(
-                key="night_time_co2_output_per_hour",
+                key="night_time_co2_output",
                 label="Night Time CO2 Output",
                 description="This is the amount of O2 output at night",
                 units="kg/hr",
-                value=5,
-                # TODO: Add default value
                 minimum=0,
                 maximum=10,
                 notes="not sure about this",
                 required=True
             ),
             ModelParam(
-                key="night_time_o2_input_per_hour",
+                key="night_time_o2_input",
                 label="Night Time O2 Input",
                 description="This is the amount of O2 input at night day",
                 units="kg/hr",
-                value=5,
                 minimum=0,
                 maximum=10,
                 source="https://www.google.com",
@@ -121,11 +332,11 @@ class Plant(Model):
     def run_step(self, models, params, states):
         is_daytime = models.location.hours_since_midnight > 5 and models.location.hours_since_midnight < 20
         if is_daytime:
-            models.habitat_atmosphere.co2 -= params.day_time_co2_input_per_hour
-            models.habitat_atmosphere.o2 += params.day_time_co2_output_per_hour
+            models.habitat_atmosphere.co2 -= params.day_time_co2_input
+            models.habitat_atmosphere.o2 += params.day_time_o2_output
         else:
-            models.habitat_atmosphere.co2 += params.night_time_co2_output_per_hour
-            models.habitat_atmosphere.o2 -= params.night_time_o2_input_per_hour
+            models.habitat_atmosphere.co2 += params.night_time_co2_output
+            models.habitat_atmosphere.o2 -= params.night_time_o2_input
 
         states.mass += 1
 
@@ -133,22 +344,64 @@ class Plant(Model):
 
 
 # TODO: Converter from csv to models
-class Raddish(Plant):
-    def __init__(self):
+class Raddish(DayNightPlant):
+    def setup(self):
+        # TODO: Avoid needing to do this super stuff.
+        # Somehow have automatic inheretance
+        super().setup()
         self.name = "Raddish"
         self.description = "A Raddish type plant"
         self.params = [
             ModelParam(
-                key="day_time_co2_consumption",
-                value=2.03,
-                source="https://www.google.com"
-            )
+                key="day_time_co2_input",
+                label="Day Time CO2 Consumption",
+                description="This is the amount of CO2 consumped",
+                units="kg/hr",
+                minimum=0,
+                value=10,
+                maximum=10,
+                notes="not sure about this",
+                required=True
+            ),
+            ModelParam(
+                key="day_time_o2_output",
+                label="Day Time O2 Output",
+                description="This is the amount of O2 output during the day",
+                units="kg/hr",
+                value=10,
+                minimum=0,
+                maximum=10,
+                source="https://www.google.com",
+                required=False
+            ),
+            ModelParam(
+                key="night_time_co2_output",
+                label="Night Time CO2 Output",
+                description="This is the amount of O2 output at night",
+                units="kg/hr",
+                value=5,
+                minimum=0,
+                maximum=10,
+                notes="not sure about this",
+                required=True
+            ),
+            ModelParam(
+                key="night_time_o2_input",
+                label="Night Time O2 Input",
+                description="This is the amount of O2 input at night day",
+                units="kg/hr",
+                value=5,
+                minimum=0,
+                maximum=10,
+                source="https://www.google.com",
+                required=False
+            ),
         ]
         # self.inputs, self.outputs, self.states, run_step inhereted
 
 
-class Location():
-    def __init__(self):
+class Location(Model):
+    def setup(self):
         self.name = "location"
         # TODO: Figure out the dependency tree to set which steps to run
         self.priority = 0
@@ -167,3 +420,10 @@ class Location():
         else:
             states.hours_since_midnight += 1
 
+def all_models():
+    return [
+        PotableWaterStorage(),
+        FoodStorage(), HabitatAtmosphere(),
+        Human(), Raddish(), Location()
+    ]
+    

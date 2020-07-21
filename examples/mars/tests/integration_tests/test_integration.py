@@ -3,10 +3,9 @@ sys.path.insert(0, "../..")
 from models import Location, Raddish, HabitatAtmosphere
 from modelflow.modelflow import run_simulation
 
-def main():
-    # TODO: Have system for scaling actors. Currently just add multiple lol
-    # Think of also how to change the params
-    # Think about how to sweep over params
+
+def test_basic_full_system():
+
     scenario = {
         "models": [
             Location(),
@@ -17,6 +16,3 @@ def main():
         "time_per_step": "1hr" # TODO: Actually use this
     }
     run_simulation(scenario)
-
-if __name__ == '__main__':
-    main()

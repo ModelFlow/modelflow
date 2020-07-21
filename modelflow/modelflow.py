@@ -2,7 +2,11 @@ from types import SimpleNamespace
 import pandas as pd
 
 class Model():
-    pass
+    def __init__(self):
+        self.setup()
+
+    def setup():
+        raise NotImplementedError("Must Override")
 
 class ModelParam():
     def __init__(self,
@@ -12,7 +16,7 @@ class ModelParam():
                  units=None,
                  minimum=0,
                  maximum=0,
-                 value=0,
+                 value=None,
                  notes=0,
                  required=True,
                  source="",
@@ -49,14 +53,19 @@ class ModelState():
 
 
 def run_simulation(scenario):
+    return run_simulation_inner(scenario['models'], scenario['models'], scenario['run_for_steps'])
+
+def run_simulation_inner(all_models, models_to_run, num_steps):
+
     # TODO improve speed
     all_outputs = []
 
     # We must do all states first because 
-    models = scenario['models']
-
+    models = all_models
     models_dict = {}
     for model in models:
+        if not issubclass(model.__class__, Model):
+            raise Exception(f"{model.__class__.__name__} must be a subclass of Model")
         models_dict[model.name] = model
 
     for model in models:
@@ -72,6 +81,9 @@ def run_simulation(scenario):
             _params = {}
             for param in model.params:
                 _params[param.key] = param.value
+                print(model.name, param.key, param.value)
+                if param.value is None:
+                    raise Exception(f"Model {model.name} param {param.key} cannot be None")
             model._params = SimpleNamespace(**_params)
         else:
             model._params = None
@@ -104,9 +116,11 @@ def run_simulation(scenario):
         #     model._outputs = None
         # print(model.name, model._inputs)
     print('---------')
-    for i in range(scenario['run_for_steps']):
+    for i in range(num_steps):
         toutputs = dict(i=i)
         for model in models:
+            if model not in models_to_run:
+                continue
             if hasattr(model, 'run_step'):
                 other_model_states = SimpleNamespace(**models_dict)
                 model.run_step(other_model_states, model._params, model)
