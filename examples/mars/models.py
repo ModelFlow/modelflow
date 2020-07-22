@@ -17,6 +17,19 @@ class PotableWaterStorage(Model):
             )
         ]
 
+class WasteStorage(Model):
+    def setup(self):
+        # NOTE: This is somewhat temporary
+        self.name = "waste_storage"
+        self.states = [
+            ModelState(
+                key="h2o_urin",
+                units="kg",
+                value=0 # TODO: This number does not seem realistic
+                # Implement comment system
+            )
+        ]
+
 class FoodStorage(Model):
     def setup(self):
         self.name = "food_storage"
@@ -86,19 +99,31 @@ class HabitatAtmosphere(Model):
 
         # TODO: Concept of calculated states. Ex: concentration of co2
 
-    # TODO: Handle case for like initial sizing based on size of habitat
-    # def setup():
+        # TODO: Handle case for like initial sizing based on size of habitat
+
+
 
 
 class Human(Model):
     def setup(self):
         self.name = "human"
         self.parent = "habitat"
-        self.inputs = [
-            "habitat_atmosphere.co2",
-            "habitat_atmosphere.o2",
-            "potable_water_storage.h2o",
-            "food_storage.food"
+
+        # TODO: I think these need to be defined here
+        self.external_state_inputs = [
+            "atmo_o2",
+            "atmo_co2",
+            "atmo_n2",
+            "h2o_potb",
+            "food_edbl"
+            # TODO: Add temperature
+        ]
+
+        self.external_state_outputs = [
+            "atmo_co2",
+            "atmo_h2o",
+            "h2o_urin",
+            "h2o_wste"
         ]
 
         self.params = [
@@ -127,13 +152,14 @@ class Human(Model):
                 source="simoc",
             ),
             ModelParam(
-                key="atmo_h2o_urin",
+                key="h2o_urin",
+                # What percent of this gets recycled?
                 units="kg/hr",
                 value=0.0625,
                 source="simoc",
             ),
             ModelParam(
-                key="h2o_waste",
+                key="solid_waste",
                 units="kg/hr",
                 value=0.087083,
                 source="simoc",
@@ -198,11 +224,10 @@ class Human(Model):
                 units="hours",
                 value=0
             )
-
         ]
 
 
-    def run_step(self, models, params, states):
+    def run_step(self, inputs, outputs, params, states):
         # Dead humans don't do anything. Convert to food if canibal=True lol?!?
         if states.is_alive == 0:
             print('dead')
@@ -221,11 +246,9 @@ class Human(Model):
             print('died due to lack of food')
             return
 
-        atmosphere_total = models.habitat_atmosphere.o2 + \
-                           models.habitat_atmosphere.co2 + \
-                           models.habitat_atmosphere.n2
-        o2_concentration = models.habitat_atmosphere.o2 / atmosphere_total 
-        if models.habitat_atmosphere.o2 == 0:
+        atmosphere_total = inputs.atmo_o2 + inputs.atmo_co2 + inputs.atmo_n2
+        o2_concentration = inputs.atmo_o2 / atmosphere_total 
+        if inputs.atmo_o2 == 0:
             states.is_alive = 0
             print('died due to no o2')
             return
@@ -239,22 +262,34 @@ class Human(Model):
             states.is_alive = 0
             print('died due to min_survivable_percent_atmo_o2')
             return
-        co2_concentration = models.habitat_atmosphere.co2 / atmosphere_total 
+        co2_concentration = inputs.atmo_co2 / atmosphere_total 
         if co2_concentration > params.max_survivable_percent_atmo_co2:
             states.is_alive = 0
             print('died due to too much co2')
             return
 
-        if models.food_storage.food == 0:
+        if inputs.food_edbl == 0:
             states.hours_without_food += 1
-        models.food_storage.food -= min(params.food_consumption, models.food_storage.food)
+        inputs.food_edbl -= min(params.food_consumption, inputs.food_edbl)
 
-        if models.potable_water_storage.h2o == 0:
+        if inputs.h2o_potb == 0:
             states.hours_without_water += 1
-        models.potable_water_storage.h2o -= min(params.h2o_consumption, models.potable_water_storage.h2o)
+        inputs.h2o_potb -= min(params.h2o_consumption, inputs.h2o_potb)
 
-        models.habitat_atmosphere.o2 -= min(params.atmo_o2_consumption, models.habitat_atmosphere.o2)
-        models.habitat_atmosphere.co2 += params.atmo_co2_output
+        inputs.atmo_o2 -= min(params.atmo_o2_consumption, inputs.atmo_o2)
+        outputs.atmo_co2 += params.atmo_co2_output
+        outputs.atmo_h2o += params.atmo_h2o_output
+        outputs.h2o_urin += params.h2o_urin
+        outputs.solid_waste += params.solid_waste
+
+class SolidWasteAerobicBioReactor(Model):
+    def setup(self):
+        self.name = "solid_waste_aerobic_bioreactor"
+        self.parent = "location"
+        self.description = """
+            First stage recovery of wastewater,
+            using microbial degradation.
+            Isolates nutrients from urine."""
 
 
 class DayNightPlant(Model):

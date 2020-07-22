@@ -55,13 +55,24 @@ class ModelState():
 def run_simulation(scenario):
     return run_simulation_inner(scenario['models'], scenario['models'], scenario['run_for_steps'])
 
-def run_simulation_inner(all_models, models_to_run, num_steps):
+def run_test_step(model, inputs, outputs):
 
-    # TODO improve speed
-    all_outputs = []
+    for state in model.states:
+        setattr(model, state.key, state.value)
 
-    # We must do all states first because 
-    models = all_models
+    if hasattr(model, 'params'):
+        _params = {}
+        for param in model.params:
+            _params[param.key] = param.value
+            if param.value is None:
+                raise Exception(f"Model {model.name} param {param.key} cannot be None")
+        model._params = SimpleNamespace(**_params)
+    else:
+        model._params = None
+
+    model.run_step(inputs, outputs, model._params, model)
+
+def setup_models(models):
     models_dict = {}
     for model in models:
         if not issubclass(model.__class__, Model):
@@ -73,10 +84,21 @@ def run_simulation_inner(all_models, models_to_run, num_steps):
         for state in model.states:
             _states[state.key] = state.value
             setattr(model, state.key, state.value)
-            # print(_states[state.key])
-        model._states = SimpleNamespace(**_states)
+    return SimpleNamespace(**models_dict)
 
-    for model in models:
+def run_simulation_inner(all_models, models_to_run, num_steps):
+
+    # TODO improve speed
+    all_outputs = []
+
+    # We must do all states first 
+    other_model_states = setup_models(all_models)
+
+    name_model_map = {}
+    for model in all_models:
+        name_model_map[model.name] = model
+
+    for model in all_models:
         if hasattr(model, 'params'):
             _params = {}
             for param in model.params:
@@ -89,19 +111,26 @@ def run_simulation_inner(all_models, models_to_run, num_steps):
             model._params = None
 
 
-        # if hasattr(model, 'inputs'):
-        #     model._inputs = SimpleNamespace()
-        #     for inputstr in model.inputs:
-        #         model_name, state_name = inputstr.split('.')
-        #         for m in scenario['models']:
-        #             if m.name != model_name:
-        #                 continue
-        #             # _inputs[state_name] = 
-        #             setattr(model._inputs,state_name,getattr(m._states, state_name))
+        # for links state to inputs map
 
-        #     # SimpleNamespace(**_inputs)
-        # else:
-        #     model._inputs = None
+
+        if hasattr(model, 'external_state_inputs'):
+            for state_name in model[self.external_state_inputs]:
+                setattr(models.inputs, state_name, name_model_map
+
+
+            model._inputs = SimpleNamespace()
+            for inputstr in model.inputs:
+                model_name, state_name = inputstr.split('.')
+                for m in scenario['models']:
+                    if m.name != model_name:
+                        continue
+                    # _inputs[state_name] = 
+                    setattr(model._inputs,state_name,getattr(m._states, state_name))
+
+            # SimpleNamespace(**_inputs)
+        else:
+            model._inputs = None
 
         # if hasattr(model, 'outputs'):
         #     _outputs = {}
@@ -118,14 +147,13 @@ def run_simulation_inner(all_models, models_to_run, num_steps):
     print('---------')
     for i in range(num_steps):
         toutputs = dict(i=i)
-        for model in models:
+        for model in all_models:
             if model not in models_to_run:
                 continue
             if hasattr(model, 'run_step'):
-                other_model_states = SimpleNamespace(**models_dict)
                 model.run_step(other_model_states, model._params, model)
 
-        for model in models:
+        for model in all_models:
             for state in model.states:
                 toutputs[state.key] = getattr(model, state.key)
         print(toutputs)
