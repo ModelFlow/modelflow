@@ -1,6 +1,6 @@
 import sys
 sys.path.insert(0, "../..")
-from models import Location, Raddish, HabitatAtmosphere
+from models import Location, Raddish, HabitatAtmosphere, Human, PotableWaterStorage, FoodStorage, WasteStorage
 from modelflow.modelflow import run_simulation
 
 def main():
@@ -20,13 +20,13 @@ def main():
                     "food_storage",
                     "waste_storage"
                 ]
-            )
+            ),
             dict(model=HabitatAtmosphere()),
             dict(model=PotableWaterStorage()),
             dict(model=FoodStorage()),
-            dict(model=WaterStorage()),
+            dict(model=WasteStorage()),
         ],
-        run_for_steps=2,
+        run_for_steps=20,
         # time_per_step": "1hr" # TODO: Actually use this
     )
     run_simulation(scenario)

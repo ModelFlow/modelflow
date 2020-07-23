@@ -5,6 +5,20 @@ class Model():
     def __init__(self):
         self.setup()
 
+        if hasattr(self, 'params'):
+            _params = {}
+            for param in self.params:
+                _params[param.key] = param.value
+                if param.value is None:
+                    raise Exception(f"Model {self.name} param {param.key} cannot be None")
+            self._params = SimpleNamespace(**_params)
+        else:
+            self._params = None
+
+        if hasattr(self, 'states'):
+            for state in self.states:
+                setattr(self, state.key, state.value)
+
     def setup():
         raise NotImplementedError("Must Override")
 
@@ -57,80 +71,76 @@ def run_simulation(scenario):
 
 def run_test_step(model, inputs, outputs):
 
-    for state in model.states:
-        setattr(model, state.key, state.value)
+    # for state in model.states:
+    #     setattr(model, state.key, state.value)
 
-    if hasattr(model, 'params'):
-        _params = {}
-        for param in model.params:
-            _params[param.key] = param.value
-            if param.value is None:
-                raise Exception(f"Model {model.name} param {param.key} cannot be None")
-        model._params = SimpleNamespace(**_params)
-    else:
-        model._params = None
+    # if hasattr(model, 'params'):
+    #     _params = {}
+    #     for param in model.params:
+    #         _params[param.key] = param.value
+    #         if param.value is None:
+    #             raise Exception(f"Model {model.name} param {param.key} cannot be None")
+    #     model._params = SimpleNamespace(**_params)
+    # else:
+    #     model._params = None
 
     model.run_step(inputs, outputs, model._params, model)
 
-def setup_models(models):
-    models_dict = {}
-    for model in models:
+def setup_models(model_infos):
+    all_state = {}
+    for model_info in model_infos:
+        model = model_info['model']
         if not issubclass(model.__class__, Model):
             raise Exception(f"{model.__class__.__name__} must be a subclass of Model")
-        models_dict[model.name] = model
-
-    for model in models:
-        _states = {}
         for state in model.states:
-            _states[state.key] = state.value
-            setattr(model, state.key, state.value)
-    return SimpleNamespace(**models_dict)
+            all_state[state.key] = state.value
+    return SimpleNamespace(**all_state)
 
-def run_simulation_inner(all_models, models_to_run, num_steps):
+def run_simulation_inner(model_infos, models_to_run, num_steps):
 
     # TODO improve speed
     all_outputs = []
 
-    # We must do all states first 
-    other_model_states = setup_models(all_models)
+    # Secretly have a dict called all states
+    # where the inputs and outputs are just that
+    all_state = setup_models(model_infos)
 
     name_model_map = {}
-    for model in all_models:
+    for model_info in model_infos:
+        model = model_info['model']
         name_model_map[model.name] = model
 
-    for model in all_models:
-        if hasattr(model, 'params'):
-            _params = {}
-            for param in model.params:
-                _params[param.key] = param.value
-                print(model.name, param.key, param.value)
-                if param.value is None:
-                    raise Exception(f"Model {model.name} param {param.key} cannot be None")
-            model._params = SimpleNamespace(**_params)
-        else:
-            model._params = None
+
+    for model_info in model_infos:
+        model = model_info['model']
+
 
 
         # for links state to inputs map
+        model.inputs = SimpleNamespace()
+
+        # if hasattr(model, 'linked_input_states'):
+        #     for state_name in getattr(model, 'linked_input_states'):
+        #         for link_name in model_info['links']:
+        #             for state in models_dict[link_name].
+        #             if 
+        #         for model in all_models:
+
+        #         setattr(model.inputs, state_name, getattr(other_model_states, ))
 
 
-        if hasattr(model, 'external_state_inputs'):
-            for state_name in model[self.external_state_inputs]:
-                setattr(models.inputs, state_name, name_model_map
+        #     model._inputs = SimpleNamespace()
+        #     for inputstr in model.inputs:
+        #         model_name, state_name = inputstr.split('.')
+        #         for m in scenario['models']:
+        #             if m.name != model_name:
+        #                 continue
+        #             # _inputs[state_name] = 
+        #             setattr(model._inputs,state_name,getattr(m._states, state_name))
 
-
-            model._inputs = SimpleNamespace()
-            for inputstr in model.inputs:
-                model_name, state_name = inputstr.split('.')
-                for m in scenario['models']:
-                    if m.name != model_name:
-                        continue
-                    # _inputs[state_name] = 
-                    setattr(model._inputs,state_name,getattr(m._states, state_name))
-
-            # SimpleNamespace(**_inputs)
-        else:
-            model._inputs = None
+        #     # SimpleNamespace(**_inputs)
+        # else:
+        #     model._inputs = None
 
         # if hasattr(model, 'outputs'):
         #     _outputs = {}
@@ -144,19 +154,21 @@ def run_simulation_inner(all_models, models_to_run, num_steps):
         # else:
         #     model._outputs = None
         # print(model.name, model._inputs)
-    print('---------')
     for i in range(num_steps):
         toutputs = dict(i=i)
-        for model in all_models:
-            if model not in models_to_run:
-                continue
+        for model_info in model_infos:
+            model = model_info['model']
+            # if model not in models_to_run:
+            #     continue
             if hasattr(model, 'run_step'):
-                model.run_step(other_model_states, model._params, model)
+                print(all_state)
+                # NOTE: This hack only works with states being different names
+                model.run_step(all_state, all_state, model._params, all_state)
+                print(all_state)
 
-        for model in all_models:
-            for state in model.states:
-                toutputs[state.key] = getattr(model, state.key)
-        print(toutputs)
+        for key, value in all_state.__dict__.items():
+            toutputs[key] = value
+        # print(toutputs)
         all_outputs.append(toutputs)
 
     df = pd.DataFrame(all_outputs)
