@@ -1,7 +1,8 @@
+from modelflow.modelflow import run_test_step, obj
+from models.structures import HabitatStructure
 import sys
 sys.path.insert(0, "../..")
-from models.storages import HabitatStructure
-from modelflow.modelflow import run_test_step, obj
+
 
 class TestStuctures:
     # TODO: Find a better place to put these fixtures
@@ -15,10 +16,10 @@ class TestStuctures:
         self.habitat.params = self.habitat._params
 
         self.inputs = obj(atmo_o2=100,
-                           atmo_co2=0,
-                           atmo_n2=0,
-                           atmo_ch4=0,
-                           atmo_h2=0)
+                          atmo_co2=0,
+                          atmo_n2=0,
+                          atmo_ch4=0,
+                          atmo_h2=0)
 
         self.outputs = obj(atmo_o2=100,
                            atmo_co2=0,
@@ -26,8 +27,6 @@ class TestStuctures:
                            atmo_ch4=0,
                            atmo_h2=0,
                            heat_diff_kwh=0)
-
-
 
     def teardown_method(self):
         """ teardown any state that was previously setup with a setup_function
@@ -47,4 +46,3 @@ class TestStuctures:
         self.habitat.params.heat_loss_per_hour = 5
         self.run_step()
         assert self.outputs.heat_diff_kwh == -5
-

@@ -855,6 +855,7 @@ class Heater(Model):
 
         # Don't run if within deadband of target temp or above
 
-        if inputs.atmo_temp
+        # if inputs.atmo_temp
+        pass
 
 

@@ -94,7 +94,7 @@ class TestHumans:
         for i in range(0, self.human.params.max_hrs_survivable_with_no_water+2):
             assert self.human.is_alive == 1
             self.run_step()
-            assert self.human.hours_without_water = i
+            assert self.human.hours_without_water == min(i - 1, 0)
         assert self.human.is_alive == 0
 
     def test_human_no_food(self):
@@ -107,7 +107,7 @@ class TestHumans:
         for i in range(0, self.human.params.max_hrs_survivable_with_no_food+2):
             assert self.human.is_alive == 1
             self.run_step()
-            assert self.human.hours_without_food = i
+            assert self.human.hours_without_food == min(i - 1, 0)
 
         assert self.human.is_alive == 0
 
@@ -119,7 +119,7 @@ class TestHumans:
 
 
     def test_human_dead(self):
-        self.human.is_alive == 0
+        self.human.is_alive = 0
         self.run_step()
         assert self.human.is_alive == 0
         assert self.outputs.h2o_urin == 0

@@ -1,8 +1,8 @@
+from modelflow.modelflow import run_test_step
+from models.indoor_air import IndoorAir
 import pytest
 import sys
 sys.path.insert(0, "../..")
-from models.indoor_air import IndoorAir
-from modelflow.modelflow import run_test_step
 
 
 class TestIndoorAir:
@@ -32,7 +32,7 @@ class TestIndoorAir:
         self.indoor_air.heat_diff_kwh = 10
         self.run_step()
         assert self.indoor_air.atmo_temp > 20
-        assert self.indoor_air.heat_diff_kwh = 0
+        assert self.indoor_air.heat_diff_kwh == 0
 
     def test_storage_exceeds_max(self):
         # TODO: Don't let atmosphere get this high and account for
@@ -45,4 +45,3 @@ class TestIndoorAir:
         self.indoor_air.atmo_o2 = -1
         with pytest.raises(Exception):
             self.run_step()
-
