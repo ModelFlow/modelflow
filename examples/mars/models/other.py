@@ -57,7 +57,9 @@
                 )
             ]
 
-        def run_step(self, models, params, states):
+        # def run_step(self, models, params, states):
+        def run_step(self, inputs, outputs, params, states):
+
             is_daytime = models.location.hours_since_midnight > 5 and models.location.hours_since_midnight < 20
             if is_daytime:
                 models.habitat_atmosphere.co2 -= params.day_time_co2_input
@@ -125,22 +127,4 @@
             ]
             # self.inputs, self.outputs, self.states, run_step inhereted
 
-    class Location(Model):
-        def setup(self):
-            self.name = "location"
-            # TODO: Figure out the dependency tree to set which steps to run
-            self.priority = 0
-            self.states = [
-                ModelState(
-                    key="hours_since_midnight",
-                    units="hours",
-                    # initial_val=0,
-                    value=0
-                )
-            ]
-
-        def run_step(self, models, params, states):
-            if states.hours_since_midnight == 23:
-                states.hours_since_midnight = 0
-            else:
-                states.hours_since_midnight += 1
+   

@@ -34,13 +34,13 @@ class TestStorage:
         self.run_step()
         assert self.water_storage.h2o_potb == 10
 
-    def test_human_exceeds_max(self):
+    def test_storage_exceeds_max(self):
         self.water_storage.h2o_potb = 100
         self.water_storage.params.max_h2o_potb = 20
         self.run_step()
         assert self.water_storage.h2o_potb == 20
 
-    def test_human_no_negative(self):
+    def test_storage_no_negative(self):
         self.water_storage.h2o_potb = -1
         with pytest.raises(Exception):
             self.run_step()

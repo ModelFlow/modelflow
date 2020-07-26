@@ -34,3 +34,4 @@ Note: You cannot currently run `pytest tests` as for now the sys.path of the cur
 - Create full example model for Mars
 - Support scaling agents
 - Make website
+- Converter from csv to models

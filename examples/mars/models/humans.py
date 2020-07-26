@@ -23,85 +23,100 @@ class Human(Model):
             "h2o_waste"
         ]
 
+        # Note: some these constraints may be pulled out
+
         self.params = [
             ModelParam(
                 key="atmo_o2_consumption",
                 units="kg/hr",
                 value=0.021583,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="h2o_consumption",
                 units="kg/hr",
                 value=0.165833,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="atmo_co2_output",
                 units="kg/hr",
                 value=0.025916,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="atmo_h2o_output",
                 units="kg/hr",
                 value=0.079167,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="h2o_urin",
                 # What percent of this gets recycled?
                 units="kg/hr",
                 value=0.0625,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="h2o_waste",
                 units="kg/hr",
                 value=0.087083,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="food_consumption",
                 units="kg/hr",
                 value=0.062917,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="max_hrs_survivable_with_no_water",
                 units="hr",
                 value=72,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="max_hrs_survivable_with_no_food",
                 units="hr",
                 value=480,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="min_survivable_percent_atmo_o2",
                 units="decimal_percent",
                 value=0.08,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="max_survivable_percent_atmo_o2",
                 units="decimal_percent",
                 value=0.25,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="max_survivable_percent_atmo_co2",
                 units="decimal_percent",
                 value=0.01,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="max_hrs_survivable_with_no_food",
                 units="hr",
                 value=480,
-                source="simoc",
+                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+            ),
+            ModelParam(
+                key="max_survivable_temperature",
+                units="C",
+                value=48,
+                source="google",
+            ),
+            ModelParam(
+                key="min_survivable_temperature",
+                description="While obviously below 0C is survivable, if the habitat interior freezes, you're probably a gonner",
+                units="C",
+                value=0,
+                source="google",
             )
         ]
 
@@ -131,7 +146,7 @@ class Human(Model):
 
         # TODO: Make constraint checks abstracted
         if states.hours_without_water > params.max_hrs_survivable_with_no_water:
-            # TODO: Support logging
+            # TODO: Support logging events
             # self.log("died from lack of water")
             print('died due to lack of water')
             states.is_alive = 0
@@ -162,6 +177,16 @@ class Human(Model):
         if co2_concentration > params.max_survivable_percent_atmo_co2:
             states.is_alive = 0
             print('died due to too much co2')
+            return
+
+        if inputs.atmo_temp > params.max_survivable_temperature:
+            states.is_alive = 0
+            print('died due to too high temp')
+            return
+
+        if inputs.atmo_temp < params.min_survivable_temperature:
+            states.is_alive = 0
+            print('died due to too low temp')
             return
 
         if inputs.food_edbl == 0:

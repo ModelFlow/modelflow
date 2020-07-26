@@ -1,5 +1,7 @@
 from types import SimpleNamespace
-import pandas as pd
+
+def obj(**kwargs):
+    return SimpleNamespace(**kwargs)
 
 class Model():
     def __init__(self):
@@ -8,6 +10,8 @@ class Model():
         if hasattr(self, 'params'):
             _params = {}
             for param in self.params:
+                if not isinstance(param, ModelParam):
+                    raise Exception("Invalid model param")
                 _params[param.key] = param.value
                 if param.value is None:
                     raise Exception(f"Model {self.name} param {param.key} cannot be None")
@@ -161,15 +165,13 @@ def run_simulation_inner(model_infos, models_to_run, num_steps):
             # if model not in models_to_run:
             #     continue
             if hasattr(model, 'run_step'):
-                print(all_state)
+                # print(all_state)
                 # NOTE: This hack only works with states being different names
                 model.run_step(all_state, all_state, model._params, all_state)
-                print(all_state)
+                # print(all_state)
 
         for key, value in all_state.__dict__.items():
             toutputs[key] = value
         # print(toutputs)
         all_outputs.append(toutputs)
-
-    df = pd.DataFrame(all_outputs)
-    df.to_csv('test.csv')
+    return all_outputs
