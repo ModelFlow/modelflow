@@ -14,7 +14,7 @@
     <WindowsPersistSimpleIdentifiers />
     <ZoneBackgroundTransparency />
   </document-format-change-manifest>
-  <repository-location id='test_no_life_support' path='/workbooks' revision='1.0' />
+  <repository-location id='test_no_life_support' path='/workbooks' revision='1.1' />
   <preferences>
     <preference name='ui.encoding.shelf.height' value='24' />
     <preference name='ui.shelf.height' value='26' />
@@ -790,7 +790,9 @@
         <column caption='Datetime' datatype='datetime' name='[datetime]' role='dimension' type='ordinal' />
         <column-instance column='[datetime]' derivation='None' name='[none:datetime:qk]' pivot='key' type='quantitative' />
       </datasource-dependencies>
-      <filter class='quantitative' column='[federated.0sd2wsu1uikn7g17t4vx51tkklvs].[none:datetime:qk]' included-values='all'>
+      <filter class='quantitative' column='[federated.0sd2wsu1uikn7g17t4vx51tkklvs].[none:datetime:qk]' included-values='in-range-or-null'>
+        <min>#2024-10-16 00:00:00#</min>
+        <max>#2024-12-31 00:00:00#</max>
         <target field='[federated.0sd2wsu1uikn7g17t4vx51tkklvs].[none:datetime:qk]' />
       </filter>
     </shared-view>
@@ -1272,7 +1274,7 @@
       <viewpoint>
         <current-page>
           <multibucket>
-            <bucket>40</bucket>
+            <bucket>103</bucket>
           </multibucket>
         </current-page>
       </viewpoint>
@@ -1423,7 +1425,7 @@
           <zoom type='entire-view' />
         </viewpoint>
       </viewpoints>
-      <active id='5' />
+      <active id='15' />
       <simple-id uuid='{EE48D91F-BA40-4501-9A69-B366B7FCBA38}' />
     </window>
   </windows>

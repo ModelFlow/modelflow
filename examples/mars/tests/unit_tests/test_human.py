@@ -52,7 +52,7 @@ class TestHumans:
         self.inputs.atmo_o2 = 5
         self.inputs.atmo_n2 = 95
         self.inputs.atmo_co2 = 0.001
-        self.humans.params.min_survivable_percent_atmo_o2 = 0.08
+        self.human.params.min_survivable_percent_atmo_o2 = 0.08
         self.run_step()
         assert self.human.is_alive == 0
 
@@ -60,15 +60,16 @@ class TestHumans:
         self.inputs.atmo_o2 = 50
         self.inputs.atmo_n2 = 50
         self.inputs.atmo_co2 = 0.001
-        self.humans.params.max_survivable_percent_atmo_o2 = 0.25
+        self.human.params.max_survivable_percent_atmo_o2 = 0.25
+        assert self.human.is_alive == 1
         self.run_step()
         assert self.human.is_alive == 0
 
     def test_human_co2_above_limit(self):
         self.inputs.atmo_o2 = 20
         self.inputs.atmo_n2 = 80
-        self.inputs.atmo_co2 = 1
-        self.humans.params.max_survivable_percent_atmo_co2 = 0.08
+        self.inputs.atmo_co2 = 10
+        self.human.params.max_survivable_percent_atmo_co2 = 0.01
         self.run_step()
         assert self.human.is_alive == 0
 
@@ -93,12 +94,12 @@ class TestHumans:
         # hour 3 = dead
         for i in range(0, self.human.params.max_hrs_survivable_with_no_water+2):
             assert self.human.is_alive == 1
+            assert self.human.hours_without_water == i
             self.run_step()
-            assert self.human.hours_without_water == min(i - 1, 0)
         assert self.human.is_alive == 0
 
     def test_human_no_food(self):
-        self.inputs.h2o_potb = 0
+        self.inputs.food_edbl = 0
         self.human.params.max_hrs_survivable_with_no_food = 2
         # hour 0 = unknown i.e. t=0
         # hour 1 = no food
@@ -106,8 +107,8 @@ class TestHumans:
         # hour 3 = dead
         for i in range(0, self.human.params.max_hrs_survivable_with_no_food+2):
             assert self.human.is_alive == 1
+            assert self.human.hours_without_food == i
             self.run_step()
-            assert self.human.hours_without_food == min(i - 1, 0)
 
         assert self.human.is_alive == 0
 

@@ -159,6 +159,7 @@ class Human(Model):
 
         atmosphere_total = inputs.atmo_o2 + inputs.atmo_co2 + inputs.atmo_n2
         o2_concentration = inputs.atmo_o2 / atmosphere_total
+        print(o2_concentration)
         if inputs.atmo_o2 == 0:
             states.is_alive = 0
             print('died due to no o2')
