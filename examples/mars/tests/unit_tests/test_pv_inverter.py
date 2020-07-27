@@ -30,9 +30,16 @@ class TestPVInverter:
         run_test_step(self.inverter, self.inputs, self.outputs)
 
     def test_inverter_works(self):
+        self.inverter.params.max_kw_ac = 1000
         self.inverter.params.one_way_efficiency = 0.98
         self.run_step()
-        assert self.inputs.kwh_for_battery == 98
+        assert self.outputs.kwh_for_battery == 98
+
+    def test_inverter_clips(self):
+        self.inverter.params.max_kw_ac = 50
+        self.inverter.params.one_way_efficiency = 0.98
+        self.run_step()
+        assert self.outputs.kwh_for_battery == 50
 
     def test_no_output(self):
         self.inputs.dc_kwh = 0
