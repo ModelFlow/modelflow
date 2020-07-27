@@ -22,8 +22,8 @@ class TestPV:
         self.pv = None
 
     def run_step(self):
-        run_test_step(self.pv, None, None)
+        run_test_step(self.pv, None, self.outputs)
 
     def test_first_output_zero(self):
         self.run_step()
-        assert self.pv.dc_kw == 0
+        assert self.outputs.dc_kw == 0

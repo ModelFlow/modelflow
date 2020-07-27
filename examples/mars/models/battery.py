@@ -12,12 +12,6 @@ class Battery(Model):
         # Note: You could have efficiency curves in here
         self.params = [
             ModelParam(
-                key="roundtrip_efficiency",
-                units="decimal percent", # (Doesn't matter if kwh since hour hard coded currently)
-                value=0.95,
-                source="FAKE"
-            ),
-            ModelParam(
                 key="dc_capacity_kwh",
                 units="kwh",
                 value=4000,
@@ -35,7 +29,6 @@ class Battery(Model):
                 value=0.95,
                 source="FAKE"
             )
-
         ]
 
         # We have this weird nomenclature so that the efficiency
@@ -62,10 +55,13 @@ class Battery(Model):
         ]
 
     def run_step(self, inputs, outputs, params, states):
-        if inputs.enrg_kwh < 0:
+        if inputs.kwh_for_battery < 0:
+            raise Exception("kwh into battery was negative")
+
+        if states.enrg_kwh < 0:
             raise Exception("Battery energy is less than 0")
 
-        if inputs.enrg_kwh == 0:
+        if states.enrg_kwh == 0:
             print("Ran out of energy!")
 
 
