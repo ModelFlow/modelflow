@@ -2,7 +2,7 @@
 Framework and UI for arbitrary agent based models
 
 # Installation
-Please use python 3.7 or later
+Please use python 3.6 or later
 ```
 cd ..
 python3 -m venv venv
