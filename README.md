@@ -29,6 +29,7 @@ Note: You cannot currently run `pytest tests` as for now the sys.path of the cur
 # TODO
 - Figure out how to elegantly store modeling scenarios
 - See if we need to store the delta outputs from each agent
+- Figure out how to not have custom imports with the tests
 - Add linting requirement git hook
 - Setup integration testing git hook
 - Support hierarchy and containers for models

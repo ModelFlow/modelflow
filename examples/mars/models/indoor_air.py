@@ -77,7 +77,7 @@ class IndoorAir(Model):
             value = getattr(states, key)
             if value > maximum:
                 print(f"Hit maximum {key} limit")
-                setattr(states, key, value)
+                setattr(states, key, maximum)
             if value < 0:
                 raise Exception(f"{key} went negative")
 

@@ -20,7 +20,8 @@ class Human(Model):
             "atmo_co2",
             "atmo_h2o",
             "h2o_urin",
-            "h2o_waste"
+            "h2o_waste",
+            "heat_diff_kwh"
         ]
 
         # Note: some these constraints may be pulled out
@@ -117,6 +118,13 @@ class Human(Model):
                 units="C",
                 value=0,
                 source="google",
+            ),
+            ModelParam(
+                key="heat_output_kwh",
+                description="Heating outputs of humans",
+                units="kwh",
+                value=0.1,
+                source="google",
             )
         ]
 
@@ -202,3 +210,4 @@ class Human(Model):
         outputs.atmo_h2o += params.atmo_h2o_output
         outputs.h2o_urin += params.h2o_urin
         outputs.h2o_waste += params.h2o_waste
+        outputs.heat_diff_kwh += params.heat_output_kwh

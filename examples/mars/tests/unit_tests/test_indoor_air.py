@@ -1,8 +1,8 @@
+import sys
+sys.path.insert(0, "../..")
 from modelflow.modelflow import run_test_step
 from models.indoor_air import IndoorAir
 import pytest
-import sys
-sys.path.insert(0, "../..")
 
 
 class TestIndoorAir:
@@ -25,7 +25,7 @@ class TestIndoorAir:
         self.outputs = None
 
     def run_step(self):
-        run_test_step(self.indoor_air, self.inputs, self.outputs)
+        run_test_step(self.indoor_air, None, None)
 
     def test_heat_raises_temp(self):
         assert self.indoor_air.atmo_temp == 20

@@ -1,7 +1,7 @@
-from modelflow.modelflow import run_test_step, obj
-from models.structures import HabitatStructure
 import sys
 sys.path.insert(0, "../..")
+from modelflow.modelflow import run_test_step, obj
+from models.structures import HabitatStructure
 
 
 class TestStuctures:
@@ -35,7 +35,7 @@ class TestStuctures:
         self.habitat = None
 
     def run_step(self):
-        run_test_step(self.habitat, None, None)
+        run_test_step(self.habitat, self.inputs, self.outputs)
 
     def test_leaks_air(self):
         self.habitat.params.leak_rate = 0.01

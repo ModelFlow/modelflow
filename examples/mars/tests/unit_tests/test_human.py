@@ -24,7 +24,8 @@ class TestHumans:
         self.outputs = obj(atmo_co2=self.inputs.atmo_co2,
                             atmo_h2o=0,
                             h2o_urin=0,
-                            h2o_waste=0)
+                            h2o_waste=0,
+                            heat_diff_kwh=0)
 
     def teardown_method(self):
         """ teardown any state that was previously setup with a setup_function
@@ -41,6 +42,9 @@ class TestHumans:
         assert self.human.is_alive == 1
         self.run_step()
         assert self.human.is_alive == 1
+        assert self.outputs.h2o_urin > 0
+        assert self.outputs.h2o_waste > 0
+        assert self.outputs.heat_diff_kwh > 0
 
     def test_human_no_air(self):
         assert self.human.is_alive == 1
@@ -112,16 +116,11 @@ class TestHumans:
 
         assert self.human.is_alive == 0
 
-
-    def test_human_outputs(self):
-        self.run_step()
-        assert self.outputs.h2o_urin > 0
-        assert self.outputs.h2o_waste > 0
-
-
     def test_human_dead(self):
         self.human.is_alive = 0
         self.run_step()
         assert self.human.is_alive == 0
         assert self.outputs.h2o_urin == 0
         assert self.outputs.h2o_waste == 0
+        assert self.outputs.heat_diff_kwh == 0
+

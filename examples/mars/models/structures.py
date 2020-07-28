@@ -56,4 +56,4 @@ class HabitatStructure(Model):
             atmo_output = atmo_input - atmo_input * params.leak_rate
             setattr(outputs, atmo_key, atmo_output)
 
-        atmo_output.heat_diff_kwh -= params.heat_loss_per_hour
+        outputs.heat_diff_kwh -= params.heat_loss_per_hour
