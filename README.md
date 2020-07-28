@@ -2,6 +2,7 @@
 Framework and UI for arbitrary agent based models
 
 # Installation
+Please use python 3.7 or later
 ```
 cd ..
 python3 -m venv venv
@@ -11,25 +12,22 @@ pip install -r requirements.txt
 ```
 
 # Running an Example
-To run an example:
+To run Mars example:
 ```
 cd examples/mars
 python main.py
 ```
 
 # Example Testing
-To run tests for an example
+To run tests:
 ```
-cd examples/mars
-python -m pytest
+pytest
 ```
-Note: You cannot currently run `pytest tests` as for now the sys.path of the current dir needs to be added. https://docs.pytest.org/en/stable/pythonpath.html
-
+Note: You need to run this from the modelflow root, not cd into examples
 
 # TODO
 - Figure out how to elegantly store modeling scenarios
 - See if we need to store the delta outputs from each agent
-- Figure out how to not have custom imports with the tests
 - Add linting requirement git hook
 - Setup integration testing git hook
 - Support hierarchy and containers for models

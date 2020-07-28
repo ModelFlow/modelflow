@@ -1,6 +1,4 @@
-import sys
 import pytest
-sys.path.insert(0, "../..")
 from models.battery import Battery
 from modelflow.modelflow import run_test_step, obj
 

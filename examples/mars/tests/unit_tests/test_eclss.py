@@ -1,5 +1,3 @@
-import sys
-sys.path.insert(0, "../..")
 from models.eclss import MultifiltrationPurifierPostTreatment
 from models.eclss import OxygenGenerationSFWE
 from modelflow.modelflow import run_test_step, obj

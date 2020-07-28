@@ -1,6 +1,4 @@
 import pytest
-import sys
-sys.path.insert(0, "../..")
 from models.pv_inverter import PVInverter
 from modelflow.modelflow import run_test_step, obj
 

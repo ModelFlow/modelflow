@@ -1,5 +1,3 @@
-import sys
-sys.path.insert(0, "../..")
 from modelflow.modelflow import run_test_step
 from models.indoor_air import IndoorAir
 import pytest

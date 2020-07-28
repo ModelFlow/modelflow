@@ -1,5 +1,3 @@
-import sys
-sys.path.insert(0, "../..")
 from models.humans import Human
 from modelflow.modelflow import run_test_step, obj
 
