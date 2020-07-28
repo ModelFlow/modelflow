@@ -1,5 +1,5 @@
 import pytest
-from examples.mars.models.pv_inverter import PVInverter
+from models.pv_inverter import PVInverter
 from modelflow.modelflow import run_test_step, obj
 
 class TestPVInverter:

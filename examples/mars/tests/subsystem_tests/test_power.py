@@ -1,6 +1,3 @@
-import sys
-sys.path.insert(0, "/Users/adamraudonis/Desktop/Projects/ModelFlow/modelflow/examples/mars")
-sys.path.insert(0, "/Users/adamraudonis/Desktop/Projects/ModelFlow/modelflow")
 from models.pv import SolarArray
 from models.location import Location
 from models.pv_inverter import PVInverter

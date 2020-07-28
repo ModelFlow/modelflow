@@ -91,7 +91,6 @@ def main():
     all_outputs = run_simulation(scenario)
     df = pd.DataFrame(all_outputs)
     print(df.columns)
-    print(df.is_alive)
     df.to_csv('test.csv',index=False)
     print(f"Model ran in {time.time() - t0:.2f} seconds")
 

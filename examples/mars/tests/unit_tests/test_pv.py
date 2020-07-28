@@ -1,4 +1,4 @@
-from examples.mars.models.pv import SolarArray
+from models.pv import SolarArray
 from modelflow.modelflow import run_test_step, obj
 
 class TestPV:

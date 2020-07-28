@@ -1,5 +1,5 @@
-from examples.mars.models.eclss import MultifiltrationPurifierPostTreatment
-from examples.mars.models.eclss import OxygenGenerationSFWE
+from models.eclss import MultifiltrationPurifierPostTreatment
+from models.eclss import OxygenGenerationSFWE
 from modelflow.modelflow import run_test_step, obj
 
 class TestBasicECLSS:

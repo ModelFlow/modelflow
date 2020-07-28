@@ -3,6 +3,9 @@ language: python
 # command to install dependencies
 install:
   - pip install -r requirements.txt
+  # https://stackoverflow.com/questions/28108971/python3-module-import-fails-on-travis-ci
+  - export PYTHONPATH=$PYTHONPATH:$(pwd)
+
 # command to run tests
 
 script:
