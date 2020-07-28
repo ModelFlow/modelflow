@@ -1,5 +1,5 @@
 from modelflow.modelflow import run_test_step
-from models.indoor_air import IndoorAir
+from examples.mars.models.indoor_air import IndoorAir
 import pytest
 
 

@@ -1,4 +1,4 @@
-from models.humans import Human
+from examples.mars.models.humans import Human
 from modelflow.modelflow import run_test_step, obj
 
 

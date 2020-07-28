@@ -1,5 +1,5 @@
 import pytest
-from models.battery import Battery
+from examples.mars.models.battery import Battery
 from modelflow.modelflow import run_test_step, obj
 
 class TestBattery:

@@ -1,5 +1,5 @@
 import pytest
-from models.storages import WaterStorage
+from examples.mars.models.storages import WaterStorage
 from modelflow.modelflow import run_test_step
 
 class TestStorage:

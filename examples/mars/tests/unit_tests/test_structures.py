@@ -1,5 +1,5 @@
 from modelflow.modelflow import run_test_step, obj
-from models.structures import HabitatStructure
+from examples.mars.models.structures import HabitatStructure
 
 
 class TestStuctures:
