@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ModelFlow/modelflow.svg?branch=master)](https://travis-ci.org/ModelFlow/modelflow)
+
 # ModelFlow
 Framework and UI for arbitrary agent based models
 
