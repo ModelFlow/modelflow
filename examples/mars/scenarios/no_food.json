@@ -1,0 +1,50 @@
+{
+  "models": [
+    {
+      "model": "Location"
+    },
+    {
+      "model": "SolarArray",
+      "links": [
+        "pv_inverter"
+      ]
+    },
+    {
+      "model": "PVInverter",
+      "links": [
+        "battery"
+      ]
+    },
+    {
+      "model": "Battery"
+    },
+    {
+      "model": "Lighting",
+      "links": [
+        "battery"
+      ]
+    },
+    {
+      "model": "Human",
+      "links": [
+        "indoor_air",
+        "potable_water_storage",
+        "food_storage",
+        "waste_storage"
+      ]
+    },
+    {
+      "model": "IndoorAir"
+    },
+    {
+      "model": "WaterStorage"
+    },
+    {
+      "model": "FoodStorage"
+    },
+    {
+      "model": "WasteStorage"
+    }
+  ],
+  "run_for_steps": 8760
+}

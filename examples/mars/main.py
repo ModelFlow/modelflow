@@ -1,98 +1,42 @@
+import json
+import os
 import sys
+import argparse
+import pathlib
 sys.path.insert(0, "../..")
-from models.humans import Human
-from models.indoor_air import IndoorAir
-from models.storages import WaterStorage, FoodStorage, WasteStorage
-from modelflow.modelflow import run_simulation
-from models.location import Location
-from models.pv import SolarArray
-from models.pv_inverter import PVInverter
-from models.battery import Battery
-from models.lighting import Lighting
+from models import list_models
+from modelflow.modelflow import run_sim
+
 import pandas as pd
 import time
 
-def main():
+def main(args):
     t0 = time.time()
-    # TODO: Have system for scaling actors. Currently just add multiple lol
-    # Think of also how to change the params
-    # Think about how to sweep over params
+    # TODO: Implement arg parse
+    # TODO: Implement scaling of actors
+    # TODO: Figure out how to override params
+    # TODO: Figure out how to sweep over params
+    abs_path = ''
+    if os.path.exists(args.scenario):
+        abs_path = args.scenario
+    else:
+        abs_path = pathlib.Path(__file__).parent.absolute()
+        abs_path = os.path.join(abs_path, 'scenarios', args.scenario)
+        if not '.json' in abs_path:
+            abs_path += '.json'
+    scenario = None
+    with open(abs_path, 'r') as f:
+        scenario = json.load(f)
 
-    # Note: You do not need bidirectional links
-    # scenario = dict(
-        # models=[
-        #     dict(
-        #         model=Human(),
-        #         scale=1,
-        #         links=[
-        #             "habitat_atmosphere",
-        #             "potable_water_storage",
-        #             "food_storage",
-        #             "waste_storage"
-        #         ]
-        #     ),
-        #     dict(model=HabitatAtmosphere()),
-        #     dict(model=PotableWaterStorage()),
-        #     dict(model=FoodStorage()),
-        #     dict(model=WasteStorage()),
-        # ],
-    #     run_for_steps=20,
-    #     # time_per_step": "1hr" # TODO: Actually use this
-    # )
-    # run_simulation(scenario)
-
-    scenario = dict(
-        models=[
-            dict(
-                model=Location(),
-            ),
-            dict(
-                model=SolarArray(),
-                scale=1,
-                links=[
-                    "pv_inverter",
-                ]
-            ),
-            dict(
-                model=PVInverter(),
-                scale=1,
-                links=[
-                    "battery",
-                ]
-            ),
-            dict(
-                model=Battery(),
-                scale=1,
-            ),
-            dict(
-                model=Lighting(),
-                scale=1,
-                links=[
-                    "battery"
-                ]
-            ),
-            dict(
-                model=Human(),
-                scale=1,
-                links=[
-                    "indoor_air",
-                    "potable_water_storage",
-                    "food_storage",
-                    "waste_storage"
-                ]
-            ),
-            dict(model=IndoorAir()),
-            dict(model=WaterStorage()),
-            dict(model=FoodStorage()),
-            dict(model=WasteStorage()),
-        ],
-        run_for_steps=8760,
-    )
-    all_outputs = run_simulation(scenario)
+    models = list_models()
+    all_outputs = run_sim(scenario, models)
     df = pd.DataFrame(all_outputs)
-    print(df.columns)
-    df.to_csv('test.csv',index=False)
+    df.to_csv(args.output,index=False)
     print(f"Model ran in {time.time() - t0:.2f} seconds")
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser(description='Run Mars Simulation')
+    parser.add_argument('-s', '--scenario', type=str, help='Name or path to scenario to run')
+    parser.add_argument('-o', '--output', type=str, default='output.csv', help='Path of the csv to output.')
+    args = parser.parse_args()
+    main(args)

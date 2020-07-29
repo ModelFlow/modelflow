@@ -17,7 +17,7 @@ pip install -r requirements.txt
 To run Mars example:
 ```
 cd examples/mars
-python main.py
+python main.py --scenario no_food
 ```
 
 # Example Testing
@@ -28,7 +28,7 @@ pytest
 Note: You need to run this from the modelflow root, not cd into examples
 
 # TODO
-- Figure out how to elegantly store modeling scenarios
+- Figure out how to elegantly store modeling scenarios (started serializing confits)
 - See if we need to store the delta outputs from each agent
 - Add linting requirement git hook
 - Setup integration testing git hook

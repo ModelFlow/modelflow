@@ -70,7 +70,17 @@ class ModelState():
         self.default_value = None
 
 
-def run_simulation(scenario):
+def run_sim(scenario=None, models=None):
+    if scenario is None and models is None:
+        raise Exception("Scenario or scenario and models are required")
+
+    if models is not None:
+        model_map = {}
+        for model in models:
+            model_map[model.__class__.__name__] = model
+
+        for model in scenario['models']:
+            model['model'] = model_map[model['model']]
     return run_simulation_inner(scenario['models'], scenario['models'], scenario['run_for_steps'])
 
 def run_test_step(model, inputs, outputs):
