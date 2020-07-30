@@ -105,7 +105,7 @@ class FoodStorage(StorageModel):
             ModelState(
                 key="food_edbl",
                 units="kg",
-                value=0
+                value=1000
             )
         ]
 

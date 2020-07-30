@@ -49,6 +49,7 @@ Note: You need to run this from the modelflow root, not cd into examples
 - Add perhaps native support for descrete event simulation
 - Add type hints to all functions
 - Make it easy to be able to swap models
+- Think about whether we want formal support for setting initial values
 
 # Ideas
 - Replace complicated agents with neural networks trained on parameter sweeps
