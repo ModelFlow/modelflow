@@ -3,7 +3,7 @@ from models.location import Location
 from models.pv_inverter import PVInverter
 from models.battery import Battery
 from models.lighting import Lighting
-from modelflow.modelflow import run_simulation
+from modelflow.modelflow import run_sim
 import pandas as pd
 
 # TODO: Convert this to actual pytest
@@ -48,7 +48,7 @@ def basic_power_subsystem():
         ],
         run_for_steps=8760,
     )
-    all_outputs = run_simulation(scenario)
+    all_outputs = run_sim(scenario)
     df = pd.DataFrame(all_outputs)
     print(df)
     df.to_csv('power_test.csv',index=False)
