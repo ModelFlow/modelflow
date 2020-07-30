@@ -16,6 +16,7 @@ def main(args):
     # TODO: Implement scaling of actors
     # TODO: Figure out how to override params
     # TODO: Figure out how to sweep over params
+    # TODO: Perhaps model model library path inside scenario?
     abs_path = ''
     if os.path.exists(args.scenario):
         abs_path = args.scenario
@@ -36,7 +37,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Mars Simulation')
-    parser.add_argument('-s', '--scenario', type=str, help='Name or path to scenario to run')
+    parser.add_argument('-s', '--scenario', type=str, help='Name or path to scenario to run', required=True)
     parser.add_argument('-o', '--output', type=str, default='output.csv', help='Path of the csv to output.')
     args = parser.parse_args()
     main(args)

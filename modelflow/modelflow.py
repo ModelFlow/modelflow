@@ -1,7 +1,9 @@
 from types import SimpleNamespace
 
+
 def obj(**kwargs):
     return SimpleNamespace(**kwargs)
+
 
 class Model():
     def __init__(self):
@@ -25,6 +27,7 @@ class Model():
 
     def setup():
         raise NotImplementedError("Must Override")
+
 
 class ModelParam():
     def __init__(self,
@@ -81,7 +84,10 @@ def run_sim(scenario=None, models=None):
 
         for model in scenario['models']:
             model['model'] = model_map[model['model']]
-    return run_simulation_inner(scenario['models'], scenario['models'], scenario['run_for_steps'])
+    # TODO: This is inelegant
+    return run_simulation_inner(scenario['models'], scenario['models'], scenario['run_for_steps'],
+                                scenario.get('states',{}), scenario.get('params',{}))
+
 
 def run_test_step(model, inputs, outputs):
 
@@ -100,6 +106,7 @@ def run_test_step(model, inputs, outputs):
 
     model.run_step(inputs, outputs, model._params, model)
 
+
 def setup_models(model_infos):
     all_state = {}
     for model_info in model_infos:
@@ -110,7 +117,8 @@ def setup_models(model_infos):
             all_state[state.key] = state.value
     return SimpleNamespace(**all_state)
 
-def run_simulation_inner(model_infos, models_to_run, num_steps):
+
+def run_simulation_inner(model_infos, models_to_run, num_steps, states_override, params_override):
 
     # TODO improve speed
     all_outputs = []
@@ -118,17 +126,31 @@ def run_simulation_inner(model_infos, models_to_run, num_steps):
     # Secretly have a dict called all states
     # where the inputs and outputs are just that
     all_state = setup_models(model_infos)
+    for key, value in states_override.items():
+        print(f"overriding state {key} with {value}")
+        if not hasattr(all_state, key):
+            raise Exception(f"Tried to override state {key} that doesn't exist")
+        setattr(all_state, key, value)
 
     name_model_map = {}
     for model_info in model_infos:
         model = model_info['model']
-        name_model_map[model.name] = model
+        name_model_map[model.__class__.__name__] = model
 
+    for raw_key, value in params_override.items():
+        if not "." in raw_key:
+            raise Exception("Need . in param_override like Human.food_eaten_per_hr")
+        model_name, key = raw_key.split(".")
+        if not model_name in name_model_map:
+            raise Exception(f"Could not find model {model_name} for param_override {raw_key}")
+        
+        if not hasattr(name_model_map[model_name]._params,key):
+            raise Exception(f"Could not find key {key} for param_override {raw_key}")
+
+        setattr(name_model_map[model_name]._params,key, value)
 
     for model_info in model_infos:
         model = model_info['model']
-
-
 
         # for links state to inputs map
         model.inputs = SimpleNamespace()
@@ -137,11 +159,10 @@ def run_simulation_inner(model_infos, models_to_run, num_steps):
         #     for state_name in getattr(model, 'linked_input_states'):
         #         for link_name in model_info['links']:
         #             for state in models_dict[link_name].
-        #             if 
+        #             if
         #         for model in all_models:
 
         #         setattr(model.inputs, state_name, getattr(other_model_states, ))
-
 
         #     model._inputs = SimpleNamespace()
         #     for inputstr in model.inputs:
@@ -149,7 +170,7 @@ def run_simulation_inner(model_infos, models_to_run, num_steps):
         #         for m in scenario['models']:
         #             if m.name != model_name:
         #                 continue
-        #             # _inputs[state_name] = 
+        #             # _inputs[state_name] =
         #             setattr(model._inputs,state_name,getattr(m._states, state_name))
 
         #     # SimpleNamespace(**_inputs)
@@ -172,6 +193,7 @@ def run_simulation_inner(model_infos, models_to_run, num_steps):
         toutputs = dict(i=i)
         for model_info in model_infos:
             model = model_info['model']
+
             # if model not in models_to_run:
             #     continue
             if hasattr(model, 'run_step'):

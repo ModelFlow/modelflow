@@ -30,8 +30,7 @@ Note: You need to run this from the modelflow root, not cd into examples
 # TODO
 - Figure out how to elegantly store modeling scenarios (started serializing confits)
 - See if we need to store the delta outputs from each agent
-- Add linting requirement git hook
-- Setup integration testing git hook
+- Add PEP8 linting requirement git hook
 - Support hierarchy and containers for models
 - Come up with format for serializing scenario configs and agents
 - Validate all serialized inputs through jsonschema
@@ -50,6 +49,7 @@ Note: You need to run this from the modelflow root, not cd into examples
 - Add type hints to all functions
 - Make it easy to be able to swap models
 - Think about whether we want formal support for setting initial values
+- Add documentation to all public modelflow methods
 
 # Ideas
 - Replace complicated agents with neural networks trained on parameter sweeps
