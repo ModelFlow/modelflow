@@ -6,6 +6,9 @@ from models.pv import SolarArray
 from models.pv_inverter import PVInverter
 from models.battery import Battery
 from models.lighting import Lighting
+from models.nuclear_reactor import NuclearReactor
+from models.structures import HabitatStructure
+from models.eclss import Heater, CH4RemovalAgent, Dehumidifier, ParticulateRemovalTCCS, CO2Removal, CO2ReductionSabatier, OxygenFromHydrolysis, MultifiltrationPurifierPostTreatment, UrineRecyclingProcessor, SolidWasteAerobicBioReactor
 
 def list_models():
 	return [
@@ -18,5 +21,17 @@ def list_models():
 		SolarArray(),
 		PVInverter(),
 		Battery(),
-		Lighting()
+		Lighting(),
+		NuclearReactor(),
+		HabitatStructure(),
+		Heater(),
+		CH4RemovalAgent(),
+		Dehumidifier(),
+		ParticulateRemovalTCCS(),
+		CO2Removal(),
+		CO2ReductionSabatier(),
+		OxygenFromHydrolysis(),
+		MultifiltrationPurifierPostTreatment(),
+		UrineRecyclingProcessor(),
+		SolidWasteAerobicBioReactor()
 	]

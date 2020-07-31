@@ -1,6 +1,6 @@
 {
   "states": {
-    "food_edbl": 0
+    "food_edbl": 1000
   },
   "params": {
     "Human.max_hrs_survivable_with_no_food": 500

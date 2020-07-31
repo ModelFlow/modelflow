@@ -53,7 +53,6 @@ class Human(Model):
             ),
             ModelParam(
                 key="h2o_urin",
-                # What percent of this gets recycled?
                 units="kg/hr",
                 value=0.0625,
                 source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",

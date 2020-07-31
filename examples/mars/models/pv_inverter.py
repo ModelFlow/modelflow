@@ -47,4 +47,4 @@ class PVInverter(Model):
         if inputs.dc_kwh < 0:
             raise Exception("negative power input to inverter. Makes no sense")
 
-        outputs.kwh_for_battery = min(inputs.dc_kwh * params.one_way_efficiency, params.max_kw_ac)
+        outputs.kwh_for_battery += min(inputs.dc_kwh * params.one_way_efficiency, params.max_kw_ac)

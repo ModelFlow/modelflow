@@ -10,9 +10,10 @@ class ConverterModel(Model):
         should_run = self.should_run_criteria(inputs, params)
         if not should_run:
             return
+        # TODO: Consider allowing variable consumption or being explicit
+        # in inputs which are hard constraints etc
         for key in self.linked_input_states:
             if getattr(inputs, key) < getattr(params, f'{key}_consumed_per_hour'):
-                print('Not running')
                 should_run = False
                 break
         if not should_run:
@@ -20,7 +21,7 @@ class ConverterModel(Model):
 
         for key in self.linked_input_states:
             input_state = getattr(inputs, key)
-            input_state -= getattr(params, f'{key}_consumed_per_hour')
+            input_state -= min(input_state, getattr(params, f'{key}_consumed_per_hour'))
             setattr(inputs, key, input_state)
 
         for key in self.linked_output_states:
@@ -113,10 +114,10 @@ class SolidWasteAerobicBioReactor(ConverterModel):
             )
         ]
 
-class UrineRecyclingProcessorVCD(ConverterModel):
+class UrineRecyclingProcessor(ConverterModel):
     def setup(self):
         # What does VCD stand for ?!?!?
-        self.name = "urine_recycling_processor_VCD"
+        self.name = "urine_recycling_processor"
         self.parent = "location" # TODO: Implement heirarchy
         self.category = "eclss"
         self.description = """
@@ -211,8 +212,10 @@ class MultifiltrationPurifierPostTreatment(ConverterModel):
 
         self.linked_output_states = [
             "h2o_potb",
-            "solid_waste",
         ]
+
+        # TODO: Check that the masses are right here
+        # they don't seem to add up
 
         # TODO: Think about how to handle if less than
         # specified. Ex: if there is only 1kg urine do you wait
@@ -233,35 +236,31 @@ class MultifiltrationPurifierPostTreatment(ConverterModel):
                 source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
-                key="h2o_tret_output_per_hour",
+                key="h2o_potb_output_per_hour",
                 units="kg/hr",
-                value=1.96,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            ModelParam(
-                key="solid_waste_output_per_hour",
-                units="kg/hr",
-                value=0.04,
+                value=4.75,
                 source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="mass",
                 units="kg",
-                value=193.3,
+                value=114.6,
                 source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             ModelParam(
                 key="volume",
                 units="m3",
-                value=0.39,
+                value=0.11,
                 source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             )
         ]
 
-class OxygenGenerationSFWE(ConverterModel):
+# TODO: Add moxie O2 from atmosphere
+
+class OxygenFromHydrolysis(ConverterModel):
 
     def setup(self):
-        self.name = "oxygen_generation_SFWE"
+        self.name = "oxygen_from_hydrolysis"
         self.parent = "location" # TODO: Implement heirarchy
         self.category = "eclss"
         self.description = """
@@ -461,10 +460,9 @@ class CO2ReductionSabatier(ConverterModel):
             return True
         return False
 
-class CO2RemovalSAWD(ConverterModel):
-    # What does SAWD stand for
+class CO2Removal(ConverterModel):
     def setup(self):
-        self.name = "co2_removal_SAWD"
+        self.name = "co2_removal"
         self.parent = "location" # TODO: Implement heirarchy
         self.category = "eclss"
         self.description = """
@@ -472,7 +470,7 @@ class CO2RemovalSAWD(ConverterModel):
         """
 
         self.linked_input_states = [
-            "atmo_co2"
+            "atmo_co2",
             "enrg_kwh",
 
             # TODO: We may want a way of denoting that
@@ -855,7 +853,8 @@ class Heater(Model):
 
         # Don't run if within deadband of target temp or above
 
-        # if inputs.atmo_temp
-        pass
+        if inputs.atmo_temp < params.target_temp - params.temp_dead_band:
+            # TODO: Replace with a smart heating strategy
+            outputs.heat_diff_kwh += params.min_kw_output
 
 

@@ -3,6 +3,9 @@
 # ModelFlow
 Framework and UI for arbitrary agent based models
 
+![](screenshot.png)
+*Mars Base Example Visualized in Tableau https://public.tableau.com/profile/adam.raudonis#!/vizhome/MarsBaseBaselineScenario/Dashboard?publish=yes*
+
 # Installation
 Please use python 3.6 or later
 ```
@@ -17,7 +20,7 @@ pip install -r requirements.txt
 To run Mars example:
 ```
 cd examples/mars
-python main.py --scenario no_food
+python main.py --scenario baseline
 ```
 
 # Example Testing

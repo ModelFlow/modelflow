@@ -3,6 +3,8 @@
 # userdefined
 *.csv
 
+*.twbr
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

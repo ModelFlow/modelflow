@@ -33,7 +33,7 @@ def main(args):
     all_outputs = run_sim(scenario, models)
     df = pd.DataFrame(all_outputs)
     df.to_csv(args.output,index=False)
-    print(f"Model ran in {time.time() - t0:.2f} seconds")
+    print(f"Model ran in {time.time() - t0:.2f} seconds. Saved {args.output}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Mars Simulation')

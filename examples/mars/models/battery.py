@@ -49,7 +49,13 @@ class Battery(Model):
                 key="enrg_kwh", # Oddly this is the AC energy available
                 units="kwh",
                 value=1000
+            ),
+            ModelState(
+                key="kwh_for_battery", # Oddly this is the kwh set to be input to battery
+                units="kwh",
+                value=0
             )
+
             # TODO: perhaps have some internal state for storage
             # where we can properly handle kw max and kwh storage
         ]
@@ -70,6 +76,10 @@ class Battery(Model):
         # energy added to the battery instead of part when added in
         # and part when added out
         states.enrg_kwh += inputs.kwh_for_battery * params.roundtrip_efficiency
+
+        # TODO: This is really not great, but allos for multiple
+        # inputs to battery
+        inputs.kwh_for_battery = 0
 
         # A hack to ensure not exceeding max kw
         states.enrg_kwh = min(states.enrg_kwh, params.ac_capacity_kw)

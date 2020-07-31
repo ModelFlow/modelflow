@@ -8,6 +8,9 @@
       "model": "Location"
     },
     {
+      "model": "Battery"
+    },
+    {
       "model": "SolarArray",
       "links": [
         "pv_inverter"
@@ -19,9 +22,7 @@
         "battery"
       ]
     },
-    {
-      "model": "Battery"
-    },
+
     {
       "model": "Lighting",
       "links": [
@@ -48,6 +49,33 @@
     },
     {
       "model": "WasteStorage"
+    },
+    {
+      "model": "HabitatStructure",
+      "links": [
+        "indoor_air"
+      ]
+    },
+    {
+      "model": "Heater",
+      "links": [
+        "heater"
+      ]
+    },
+    {
+      "model": "CO2Removal",
+      "links": [
+        "indoor_air"
+      ]
+    },
+    {
+      "model": "OxygenFromHydrolysis"
+    },
+    {
+      "model": "UrineRecyclingProcessor"
+    },
+    {
+      "model": "MultifiltrationPurifierPostTreatment"
     }
   ],
   "run_for_steps": 8760

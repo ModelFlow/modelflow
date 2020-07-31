@@ -83,6 +83,8 @@ def run_sim(scenario=None, models=None):
             model_map[model.__class__.__name__] = model
 
         for model in scenario['models']:
+            if model['model'] not in model_map:
+                raise Exception(f"{model['model']} not in model list!")
             model['model'] = model_map[model['model']]
     # TODO: This is inelegant
     return run_simulation_inner(scenario['models'], scenario['models'], scenario['run_for_steps'],
@@ -113,8 +115,9 @@ def setup_models(model_infos):
         model = model_info['model']
         if not issubclass(model.__class__, Model):
             raise Exception(f"{model.__class__.__name__} must be a subclass of Model")
-        for state in model.states:
-            all_state[state.key] = state.value
+        if hasattr(model, 'states'):
+            for state in model.states:
+                all_state[state.key] = state.value
     return SimpleNamespace(**all_state)
 
 

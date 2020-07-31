@@ -1,5 +1,5 @@
 from models.eclss import MultifiltrationPurifierPostTreatment
-from models.eclss import OxygenGenerationSFWE
+from models.eclss import OxygenFromHydrolysis
 from modelflow.modelflow import run_test_step, obj
 
 class TestBasicECLSS:
@@ -14,7 +14,7 @@ class TestBasicECLSS:
         self.converter.params = self.converter._params
 
         self.inputs = obj(h2o_tret=100, enrg_kwh=100)
-        self.outputs = obj(h2o_potb=0, solid_waste=0)
+        self.outputs = obj(h2o_potb=0)
 
     def teardown_method(self):
         """ teardown any state that was previously setup with a setup_function
@@ -37,7 +37,6 @@ class TestBasicECLSS:
         assert self.inputs.h2o_tret == 90
         assert self.inputs.enrg_kwh == 95
         assert self.outputs.h2o_potb == 1
-        assert self.outputs.solid_waste == 2
 
     def test_does_not_run(self):
         self.converter.params.h2o_tret_consumed_per_hour = 10
@@ -45,7 +44,6 @@ class TestBasicECLSS:
         self.run_step()
         assert self.inputs.h2o_tret == 5
         assert self.outputs.h2o_potb == 0
-        assert self.outputs.solid_waste == 0
 
 
 class TestOxygenGenerationSFWE:
@@ -55,7 +53,7 @@ class TestOxygenGenerationSFWE:
         Invoked for every test function in the module.
         """
         # Defaults
-        self.converter = OxygenGenerationSFWE()
+        self.converter = OxygenFromHydrolysis()
         # TODO: improve this setting of params
         self.converter.params = self.converter._params
 
