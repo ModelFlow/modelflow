@@ -4,7 +4,7 @@
 Framework and UI for arbitrary agent based models
 
 ![](screenshot.png)
-*Mars Base Example Visualized in Tableau https://public.tableau.com/profile/adam.raudonis#!/vizhome/MarsBaseBaselineScenario/Dashboard?publish=yes*
+*Simple Mars Base Example Results Visualized in Tableau https://public.tableau.com/profile/adam.raudonis#!/vizhome/MarsBaseBaselineScenario/Dashboard*
 
 # Installation
 Please use python 3.6 or later
