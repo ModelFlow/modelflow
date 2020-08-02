@@ -57,3 +57,4 @@ Note: You need to run this from the modelflow root, not cd into examples
 # Ideas
 - Replace complicated agents with neural networks trained on parameter sweeps
 - Create a playground for reinforcement learning algorithms to explore
+- Think about centralized control vs decentralized control

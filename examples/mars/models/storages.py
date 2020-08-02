@@ -59,7 +59,7 @@ class WaterStorage(StorageModel):
             ModelState(
                 key="h2o_tret",
                 units="kg",
-                value=1341
+                value=0
             )
         ]
 
