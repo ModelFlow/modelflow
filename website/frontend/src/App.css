@@ -41,11 +41,42 @@
 .grid-container {
   display: grid;
   grid-template-columns: 300px auto;
-  background-color: #2196F3;
+  background-color: white;
   height: 100vh;
 }
-.grid-item {
-  background-color: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.8);
+.paramsCabinet {
+  background-color: white;
+  border-left: 1px solid lightgray;
   padding: 20px;
+  font-size: 13px;
+}
+
+.resultsDisplay {
+  background-color: #F5F8FA;
+  border-left: 1px solid lightgray;
+  padding: 0px;
+}
+
+.global-header {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: lightgray;
+  height: 40px;
+}
+
+.logo {
+  margin-left: 20px;
+  margin-top: 3px;
+}
+
+.titleText {
+  margin-left: 210px;
+  position: absolute;
+  margin-top: -31px;
+}
+
+.heading-button {
+  float: right;
+  margin-right: 5px;
+  margin-top: 4px;
 }

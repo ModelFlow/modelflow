@@ -34,7 +34,6 @@ class ParamInputs extends Component {
     const { params } = this.props;
     return (
       <>
-        <h1>Params</h1>
         {params.map((param) => {
           if (param.max) {
             return <ParamInput key={param.index} param={param} paramDidUpdate={this.paramDidUpdate}></ParamInput>
