@@ -237,7 +237,6 @@ def run_sim(scenario, models, sim_dir):
     if 'params' in scenario:
         for item in scenario['params']:
             override_params_dict[item['new_key']] = item['value']
-    print(override_params_dict)
 
     # TODO: Support multiple data
     # for k, v in data_dict.items():
@@ -249,8 +248,12 @@ def run_sim(scenario, models, sim_dir):
 
     args = None
     should_gen = True
-    arg_cachepath = 'args_cache.json'
-    if os.path.exists(arg_cachepath) and os.path.exists('generated.py'):
+
+    abs_dir = pathlib.Path(__file__).parent
+
+    arg_cachepath = os.path.join(abs_dir, 'args_cache.json')
+    gen_path = os.path.join(abs_dir, 'generated.py')
+    if os.path.exists(arg_cachepath) and os.path.exists(gen_path):
         file_list = []
         times = []
         for root, _, filenames in os.walk(sim_dir):
@@ -294,7 +297,8 @@ def run_sim(scenario, models, sim_dir):
         else:
             raise Exception(f"Could not find {arg} in params or state dict")
 
-    sys.path.insert(0, str(pathlib.Path(__file__).parent.absolute()))
+    print(abs_dir)
+    sys.path.insert(0, str(abs_dir))
     rstep = __import__('generated').rstep
     num_steps = scenario['run_for_steps']
     ts0 = time.time()

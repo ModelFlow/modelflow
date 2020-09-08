@@ -86,8 +86,8 @@ class Battery:
             raise Exception("Battery energy is less than 0")
 
         if states.enrg_kwh == 0:
-            print("Ran out of energy!")
-
+            # print("Ran out of energy!")
+            pass
 
         # Due to current limitations in modeling setup
         # Apply the full round trip battery efficiency for
