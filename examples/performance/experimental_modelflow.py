@@ -61,36 +61,36 @@ def python_modelflow(config):
     # print(f"Model ran in {dur} seconds. Saved in {saved} seconds. Saved {output_path}")
     print(f"Model ran in {dur} seconds.")
 
-@jit(nopython=True, cache=True)
-def numba_test(num_steps):
-    params_max_widgets_per_hour_created = 15
-    params_cost_per_widget = 5
-    params_max_widgets_per_hour_consumed = 10
-    params_paid_per_widget = 10
+# @jit(nopython=True, cache=True)
+# def numba_test(num_steps):
+#     params_max_widgets_per_hour_created = 15
+#     params_cost_per_widget = 5
+#     params_max_widgets_per_hour_consumed = 10
+#     params_paid_per_widget = 10
 
-    indexes = np.zeros(num_steps)
-    states_pmoney = np.zeros(num_steps)
-    states_widgets = np.zeros(num_steps)
-    states_cmoney = np.zeros(num_steps)
+#     indexes = np.zeros(num_steps)
+#     states_pmoney = np.zeros(num_steps)
+#     states_widgets = np.zeros(num_steps)
+#     states_cmoney = np.zeros(num_steps)
 
-    states_pmoney[0] = 1000000
-    states_cmoney[0] = 1000000
+#     states_pmoney[0] = 1000000
+#     states_cmoney[0] = 1000000
 
-    for i in range(num_steps):
-        indexes[i] = i
+#     for i in range(num_steps):
+#         indexes[i] = i
 
-        if states_pmoney[i] > 0:
-            widgets_per_hr = min(params_max_widgets_per_hour_created, states_pmoney[i] // params_cost_per_widget)
-            states_pmoney[i] -= params_cost_per_widget * widgets_per_hr
-            states_widgets[i] += params_max_widgets_per_hour_created
+#         if states_pmoney[i] > 0:
+#             widgets_per_hr = min(params_max_widgets_per_hour_created, states_pmoney[i] // params_cost_per_widget)
+#             states_pmoney[i] -= params_cost_per_widget * widgets_per_hr
+#             states_widgets[i] += params_max_widgets_per_hour_created
 
-        if states_cmoney[i] > 0:
-            consumed = min(params_max_widgets_per_hour_consumed, states_cmoney[i] // params_paid_per_widget)
-            states_widgets[i] -= consumed
-            states_pmoney[i] += params_paid_per_widget * consumed
-            states_cmoney[i] -= params_paid_per_widget * consumed
+#         if states_cmoney[i] > 0:
+#             consumed = min(params_max_widgets_per_hour_consumed, states_cmoney[i] // params_paid_per_widget)
+#             states_widgets[i] -= consumed
+#             states_pmoney[i] += params_paid_per_widget * consumed
+#             states_cmoney[i] -= params_paid_per_widget * consumed
 
-    return indexes, states_pmoney, states_cmoney, states_widgets
+#     return indexes, states_pmoney, states_cmoney, states_widgets
 
 def generated_numba(config):
 
@@ -101,7 +101,7 @@ def generated_numba(config):
     out += "from numba import jit\n"
     out += "\n"
     out += "\n"
-    out += "@jit(nopython=True, cache=True)\n"
+    out += "@jit(nopython=False, cache=True)\n"
 
     params_dict = {}
     state_dict = {}
@@ -275,7 +275,7 @@ def main():
                 "model": Consumer()
             },
         ],
-        "run_for_steps": 300000
+        "run_for_steps": 3000000
     }
     # python_modelflow(config)
     # t0 = time.time()

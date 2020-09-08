@@ -1,0 +1,15 @@
+{
+  "states": {
+  },
+  "params": {
+  },
+  "models": [
+    {
+      "model": "SolarArray",
+      "links": [
+        "pv_inverter"
+      ]
+    }
+  ],
+  "run_for_steps": 8760
+}
