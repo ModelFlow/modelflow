@@ -1,17 +1,56 @@
 import React, {Component} from "react";
 import Plotly from 'plotly.js-basic-dist'
 import './Card.css'
-import { Button } from "@blueprintjs/core";
+import { Button, MenuItem } from "@blueprintjs/core";
+import { Select } from "@blueprintjs/select";
+
 
 
 import createPlotlyComponent from 'react-plotly.js/factory';
 const Plot = createPlotlyComponent(Plotly);
 
+// import { ItemRenderer, ItemPredicate, Select } from "@blueprintjs/select";
+ 
+// const FilmSelect = Select.ofType<Film>();
+ 
+const filterItem = (query, item) => {
+    return item.toLowerCase().indexOf(query.toLowerCase()) >= 0;
+};
+ 
+const renderItem = (item, { handleClick, modifiers }) => {
+    if (!modifiers.matchesPredicate) {
+        return null;
+    }
+    return (
+        <MenuItem
+            active={modifiers.active}
+            key={item}
+            label={item}
+            onClick={handleClick}
+            text={item}
+        />
+    );
+};
+ 
+
 class Card extends Component {
 
   size = {width: 0, height: 0}
+
+  constructor() {
+    super();
+    this.state = {selectedItem: null}
+  }
+
+  handleValueChange = (selectedItem) => {
+    this.setState({ selectedItem });
+  };
+
+
   render() {
     const { results, cardInfo } = this.props;
+    // TODO: This should eventually be a prop
+    const { selectedItem } = this.state;
     
     if (this.contentRef) {
       const { width, height } = this.contentRef.getBoundingClientRect();
@@ -19,7 +58,19 @@ class Card extends Component {
       this.size.height = height
     }
     let plot = null;
-    if (this.size.width) {
+    let selector = null;
+    if (this.size.width && results) {
+      selector = (
+        <Select
+          items={Object.keys(results.output_states)}
+          noResults={<MenuItem disabled={true} text="No results." />}
+          onItemSelect={this.handleValueChange}
+          itemRenderer={renderItem}
+          itemPredicate={filterItem}
+        >
+          <Button small icon="properties" text={selectedItem}/>
+        </Select>
+      )
       plot = (
         <Plot
             data={[
@@ -35,6 +86,7 @@ class Card extends Component {
           />
       )
     }
+
     return (
       <>
         <div 
@@ -49,7 +101,7 @@ class Card extends Component {
               {cardInfo.type}
             </span>
             <span style={{float: 'right', margin: '5px'}}>
-              <Button small icon="properties"/>
+              {selector}
             </span>
           </div>
           {plot}
