@@ -1,5 +1,5 @@
 *.DS_Store
-
+*.elasticbeanstalk/
 # userdefined
 *.csv
 *args_cache.json
