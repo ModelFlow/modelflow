@@ -1,0 +1,12 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "805888055623.dkr.ecr.us-west-2.amazonaws.com/modelflow:latest"
+  },
+  "Ports": [
+    {
+      "ContainerPort": 8080,
+      "HostPort": 8080
+    }
+  ]
+}

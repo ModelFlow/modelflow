@@ -1,0 +1,15 @@
+.card_header {
+  background: white;
+  border-bottom-style: solid;
+  border-bottom-width: 1px;
+  border-bottom-color: lightgray;
+  height:34px;
+}
+
+.chart_title {
+  margin: 5px;
+  margin-left: 10px;
+  margin-top: 6px;
+  position: absolute;
+  font-size: 16px;
+}

@@ -1,0 +1,15 @@
+{
+  "states": {
+  },
+  "params": {
+  },
+  "models": [
+    {
+      "model": "Producer"
+    },
+    {
+      "model": "Consumer"
+    }
+  ],
+  "run_for_steps": 8760
+}

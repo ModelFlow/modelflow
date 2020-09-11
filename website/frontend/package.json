@@ -1,0 +1,48 @@
+{
+  "name": "frontend",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@blueprintjs/core": "^3.31.0",
+    "@blueprintjs/select": "^3.13.7",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.5.0",
+    "@testing-library/user-event": "^7.2.1",
+    "axios": "^0.20.0",
+    "dotenv": "^8.2.0",
+    "fetch": "^1.1.0",
+    "node-sass": "^4.14.1",
+    "plotly.js": "^1.55.1",
+    "plotly.js-basic-dist": "^1.55.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-grid-layout": "^0.16.6",
+    "react-plotly.js": "^2.4.0",
+    "react-redux": "^7.2.1",
+    "react-scripts": "3.4.3",
+    "redux": "^4.0.5",
+    "redux-thunk": "^2.3.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {}
+}

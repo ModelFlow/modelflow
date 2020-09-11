@@ -1,182 +1,185 @@
-from modelflow.modelflow import Model, ModelParam, ModelState
-
-
-class StorageModel(Model):
-
-    def setup(self):
-        self.params = []
-        self.name = None
-        self.additional_setup()
-        if self.name is None:
-            raise Exception("Must provide name in additional setup")
-        self.states = self.storage_states()
-
-        for key, value in self.storage_maximums().items():
-            self.params.append(ModelParam(
-                key=f"max_{key}",
-                label=f"Maximum {key.title()} Storable",
-                description="This maximum amount that this store can hold",
-                units="kg",  # TODO: Pull this from the state unit
-                value=value,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ))
-
-    def additional_setup(self):
-        raise NotImplementedError("Must Override")
-
-    def storage_states(self):
-        raise NotImplementedError("Must Override")
-
-    def storage_maximums(self):
-        raise NotImplementedError("Must Override")
-
-    def run_step(self, inputs, outputs, params, states):
-        # TODO: Improve this hack due to 
-        # states not actually being only internal states
-        for param_key, max_param in params.__dict__.items():
-            key = param_key[4:]
-            value = getattr(states, key)
-            if value > max_param:
-                print(f"Hit maximum {key} limit")
-                setattr(states, key, max_param)
-
-            if value < 0:
-                raise Exception(f"{key} went negative")
-
-
-class WaterStorage(StorageModel):
-
-    def additional_setup(self):
-        self.name = "water_storage"
-
-    def storage_states(self):
-        return [
-            ModelState(
+class WaterStorage:
+    definition = {
+        "name": "water_storage",
+        "states": [
+            dict(
                 key="h2o_potb",
                 units="kg",
-                value=1341
+                value=1341,
+                min=0,
+                max=10000
             ),
-            ModelState(
+            dict(
                 key="h2o_tret",
                 units="kg",
-                value=1341
+                value=0
+            )
+        ],
+        "params": [
+            dict(
+                key="max_h2o_potb",
+                units="kg",
+                value=4000,
+            ),
+            dict(
+                key="max_h2o_tret",
+                units="kg",
+                value=4000,
             )
         ]
-
-    def storage_maximums(self):
-        return dict(h2o_potb=4000, h2o_tret=4000)
+    }
 
 
-class WasteStorage(StorageModel):
+    @staticmethod
+    def setup(inputs, outputs, params, states, data):
+        states.h2o_potb = params.max_h2o_potb
 
-    def additional_setup(self):
-        self.name = "waste_storage"
+    @staticmethod
+    def cost(params, states):
+        return states.h2o_potb
 
-    def storage_states(self):
-        return [
-            ModelState(
+    @staticmethod
+    def run_step(inputs, outputs, params, states, data):
+        if states.h2o_potb > params.max_h2o_potb:
+           states.h2o_potb = params.max_h2o_potb
+        if states.h2o_potb < 0:
+            raise Exception("h2o_potb < 0")
+
+        if states.h2o_tret > params.max_h2o_tret:
+           states.h2o_tret = params.max_h2o_tret
+        if states.h2o_tret < 0:
+            raise Exception("h2o_tret < 0")
+
+
+class WasteStorage:
+    definition = {
+        "name": "waste_storage",
+        "states": [
+            dict(
                 key="h2o_urin",
                 units="kg",
                 value=0
             ),
-            ModelState(
+            dict(
                 key="h2o_waste",
                 units="kg",
                 value=0
             ),
-            ModelState(
+            dict(
                 key="solid_waste",
                 units="kg",
                 value=0
             )
         ]
+    }
 
-    def storage_maximums(self):
-        return dict(h2o_urin=4000, h2o_waste=4000, solid_waste=4000)
+    @staticmethod
+    def run_step(inputs, outputs, params, states, data):
+        if states.h2o_urin < 0:
+            raise Exception("h2o_urin < 0")
 
+        if states.h2o_waste < 0:
+            raise Exception("h2o_waste < 0")
 
-class FoodStorage(StorageModel):
+        if states.solid_waste < 0:
+            raise Exception("solid_waste < 0")
 
-    def additional_setup(self):
-        self.name = "food_storage"
+class FoodStorage:
 
-    def storage_states(self):
-        return [
-            ModelState(
+    definition = {
+        "name": "food_storage",
+        "states": [
+            dict(
                 key="food_edbl",
                 units="kg",
                 value=1000
             )
+        ],
+        "params": [
+            dict(
+                key="max_food_edbl",
+                units="kg",
+                value=10000,
+                min=0,
+                max=100000
+            )
         ]
-
-    def storage_maximums(self):
-        return dict(food_edbl=10000)
+    }
 
 
-class NutrientStorage(StorageModel):
+    @staticmethod
+    def setup(inputs, outputs, params, states, data):
+        states.food_edbl = params.max_food_edbl
 
-    def additional_setup(self):
-        self.name = "nutrient_storage"
-        self.description = """
+    @staticmethod
+    def cost(params, states):
+        return states.food_edbl
+
+    @staticmethod
+    def run_step(inputs, outputs, params, states, data):
+        if states.food_edbl > params.max_food_edbl:
+           states.food_edbl = params.max_food_edbl
+        if states.food_edbl < 0:
+            raise Exception("food_edbl < 0")
+
+
+
+class NutrientStorage:
+    definition = {
+        "name": "nutrient_storage",
+        "description": """
             These are the nutrients within soil or
-            hydroponic system"""
-
-    def storage_states(self):
-        return [
-            ModelState(
+            hydroponic system""",
+        "states": [
+            dict(
                 key="solid_n",
                 units="kg",
-                value=100  # TODO: This number does not seem realistic
+                value=1000
             ),
-            ModelState(
+            dict(
                 key="solid_p",
                 units="kg",
-                value=100  # TODO: This number does not seem realistic
+                value=1000
             ),
-            ModelState(
+            dict(
                 key="solid_k",
                 units="kg",
-                value=100  # TODO: This number does not seem realistic
-            )
-        ]
-
-    def storage_maximums(self):
-        return dict(solid_n=1000, solid_k=1000, solid_p=1000)
-
-
-class EnergyStorage(StorageModel):
-
-    def additional_setup(self):
-        self.name = "energy_storage"
-        # NOTE: This basic battery model will probably need to be overriden
-        self.params = [
-            ModelParam(
-                key="mass",
-                label="Battery Mass",
-                description="Mass of battery electrical system",
-                units="kg",
-                value=226.796,
-                notes="not sure about this",
-            ),
-            ModelParam(
-                key="volume",
-                label="Battery Volume",
-                description="Volume of battery electrical system",
-                units="m3",
-                value=0.368,
-                notes="not sure about this",
-            )
-        ]
-
-    def storage_states(self):
-        # Think about immutable states. Ex: battery volume / mass
-        return [
-            ModelState(
-                key="enrg_kwh",
-                units="kwh",
                 value=1000
             )
+        ],
+        "params": [
+            dict(
+                key="max_solid_n",
+                units="kg",
+                value=1000,
+            ),
+            dict(
+                key="max_solid_p",
+                units="kg",
+                value=1000,
+            ),
+            dict(
+                key="max_solid_k",
+                units="kg",
+                value=1000,
+            )
         ]
+    }
 
-    def storage_maximums(self):
-        return dict(enrg_kwh=1000)
+    @staticmethod
+    def run_step(inputs, outputs, params, states, data):
+        if states.solid_p > params.max_solid_p:
+           states.solid_p = params.max_solid_p
+        if states.solid_p < 0:
+            raise Exception("solid_p < 0")
+
+        if states.solid_n > params.max_solid_n:
+           states.solid_n = params.max_solid_n
+        if states.solid_n < 0:
+            raise Exception("solid_n < 0")
+
+        if states.solid_k > params.max_solid_k:
+           states.solid_k = params.max_solid_k
+        if states.solid_k < 0:
+            raise Exception("solid_k < 0")
+

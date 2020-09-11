@@ -1,27 +1,34 @@
-from modelflow.modelflow import Model, ModelParam
-
-
-class NuclearReactor(Model):
-    def setup(self):
+class NuclearReactor:
+    definition = {
         # TODO: Think of naming like kilopower instead
-        self.name = "nuclear_reactor"
-
-        self.params = [
-            ModelParam(
+        "name": "nuclear_reactor",
+        "scale_max": 10,
+        "params": [
+            dict(
                 key="max_kw_ac",
-                units="kw", # (Doesn't matter if kwh since hour hard coded currently)
+                units="kw",
                 value=40,
                 source="FAKE"
+            ),
+            dict(
+                key="mass",
+                units="kg",
+                value=1500,
+                source="https://en.wikipedia.org/wiki/Kilopower",
+                notes="The space rated 10 kWe Kilopower for Mars is expected to mass 1500 kg in total (with a 226 kg core) and contain 43.7 kg of U235"
             )
-        ]
-
-        self.states = [
-        ]
-
-
-        self.linked_output_states = [
+        ],
+        "states": [],
+        "linked_output_states": [
             "kwh_for_battery"
         ]
+    }
 
-    def run_step(self, inputs, outputs, params, states):
+    @staticmethod
+    def cost(params, states):
+        return params.mass
+
+
+    @staticmethod
+    def run_step(inputs, outputs, params, states, data):
         outputs.kwh_for_battery = params.max_kw_ac

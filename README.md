@@ -57,3 +57,32 @@ Note: You need to run this from the modelflow root, not cd into examples
 # Ideas
 - Replace complicated agents with neural networks trained on parameter sweeps
 - Create a playground for reinforcement learning algorithms to explore
+- Think about centralized control vs decentralized control
+
+# Performance Optimization Agent Constraints
+- No f formatted strings
+- No inner functions
+- No subclassing agents (yet)
+- Custom imports not currently handled
+
+
+# Notes:
+- Create a simulation platform that is fast enough that it can efficiently work with networks
+- Do we treat simulation as simply a loss function which tells us whether the initial parameters / model scaling was correct. If we actually need independent agents then does this destroy the speed benefits of the code gen? We can just have a for loop for each model and then the scale can be changed. Note: We can have a mode where outputs are saved and then a mode where just constraints are checked. We can have early fails for bad scenarios.
+
+https://github.com/paulknysh/blackbox
+https://github.com/paulknysh/blackbox/blob/master/blackbox.py
+https://arxiv.org/pdf/1605.00998.pdf
+
+Questions:
+- Find the optimal set and scale of objects that maximizes chance of survival
+
+Inputs:
+-max mass
+-max vol
+- people
+- every_object scale
+
+Outputs:
+- all params
+- all scales

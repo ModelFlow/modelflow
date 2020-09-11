@@ -5,7 +5,7 @@ import argparse
 import pathlib
 sys.path.insert(0, "../..")
 from models import list_models
-from modelflow.modelflow import run_sim
+from modelflow.modelflow import run_sim, run_minimization
 
 import pandas as pd
 import time
@@ -30,14 +30,21 @@ def main(args):
         scenario = json.load(f)
 
     models = list_models()
-    all_outputs = run_sim(scenario, models)
-    df = pd.DataFrame(all_outputs)
-    df.to_csv(args.output,index=False)
-    print(f"Model ran in {time.time() - t0:.2f} seconds. Saved {args.output}")
+
+    if args.minimization:
+        print("Running minimization")
+        run_minimization(scenario, models)
+    else:
+        df = run_sim(scenario, models)
+        # df = pd.DataFrame(all_outputs)
+        df.to_csv(args.output,index=False)
+        print(f"Model ran in {time.time() - t0:.2f} seconds. Saved {args.output}")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Mars Simulation')
     parser.add_argument('-s', '--scenario', type=str, help='Name or path to scenario to run', required=True)
     parser.add_argument('-o', '--output', type=str, default='output.csv', help='Path of the csv to output.')
+    parser.add_argument('-m', '--minimization', action='store_true', help='Run minimization sweep')
+
     args = parser.parse_args()
     main(args)
