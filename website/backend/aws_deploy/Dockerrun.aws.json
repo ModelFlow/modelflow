@@ -1,7 +1,8 @@
 {
   "AWSEBDockerrunVersion": "1",
   "Image": {
-    "Name": "805888055623.dkr.ecr.us-west-2.amazonaws.com/modelflow:latest"
+    "Name": "805888055623.dkr.ecr.us-west-2.amazonaws.com/modelflow",
+    "Update": "true"
   },
   "Ports": [
     {

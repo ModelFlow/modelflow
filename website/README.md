@@ -34,6 +34,7 @@ npm start
 
 ```
 cd ...modelflow/website/frontend
+export REACT_APP_API_URL=/api
 npm run build
 aws s3 sync build/ s3://modelflow-frontend
 ```
@@ -47,7 +48,7 @@ https://aws.amazon.com/premiumsupport/knowledge-center/cloudfront-serve-static-w
 ### How to deploy
 
 ```
-cd ...modelflow/website/backend
+cd to root of modelflow
 
 aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 805888055623.dkr.ecr.us-west-2.amazonaws.com
 
@@ -57,7 +58,12 @@ docker tag modelflow:latest 805888055623.dkr.ecr.us-west-2.amazonaws.com/modelfl
 
 docker push 805888055623.dkr.ecr.us-west-2.amazonaws.com/modelflow:latest
 
-eb deploy --version 4
+cd ...website/backend/aws_deploy
+
+For first time:
+eb init
+
+eb deploy
 
 ```
 
@@ -79,3 +85,5 @@ Any input change causes request new data:
 - Single x(timestamps), all other selected Y
 - Zoom in on one shows all
 
+# TODO
+- Make a staging environment

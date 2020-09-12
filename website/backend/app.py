@@ -17,11 +17,11 @@ CORS(app)
 # TODO: Save and create scenarios
 # - Think about the storage of scenarios and models
 
-@app.route('/health')
+@app.route('/api/health')
 def health():
     return "ok"
 
-@app.route('/get_params')
+@app.route('/api/get_params')
 def get_params_route():
     scenario_name = request.args.get("scenario", "baseline")
     scenario = get_scenario(scenario_name)
@@ -31,7 +31,7 @@ def get_params_route():
     return dict(params=get_params(scenario, models))
 
 
-@app.route('/run_sim', methods=["POST"])
+@app.route('/api/run_sim', methods=["POST"])
 def run_sim_route():
     body = json.loads(request.data)
     scenario_name = body.get("scenario", "baseline")
