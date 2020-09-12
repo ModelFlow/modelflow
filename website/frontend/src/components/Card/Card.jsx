@@ -31,7 +31,6 @@ class Card extends Component {
     if (!modifiers.matchesPredicate) {
       return null;
     }
-    console.log(item, modifiers.active);
     return (
       <MenuItem
         active={modifiers.active}
@@ -82,7 +81,12 @@ class Card extends Component {
           layout={{
             width: this.size.width,
             height: this.size.height,
-            margin: { t: 20, b: 55, l: 40, r: 15 },
+            margin: {
+              t: 20,
+              b: 55,
+              l: 40,
+              r: 15,
+            },
           }}
         />
       );

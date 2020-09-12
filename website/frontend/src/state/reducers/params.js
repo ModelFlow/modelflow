@@ -13,4 +13,4 @@ export default function reduce(state = initialState, action = {}) {
     default:
       return state;
   }
-};
+}
