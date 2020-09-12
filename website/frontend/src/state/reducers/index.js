@@ -1,4 +1,7 @@
-import params from "./params"
-import sim from "./sim"
+import params from './params';
+import sim from './sim';
 
-export { params, sim };
+export {
+  params,
+  sim,
+};

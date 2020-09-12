@@ -1,16 +1,16 @@
 const initialState = {
-  params: []
-}
+  params: [],
+};
 
 export default function reduce(state = initialState, action = {}) {
   switch (action.type) {
-    case "PARAMS_SET_PARAMS": {
+    case 'PARAMS_SET_PARAMS': {
       return {
         ...state,
-        params: action.params
-      }
+        params: action.params,
+      };
     }
     default:
-      return state
+      return state;
   }
-}
+};

@@ -1,7 +1,7 @@
-var Plotly = require("plotly.js/lib/core")
+var Plotly = require('plotly.js/lib/core')
 
 Plotly.register([
-  requre("plotly.js/lib/scatter")
-])
+  require('plotly.js/lib/scatter')
+]);
 
 modules.exports = Plotly;

@@ -214,8 +214,6 @@ def run_sim(scenario, models, sim_dir):
             raise Exception(f"{model['model']} not in model list!")
         model['model'] = model_map[model['model']]
 
-    print(scenario['params'])
-
     params_dict = {}
     initial_states_dict = {}
     data_dict = {}
