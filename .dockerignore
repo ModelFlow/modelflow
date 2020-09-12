@@ -1,3 +1,6 @@
 .git
 .vscode
 frontend
+**/node_modules
+**/frontend
+**/__pycache__
