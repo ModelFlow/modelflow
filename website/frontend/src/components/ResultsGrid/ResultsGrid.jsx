@@ -3,44 +3,23 @@ import { connect } from 'react-redux';
 import './ResultsGrid.css';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import Card from '../Card/Card';
+import actions from '../../state/actions';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
 class ResultsGrid extends Component {
-  constructor() {
-    super();
-    this.state = {
-      cardInfos: {
-        a: {
-          type: 'state_enrg_kwh',
-        },
-        b: {
-          type: 'state_dc_kwh',
-        },
-      },
-      layout: {
-        lg: [
-          { i: 'a', x: 0, y: 0, w: 6, h: 8 },
-          { i: 'b', x: 6, y: 0, w: 6, h: 6 },
-        ],
-      },
-    };
-  }
-
-  componentDidMount() {}
-
   onLayoutChange = (newLayout) => {
-    this.setState({ layout: { lg: newLayout } });
+    const { updateLayout } = this.props;
+    updateLayout(newLayout);
   };
 
   render() {
-    const { results } = this.props;
-    const { layout, cardInfos } = this.state;
-
+    const { layout, cards } = this.props;
+    // Note: Although not used, passing in item to Card is needed
+    // to trigger a rerender when the card is resized
     return (
       <ResponsiveGridLayout
         layouts={layout}
-        className="layoutsss"
         rowHeight={30}
         measureBeforeMount
         isResizable
@@ -51,7 +30,7 @@ class ResultsGrid extends Component {
       >
         {layout.lg.map((item) => (
           <div key={item.i}>
-            <Card item={item} cardInfo={cardInfos[item.i]} results={results} />
+            <Card uuid={item.i} item={item} />
           </div>
         ))}
       </ResponsiveGridLayout>
@@ -59,10 +38,14 @@ class ResultsGrid extends Component {
   }
 }
 
-const mapDispatchToProps = {};
+const mapDispatchToProps = {
+  updateLayout: actions.resultViews.updateLayout,
+};
 
 const mapStateToProps = (state) => ({
   results: state.sim.results,
+  cards: state.resultViews.cards,
+  layout: state.resultViews.layout,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ResultsGrid);

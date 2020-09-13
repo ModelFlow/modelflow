@@ -21,12 +21,10 @@ export const updateParam = (index, value) => async (dispatch, getState) => {
 };
 
 export const getParams = () => async (dispatch) => {
-  const {
-    data,
-  } = await axios.get(`${process.env.REACT_APP_API_URL}/get_params`);
-  const {
-    params,
-  } = data;
+  const { data } = await axios.get(
+    `${process.env.REACT_APP_API_URL}/get_params`,
+  );
+  const { params } = data;
 
   dispatch({
     type: 'PARAMS_SET_PARAMS',

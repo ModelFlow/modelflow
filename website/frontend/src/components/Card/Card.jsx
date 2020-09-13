@@ -1,27 +1,21 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import Plotly from 'plotly.js-basic-dist';
 import './Card.css';
 import { Button, MenuItem } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import createPlotlyComponent from 'react-plotly.js/factory';
+import actions from '../../state/actions';
 
 const Plot = createPlotlyComponent(Plotly);
 
 class Card extends Component {
   size = { width: 0, height: 0 };
 
-  constructor() {
-    super();
-    this.state = { selectedItem: null };
-  }
-
-  componentDidMount() {
-    const { cardInfo } = this.props;
-    this.setState({ selectedItem: cardInfo.type });
-  }
-
-  handleValueChange = (selectedItem) => {
-    this.setState({ selectedItem });
+  handleValueChange = (newOutputKey) => {
+    // this.setState({ selectedItem });
+    const { uuid, updateCardOutputKey } = this.props;
+    updateCardOutputKey(uuid, newOutputKey);
   };
 
   filterItem = (query, item) =>
@@ -42,11 +36,16 @@ class Card extends Component {
     );
   };
 
+  deleteClicked = () => {
+    const { uuid, removeCard } = this.props;
+    removeCard(uuid);
+  };
+
   render() {
-    const { results, cardInfo } = this.props;
-    // TODO: This should eventually be a prop
-    const { selectedItem } = this.state;
-    console.log('rendering:', cardInfo.type, selectedItem);
+    const { results, cards, uuid } = this.props;
+    const selectedOutputKey = cards[uuid].outputKey;
+    const { output_states } = results;
+
     if (this.contentRef) {
       const { width, height } = this.contentRef.getBoundingClientRect();
       this.size.width = width;
@@ -54,11 +53,12 @@ class Card extends Component {
     }
     let plot = null;
     let selector = null;
-    if (this.size.width && selectedItem && results && results.output_states) {
+    let deleteButton = null;
+    if (this.size.width && results && output_states) {
       selector = (
         <Select
-          items={Object.keys(results.output_states)}
-          activeItem={selectedItem}
+          items={Object.keys(output_states)}
+          activeItem={selectedOutputKey}
           noResults={<MenuItem disabled text="No results." />}
           onItemSelect={this.handleValueChange}
           itemRenderer={this.renderItem}
@@ -67,31 +67,44 @@ class Card extends Component {
           <Button small icon="properties" />
         </Select>
       );
-      plot = (
-        <Plot
-          data={[
-            {
-              x: results.time,
-              y: results.output_states[selectedItem].data,
-              type: 'line',
-              mode: 'lines',
-              marker: { color: '#137cbd' },
-            },
-          ]}
-          layout={{
-            width: this.size.width,
-            height: this.size.height,
-            margin: {
-              t: 20,
-              b: 55,
-              l: 40,
-              r: 15,
-            },
-          }}
-        />
+      deleteButton = (
+        <Button small icon="delete" onClick={this.deleteClicked} />
       );
+      if (output_states.hasOwnProperty(selectedOutputKey)) {
+        plot = (
+          <Plot
+            data={[
+              {
+                x: results.time,
+                y: output_states[selectedOutputKey].data,
+                type: 'line',
+                mode: 'lines',
+                marker: { color: '#137cbd' },
+              },
+            ]}
+            layout={{
+              width: this.size.width,
+              height: this.size.height,
+              margin: {
+                t: 20,
+                b: 55,
+                l: 40,
+                r: 15,
+              },
+            }}
+          />
+        );
+      }
+      if (selectedOutputKey === 'none') {
+        plot = (
+          <div style={{ textAlign: 'center' }}>
+            <br />
+            Select a signal from the dropdown
+          </div>
+        );
+      }
     }
-
+    console.log(selectedOutputKey);
     return (
       <>
         <div
@@ -109,8 +122,17 @@ class Card extends Component {
           }}
         >
           <div className="card_header">
-            <span className="chart_title">{selectedItem}</span>
-            <span style={{ float: 'right', margin: '5px' }}>{selector}</span>
+            <span className="chart_title">{selectedOutputKey}</span>
+            <span
+              style={{ float: 'right', marginTop: '5px', marginRight: '5px' }}
+            >
+              {deleteButton}
+            </span>
+            <span
+              style={{ float: 'right', marginTop: '5px', marginRight: '3px' }}
+            >
+              {selector}
+            </span>
           </div>
           {plot}
         </div>
@@ -119,4 +141,14 @@ class Card extends Component {
   }
 }
 
-export default Card;
+const mapDispatchToProps = {
+  removeCard: actions.resultViews.removeCard,
+  updateCardOutputKey: actions.resultViews.updateCardOutputKey,
+};
+
+const mapStateToProps = (state) => ({
+  results: state.sim.results,
+  cards: state.resultViews.cards,
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(Card);
