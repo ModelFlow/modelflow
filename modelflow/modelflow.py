@@ -317,12 +317,21 @@ def run_sim(scenario, models, sim_dir):
         }
 
     times = list(range(len(list(output_states.values())[0]['data'])))
+    tsall1 = time.time()
     output = {
+        "stats": {
+            "generating_numba": should_gen,
+            "arg_cachepath": arg_cachepath,
+            "gen_path": gen_path,
+            "model": ts1 - ts0,
+            "total": tsall1 - tsall0,
+            "pre": ts0 - tsall0,
+            "post": tsall1 - ts1
+        },
         "cost": cost_and_outputs[0],
         "time": times,
         "output_states": output_states
     }
-    tsall1 = time.time()
     print(f"Model ran in {ts1 - ts0} total {tsall1 - tsall0} pre {ts0 - tsall0} post {tsall1 - ts1}")
     return output
 

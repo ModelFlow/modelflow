@@ -4,3 +4,5 @@ frontend
 **/node_modules
 **/frontend
 **/__pycache__
+**/args_cache.json
+**/generated.py
