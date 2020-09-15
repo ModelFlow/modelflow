@@ -17,6 +17,10 @@ CORS(app)
 # TODO: Save and create scenarios
 # - Think about the storage of scenarios and models
 
+@app.route('/')  # NOTE: This route is needed for health check
+def home():
+    return "ok"
+
 @app.route('/api/health')
 def health():
     return "ok"
