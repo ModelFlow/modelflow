@@ -1,13 +1,13 @@
 [![Build Status](https://travis-ci.org/ModelFlow/modelflow.svg?branch=master)](https://travis-ci.org/ModelFlow/modelflow)
 
 # ModelFlow
-Framework and UI for arbitrary agent based models
+Python framework and web interface for creating and sharing agent based models.
 
-![](screenshot.png)
-*Simple Mars Base Example Results Visualized in Tableau https://public.tableau.com/profile/adam.raudonis#!/vizhome/MarsBaseBaselineScenario/Dashboard*
+![](screenshots/modelflow_2020_09_20.png)
+*Simple Mars Base Example Results Visualized in Experimental Modelflow Interface https://modelflow.io*
 
-# Installation
-Please use python 3.6 or later
+## Installation
+Requires python 3.6 or later
 ```
 cd ..
 python3 -m venv venv
@@ -16,73 +16,41 @@ cd modelflow
 pip install -r requirements.txt
 ```
 
-# Running an Example
-To run Mars example:
+## Running an example in terminal
+To run the Mars baseline example:
 ```
 cd examples/mars
 python main.py --scenario baseline
 ```
 
-# Example Testing
-To run tests:
+## Running in website locally
+(This currently is hard coded for the Mars example) In one terminal window after installing [npm](https://nodejs.org/en/) run:
+```
+cd website/frontend
+npm install
+npm start
+```
+In a second terminal window after following steps under installation, run:
+```
+cd website/backend
+python app.py
+```
+In a browser open http://localhost:3000
+
+
+## Testing
+To run tests (from the modelflow root dir):
 ```
 pytest
 ```
-Note: You need to run this from the modelflow root, not cd into examples
 
-# TODO
-- Figure out how to elegantly store modeling scenarios (started serializing confits)
-- See if we need to store the delta outputs from each agent
-- Add PEP8 linting requirement git hook
-- Support hierarchy and containers for models
-- Come up with format for serializing scenario configs and agents
-- Validate all serialized inputs through jsonschema
-- Audit the flow of all units throughout model
-- Support different time spans (not just 1hr hard coded)
-- Add support for scaling models in scenarios
-- Create local website that automatically documents parameters
-- Create png graphical visualization of flows
-- Add utility for easily running parameter sweeps
-- Create local website to automatically edit parameters
-- Create local website to visualize flows and potentially edit
-- Look into cython for agents and optimizing speed
-- Figure out a way to have certain inputs scaled on other inputs. i.e. lighting determined by habitat volume. Scale atmosphere by volume.
-- Add warnings and events
-- Add perhaps native support for descrete event simulation
-- Add type hints to all functions
-- Make it easy to be able to swap models
-- Think about whether we want formal support for setting initial values
-- Add documentation to all public modelflow methods
+## Model Performance
+Pure Python is extremely slow with some basic examples taking roughly 0.5 seconds for a single run. Therefore, Modelflow supports using [Numba](https://numba.pydata.org/) to automatically convert all the models to C which can lead to a *100x speed up*. This does come with a tradeoff of complexity and certain limitations on what you can do inside model run functions. Currently all models are combined into a single function in a temporary file called `generated.py` allowing Numba to convert it to C. This process takes 3-4 seconds, but subsequent calls take from 0.1 to 0.0008 seconds depending on how you measure. This speed is important if you are trying to sweep across many parameterizations. 
 
-# Ideas
-- Replace complicated agents with neural networks trained on parameter sweeps
-- Create a playground for reinforcement learning algorithms to explore
-- Think about centralized control vs decentralized control
+## Inspiration
+- Wolfram Alpha System Modeler: https://www.wolfram.com/system-modeler/examples/energy/energy-consumption-model.html
+- SIMOC (Mars Habitat Simulation): https://ngs.simoc.space/entry
 
-# Performance Optimization Agent Constraints
-- No f formatted strings
-- No inner functions
-- No subclassing agents (yet)
-- Custom imports not currently handled
+## Notes
+See [notes.md](notes.md) for TODOs and ideas
 
-
-# Notes:
-- Create a simulation platform that is fast enough that it can efficiently work with networks
-- Do we treat simulation as simply a loss function which tells us whether the initial parameters / model scaling was correct. If we actually need independent agents then does this destroy the speed benefits of the code gen? We can just have a for loop for each model and then the scale can be changed. Note: We can have a mode where outputs are saved and then a mode where just constraints are checked. We can have early fails for bad scenarios.
-
-https://github.com/paulknysh/blackbox
-https://github.com/paulknysh/blackbox/blob/master/blackbox.py
-https://arxiv.org/pdf/1605.00998.pdf
-
-Questions:
-- Find the optimal set and scale of objects that maximizes chance of survival
-
-Inputs:
--max mass
--max vol
-- people
-- every_object scale
-
-Outputs:
-- all params
-- all scales

@@ -3,96 +3,25 @@ import os
 import pathlib
 import copy
 import json
-import numpy as np
 import re
 import inspect
 import time
 from types import SimpleNamespace
 import pandas as pd
-from datetime import timedelta, datetime
 from . import blackbox as bb
 from math import log10, floor
 
-def obj(**kwargs):
-    return SimpleNamespace(**kwargs)
-
-
-# class Model():
-#     def __init__(self):
-#         self.setup()
-
-#         if hasattr(self, 'params'):
-#             _params = {}
-#             for param in self.params:
-#                 if not isinstance(param, ModelParam):
-#                     raise Exception("Invalid model param")
-#                 _params[param.key] = param.value
-#                 if param.value is None:
-#                     raise Exception(f"Model {self.name} param {param.key} cannot be None")
-#             self._params = SimpleNamespace(**_params)
-#         else:
-#             self._params = None
-
-#         if hasattr(self, 'states'):
-#             for state in self.states:
-#                 setattr(self, state.key, state.value)
-
-#     def setup():
-#         raise NotImplementedError("Must Override")
-
-
-# class ModelParam():
-#     def __init__(self,
-#                  key=None,
-#                  label=None,
-#                  description=None,
-#                  units=None,
-#                  minimum=0,
-#                  maximum=0,
-#                  value=None,
-#                  notes=0,
-#                  required=True,
-#                  source="",
-#                  default_value=None):
-#         self.key = key
-#         self.label = label
-#         self.description = description
-#         self.units = units
-#         self.minimum = minimum
-#         self.maximum = maximum
-#         self.value = value
-#         self.notes = notes
-#         self.source = source
-#         self.required = required
-#         self.default_value = None
-
-
-# class ModelState():
-#     def __init__(self,
-#                  key=None,
-#                  label=None,
-#                  description=None,
-#                  units=None,
-#                  value=0,
-#                  notes=0,
-#                  default_value=None):
-#         self.key = key
-#         self.label = label
-#         self.description = description
-#         self.units = units
-#         self.value = value
-#         self.notes = notes
-#         self.default_value = None
 
 class Sweep():
-    
+
     def __init__(self, scenario, data):
         self.scenario = scenario
         self.data = data
 
     def run_sweep(self, params):
         rstep = __import__('generated').rstep
-        num_steps = self.scenario['run_for_steps'] # TODO: Figure out a way to pass this through
+        # TODO: Figure out a way to pass this through
+        num_steps = self.scenario['run_for_steps']
         max_cost = 9999999
         cost = max_cost
         t0 = time.time()
@@ -102,6 +31,7 @@ class Sweep():
         except Exception as e:
             print(f"SIM ERROR {e} in {time.time() - t0}")
         return cost
+
 
 def get_params(scenario, models):
     model_map = {}
@@ -122,7 +52,8 @@ def get_params(scenario, models):
         model = model_info['model']
         if 'params' in model.definition:
             for param in model.definition['params']:
-                param['new_key'] = model.__class__.__name__+ '_params_' + param['key']
+                param['new_key'] = model.__class__.__name__ + \
+                    '_params_' + param['key']
                 param['agent'] = model.__class__.__name__
                 param['index'] = i
                 all_params.append(param)
@@ -161,7 +92,8 @@ def run_minimization(scenario, models):
         model = model_info['model']
         if 'params' in model.definition:
             for param in model.definition['params']:
-                params_dict[model.__class__.__name__+ '_params_' + param['key']] = param
+                params_dict[model.__class__.__name__ +
+                            '_params_' + param['key']] = param
 
         if hasattr(model, 'load_data'):
             print(f"inside has data {model.__class__.__name__}")
@@ -176,8 +108,8 @@ def run_minimization(scenario, models):
     args = generated_numba(
         scenario['models'],
         scenario['run_for_steps'],
-        None, # TODO: states_override
-        None, # TODO: params_override
+        None,  # TODO: states_override
+        None,  # TODO: params_override
         no_outputs=True,
         is_sweep=True
     )
@@ -191,11 +123,11 @@ def run_minimization(scenario, models):
     # Battery_params_ac_capacity_kw,Battery_params_dc_capacity_kwh,FoodStorage_params_max_food_edbl,PVInverter_params_max_kw_ac,SolarArray_params_scaling_factor
 
     s = Sweep(scenario, data)
-    best_params = bb.search_min(f = s.run_sweep,  # given function
-                            domain = parameter_ranges,
-                            budget = 1000,  # total number of function calls available
-                            batch = 4,  # number of calls that will be evaluated in parallel
-                            resfile = 'bb2.csv')
+    best_params = bb.search_min(f=s.run_sweep,  # given function
+                                domain=parameter_ranges,
+                                budget=1000,  # total number of function calls available
+                                batch=4,  # number of calls that will be evaluated in parallel
+                                resfile='bb2.csv')
 
     # TODO: Add cost
     print("Optimal Parameters are:")
@@ -221,7 +153,8 @@ def run_sim(scenario, models, sim_dir):
         model = model_info['model']
         if 'params' in model.definition:
             for param in model.definition['params']:
-                params_dict[model.__class__.__name__+ '_params_' + param['key']] = param
+                params_dict[model.__class__.__name__ +
+                            '_params_' + param['key']] = param
 
         if hasattr(model, 'load_data'):
             print(f"inside has data {model.__class__.__name__}")
@@ -273,8 +206,8 @@ def run_sim(scenario, models, sim_dir):
         args = generated_numba(
             scenario['models'],
             scenario['run_for_steps'],
-            None, # TODO: states_override
-            None, # TODO: params_override
+            None,  # TODO: states_override
+            None,  # TODO: params_override
             no_outputs=False,
             is_sweep=False
         )
@@ -335,9 +268,8 @@ def run_sim(scenario, models, sim_dir):
     print(f"Model ran in {ts1 - ts0} total {tsall1 - tsall0} pre {ts0 - tsall0} post {tsall1 - ts1}")
     return output
 
-
     # try:
-        
+
     #     print(f"Ran in {time.time() - t0} {cost}")
     # except Exception as e:
     #     print(f"SIM ERROR {e} in {time.time() - t0}")
@@ -364,7 +296,6 @@ def run_sim(scenario, models, sim_dir):
     # df1['datetime'] = final_col
     # df1.to_csv('nb_test.csv')
 
-
     # # TODO: This is inelegant
     # df = run_simulation_inner(scenario['models'], scenario['run_for_steps'],
     #                             scenario.get('states', {}), scenario.get('params', {}))
@@ -376,22 +307,22 @@ def run_sim(scenario, models, sim_dir):
     # df.to_csv('py_test.csv')
 
 
-def run_test_step(model, inputs, outputs):
+# def run_test_step(model, inputs, outputs):
 
-    # for state in model.states:
-    #     setattr(model, state.key, state.value)
+#     # for state in model.states:
+#     #     setattr(model, state.key, state.value)
 
-    # if hasattr(model, 'params'):
-    #     _params = {}
-    #     for param in model.params:
-    #         _params[param.key] = param.value
-    #         if param.value is None:
-    #             raise Exception(f"Model {model.name} param {param.key} cannot be None")
-    #     model._params = SimpleNamespace(**_params)
-    # else:
-    #     model._params = None
+#     # if hasattr(model, 'params'):
+#     #     _params = {}
+#     #     for param in model.params:
+#     #         _params[param.key] = param.value
+#     #         if param.value is None:
+#     #             raise Exception(f"Model {model.name} param {param.key} cannot be None")
+#     #     model._params = SimpleNamespace(**_params)
+#     # else:
+#     #     model._params = None
 
-    model.run_step(inputs, outputs, model._params, model)
+#     model.run_step(inputs, outputs, model._params, model)
 
 
 def setup_models(model_infos):
@@ -487,17 +418,18 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
 
             param_strs = re.findall(r'params\.\w*', clines)
             for param_str in param_strs:
-                new_name = model_name + "_" + param_str.replace(".","_")
+                new_name = model_name + "_" + param_str.replace(".", "_")
                 clines = clines.replace(param_str, new_name)
 
             clines = clines.replace('    return ', 'all_costs += ')
             all_costs += f'    # {model_name} cost\n'
             all_costs += clines
 
-        # match all inputs. , outputs. , states.
+        # match all io. , states.
+        # TODO: io. seems like something that can be accidentally
+        # used in something else, so make a more robust setup.
         states_strs = re.findall(r'states\.\w*', flines)
-        states_strs += re.findall(r'inputs\.\w*', flines)
-        states_strs += re.findall(r'outputs\.\w*', flines)
+        states_strs += re.findall(r'io\.\w*', flines)
         new_states_set = set(["state_terminate_sim"])
         for state_str in states_strs:
             state_name = state_str.split('.')[1]
@@ -521,7 +453,7 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
             if param_name not in params_dict[model_name]:
                 raise Exception(f"Found param not in dict {param_name}")
 
-            new_name = param_str.replace(".","_")
+            new_name = param_str.replace(".", "_")
             new_name = model_name + "_" + new_name
             new_params_set.add(new_name)
             all_params[new_name] = params_dict[model_name][param_name]
@@ -553,7 +485,6 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
 
         all_olines += olines
 
-
     # all_kwargs = []
     # for k, v in all_dicts.items():
     #     all_kwargs.append("{key}={value}")
@@ -573,7 +504,7 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
     only_states = []
     all_state_keys = sorted(list(all_states.keys()))
     for k in all_state_keys:
-        only_states.append(k.replace('state_',''))
+        only_states.append(k.replace('state_', ''))
         if not no_outputs:
             all_output_keys.append(k+"_out")
         if not is_sweep:
@@ -716,7 +647,6 @@ def run_simulation_inner(model_infos, num_steps, states_override, params_overrid
 
     #     setattr(name_model_map[model_name]._params,key, value)
 
-    
     data_dict = {}
     for model_info in model_infos:
         model = model_info['model']
@@ -738,9 +668,36 @@ def run_simulation_inner(model_infos, num_steps, states_override, params_overrid
             toutputs[key] = value
         all_outputs.append(toutputs)
     print(time.time() - t0)
-    return pd.DataFrame(all_outputs,columns=list(sorted(all_outputs[0].keys())))
+    return pd.DataFrame(all_outputs, columns=list(sorted(all_outputs[0].keys())))
 
-def round_sig(x, sig=2): 
+
+class ModelUnitTest():
+    def setup_model(self, model):
+        self.model = model
+        self.io = SimpleNamespace()
+        self.params = {}
+        if 'params' in model.definition:
+            for params in model.definition['params']:
+                self.params[params['key']] = params['value']
+        self.params = SimpleNamespace(**self.params)
+
+        self.states = {}
+        if 'states' in model.definition:
+            for state in model.definition['states']:
+                self.states[state['key']] = state['value']
+        self.states = SimpleNamespace(**self.states)
+        self.data = []
+
+    def run_step(self):
+        self.model.run_step(self.io, self.params, self.states, self.data)
+
+
+
+def obj(**kwargs):
+    return SimpleNamespace(**kwargs)
+
+
+def round_sig(x, sig=2):
     if x == 0:
         return 0
     return round(x, sig-int(floor(log10(abs(x))))-1)

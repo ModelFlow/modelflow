@@ -31,7 +31,7 @@ class WaterStorage:
 
 
     @staticmethod
-    def setup(inputs, outputs, params, states, data):
+    def setup(io, params, states, data):
         states.h2o_potb = params.max_h2o_potb
 
     @staticmethod
@@ -39,7 +39,7 @@ class WaterStorage:
         return states.h2o_potb
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
+    def run_step(io, params, states, data):
         if states.h2o_potb > params.max_h2o_potb:
            states.h2o_potb = params.max_h2o_potb
         if states.h2o_potb < 0:
@@ -74,7 +74,7 @@ class WasteStorage:
     }
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
+    def run_step(io, params, states, data):
         if states.h2o_urin < 0:
             raise Exception("h2o_urin < 0")
 
@@ -83,6 +83,7 @@ class WasteStorage:
 
         if states.solid_waste < 0:
             raise Exception("solid_waste < 0")
+
 
 class FoodStorage:
 
@@ -108,7 +109,7 @@ class FoodStorage:
 
 
     @staticmethod
-    def setup(inputs, outputs, params, states, data):
+    def setup(io, params, states, data):
         states.food_edbl = params.max_food_edbl
 
     @staticmethod
@@ -116,12 +117,11 @@ class FoodStorage:
         return states.food_edbl
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
+    def run_step(io, params, states, data):
         if states.food_edbl > params.max_food_edbl:
            states.food_edbl = params.max_food_edbl
         if states.food_edbl < 0:
             raise Exception("food_edbl < 0")
-
 
 
 class NutrientStorage:
@@ -167,7 +167,7 @@ class NutrientStorage:
     }
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
+    def run_step(io, params, states, data):
         if states.solid_p > params.max_solid_p:
            states.solid_p = params.max_solid_p
         if states.solid_p < 0:

@@ -78,8 +78,8 @@ class Battery:
         return params.dc_capacity_kwh / params.Wh_per_kg / 1000
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
-        if inputs.kwh_for_battery < 0:
+    def run_step(io, params, states, data):
+        if io.kwh_for_battery < 0:
             raise Exception("kwh into battery was negative")
 
         if states.enrg_kwh < 0:
@@ -93,14 +93,14 @@ class Battery:
         # Apply the full round trip battery efficiency for
         # energy added to the battery instead of part when added in
         # and part when added out
-        states.enrg_kwh += inputs.kwh_for_battery * params.roundtrip_efficiency
+        states.enrg_kwh += io.kwh_for_battery * params.roundtrip_efficiency
 
         if states.enrg_kwh > params.dc_capacity_kwh:
             states.enrg_kwh = params.dc_capacity_kwh
 
-        # TODO: This is really not great, but allos for multiple
-        # inputs to battery
-        inputs.kwh_for_battery = 0
+        # TODO: This is really not great, but allows for multiple
+        # io to battery
+        io.kwh_for_battery = 0
 
         # A hack to ensure not exceeding max kw
         states.enrg_kwh = min(states.enrg_kwh, params.ac_capacity_kw)

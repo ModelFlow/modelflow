@@ -111,7 +111,7 @@ class Human:
             ),
             dict(
                 key="heat_output_kwh",
-                description="Heating outputs of humans",
+                description="Heating io of humans",
                 units="kwh",
                 value=0.1,
                 source="google",
@@ -137,7 +137,7 @@ class Human:
     }
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
+    def run_step(io, params, states, data):
         # Dead humans don't do anything. Convert to food if canibal=True lol?!?
         if states.is_alive == 0:
             # TODO: Support different models with different terminations
@@ -158,9 +158,9 @@ class Human:
             print('died due to lack of food')
             return
 
-        atmosphere_total = inputs.atmo_o2 + inputs.atmo_co2 + inputs.atmo_n2
-        o2_concentration = inputs.atmo_o2 / atmosphere_total
-        if inputs.atmo_o2 == 0:
+        atmosphere_total = io.atmo_o2 + io.atmo_co2 + io.atmo_n2
+        o2_concentration = io.atmo_o2 / atmosphere_total
+        if io.atmo_o2 == 0:
             states.is_alive = 0
             print('died due to no o2')
             return
@@ -174,32 +174,32 @@ class Human:
             states.is_alive = 0
             print('died due to min_survivable_percent_atmo_o2')
             return
-        co2_concentration = inputs.atmo_co2 / atmosphere_total
+        co2_concentration = io.atmo_co2 / atmosphere_total
         if co2_concentration > params.max_survivable_percent_atmo_co2:
             states.is_alive = 0
             print('died due to too much co2')
             return
 
-        if inputs.atmo_temp > params.max_survivable_temperature:
+        if io.atmo_temp > params.max_survivable_temperature:
             states.is_alive = 0
             print('died due to too high temp')
             return
 
-        if inputs.atmo_temp < params.min_survivable_temperature:
+        if io.atmo_temp < params.min_survivable_temperature:
             states.is_alive = 0
             print('died due to too low temp')
             return
 
-        if inputs.food_edbl == 0:
+        if io.food_edbl == 0:
             states.hours_without_food += 1
-        inputs.food_edbl -= min(params.food_consumption, inputs.food_edbl)
+        io.food_edbl -= min(params.food_consumption, io.food_edbl)
 
-        if inputs.h2o_potb == 0:
+        if io.h2o_potb == 0:
             states.hours_without_water += 1
-        inputs.h2o_potb -= min(params.h2o_consumption, inputs.h2o_potb)
-        inputs.atmo_o2 -= min(params.atmo_o2_consumption, inputs.atmo_o2)
-        outputs.atmo_co2 += params.atmo_co2_output
-        outputs.atmo_h2o += params.atmo_h2o_output
-        outputs.h2o_urin += params.h2o_urin
-        outputs.h2o_waste += params.h2o_waste
-        outputs.heat_diff_kwh += params.heat_output_kwh
+        io.h2o_potb -= min(params.h2o_consumption, io.h2o_potb)
+        io.atmo_o2 -= min(params.atmo_o2_consumption, io.atmo_o2)
+        io.atmo_co2 += params.atmo_co2_output
+        io.atmo_h2o += params.atmo_h2o_output
+        io.h2o_urin += params.h2o_urin
+        io.h2o_waste += params.h2o_waste
+        io.heat_diff_kwh += params.heat_output_kwh

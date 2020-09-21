@@ -17,12 +17,12 @@ def main(args):
     # TODO: Figure out how to override params
     # TODO: Figure out how to sweep over params
     # TODO: Perhaps model model library path inside scenario?
+    abs_dir = pathlib.Path(__file__).parent.absolute()
     abs_path = ''
     if os.path.exists(args.scenario):
         abs_path = args.scenario
     else:
-        abs_path = pathlib.Path(__file__).parent.absolute()
-        abs_path = os.path.join(abs_path, 'scenarios', args.scenario)
+        abs_path = os.path.join(abs_dir, 'scenarios', args.scenario)
         if not '.json' in abs_path:
             abs_path += '.json'
     scenario = None
@@ -35,9 +35,12 @@ def main(args):
         print("Running minimization")
         run_minimization(scenario, models)
     else:
-        df = run_sim(scenario, models)
-        # df = pd.DataFrame(all_outputs)
-        df.to_csv(args.output,index=False)
+        outputs = run_sim(scenario, models, abs_dir)
+        df = pd.DataFrame()
+        for key, value in outputs['output_states'].items():
+            df[key] = value['data']
+
+        df.to_csv(args.output, index=False)
         print(f"Model ran in {time.time() - t0:.2f} seconds. Saved {args.output}")
 
 if __name__ == '__main__':

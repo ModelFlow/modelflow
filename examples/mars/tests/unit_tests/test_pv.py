@@ -1,27 +1,16 @@
 from models.pv import SolarArray
-from modelflow.modelflow import run_test_step, obj
+from modelflow.modelflow import ModelUnitTest
 
-class TestPV:
-    # TODO: Find a better place to put these fixtures
+
+class TestPV(ModelUnitTest):
     def setup_method(self):
-        """ setup any state tied to the execution of the given function.
-        Invoked for every test function in the module.
-        """
-        # Defaults
-        self.pv = SolarArray()
-        # TODO: improve this setting of params
-        self.pv.params = self.pv._params
-        self.outputs = obj(dc_kw=0)
+        pv = SolarArray()
+        self.setup_model(pv)
+        self.data = pv.load_data()
+        self.io.dc_kw = 0
 
-    def teardown_method(self):
-        """ teardown any state that was previously setup with a setup_function
-        call.
-        """
-        self.pv = None
-
-    def run_step(self):
-        run_test_step(self.pv, None, self.outputs)
-
-    def test_first_output_zero(self):
+    def test_first_output(self):
         self.run_step()
-        assert self.outputs.dc_kw == 0
+        assert self.io.dc_kw == self.data[0]
+
+    # TODO: Add tests that test data loading

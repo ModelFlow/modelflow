@@ -30,5 +30,5 @@ class NuclearReactor:
 
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
-        outputs.kwh_for_battery = params.max_kw_ac
+    def run_step(io, params, states, data):
+        io.kwh_for_battery = params.max_kw_ac

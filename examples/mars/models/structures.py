@@ -46,11 +46,11 @@ class HabitatStructure:
     }
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
-        inputs.atmo_co2 -= inputs.atmo_co2 * params.leak_rate
-        inputs.atmo_o2 -= inputs.atmo_o2 * params.leak_rate
-        inputs.atmo_n2 -= inputs.atmo_n2 * params.leak_rate
-        inputs.atmo_ch4 -= inputs.atmo_ch4 * params.leak_rate
-        inputs.atmo_h2 -= inputs.atmo_h2 * params.leak_rate
+    def run_step(io, params, states, data):
+        io.atmo_co2 -= io.atmo_co2 * params.leak_rate
+        io.atmo_o2 -= io.atmo_o2 * params.leak_rate
+        io.atmo_n2 -= io.atmo_n2 * params.leak_rate
+        io.atmo_ch4 -= io.atmo_ch4 * params.leak_rate
+        io.atmo_h2 -= io.atmo_h2 * params.leak_rate
 
-        outputs.heat_diff_kwh -= params.heat_loss_per_hour
+        io.heat_diff_kwh -= params.heat_loss_per_hour

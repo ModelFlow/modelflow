@@ -20,5 +20,5 @@ class Lighting:
         return 1
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
-        inputs.enrg_kwh -= min(params.enrg_kwh_use, inputs.enrg_kwh)
+    def run_step(io, params, states, data):
+        io.enrg_kwh -= min(params.enrg_kwh_use, io.enrg_kwh)

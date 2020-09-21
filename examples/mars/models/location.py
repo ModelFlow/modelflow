@@ -30,7 +30,7 @@ class Location:
     }
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
+    def run_step(io, params, states, data):
         if states.hours_since_midnight == 23:
             states.hours_since_midnight = 0
         else:

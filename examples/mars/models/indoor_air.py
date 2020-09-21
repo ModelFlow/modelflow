@@ -81,7 +81,7 @@ class IndoorAir:
         return states.atmo_o2 + states.atmo_co2 + states.atmo_n2 + states.atmo_h2o + states.atmo_ch4 + states.atmo_h2
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
+    def run_step(io, params, states, data):
         # TODO: Create a more accurate model that varies specific heat of air based on temperature, moisture
         mass_of_air = states.atmo_co2 + states.atmo_o2 + states.atmo_n2 + states.atmo_ch4
         KJ_required_to_heat_1_deg_c = mass_of_air * params.specific_heat_of_air
@@ -104,5 +104,16 @@ class IndoorAir:
         if states.atmo_h2 > max_val:
             states.atmo_h2 = max_val
 
-        # TODO: Add exceptions for going negative
+        if states.atmo_o2 < 0:
+            states.atmo_o2 = 0
+        if states.atmo_co2 < 0:
+            states.atmo_co2 = 0        
+        if states.atmo_n2 < 0:
+            states.atmo_n2 = 0        
+        if states.atmo_h2o < 0:
+            states.atmo_h2o = 0        
+        if states.atmo_ch4 < 0:
+            states.atmo_ch4 = 0
+        if states.atmo_h2 < 0:
+            states.atmo_h2 = 0
 

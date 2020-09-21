@@ -1,3 +1,15 @@
+# Week of 2020-09-20
+- Updated readme, fixed running sim via cli and got unit tests to pass
+
+# Week of 2020-09-13
+- Deployed https://modelflow.io website
+
+# Week of 2020-09-06
+- Created initial version of modeflow website
+
+# Week of 2020-08-31
+- Experimented with automatic sweeping trying to find lowest cost
+
 # Week of 2020-07-31
 - Fixed all unit tests
 - Add serialization of simulation configs

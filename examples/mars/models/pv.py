@@ -54,6 +54,6 @@ class SolarArray:
         return pd.read_csv(filepath).values[:,0]
 
     @staticmethod
-    def run_step(inputs, outputs, params, states, data):
-        outputs.dc_kwh = data[states.time_since_start % len(data)] * params.scaling_factor
+    def run_step(io, params, states, data):
+        io.dc_kwh = data[states.time_since_start % len(data)] * params.scaling_factor
         states.time_since_start += 1
