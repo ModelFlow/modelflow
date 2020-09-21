@@ -52,5 +52,5 @@ Pure Python is extremely slow with some basic examples taking roughly 0.5 second
 - SIMOC (Mars Habitat Simulation): https://ngs.simoc.space/entry
 
 ## Notes
-See [notes.md](notes.md) for TODOs and ideas
+See [NOTES.md](NOTES.md) for TODOs and ideas
 
