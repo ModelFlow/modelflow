@@ -25,6 +25,7 @@ class ResultsGrid extends Component {
         isResizable
         breakpoints={{ lg: 1200 }}
         cols={{ lg: 12 }}
+        draggableHandle=".card_header"
         onLayoutChange={this.onLayoutChange}
         compactType="vertical"
       >
