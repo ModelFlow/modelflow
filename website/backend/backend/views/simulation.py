@@ -3,27 +3,15 @@ import time
 import sys
 import json
 import pathlib
-from flask import Flask, request
+from backend import app
+from flask import request
 from flask_cors import CORS
 
 # TODO: DO NOT HARD CODE
-sys.path.insert(0, str(pathlib.Path(__file__).absolute().parents[2]))
+sys.path.insert(0, str(pathlib.Path(__file__).absolute().parents[4]))
 from examples.mars.models import list_models
 from modelflow.modelflow import get_params, run_sim
 
-app = Flask(__name__)
-CORS(app)
-
-# TODO: Save and create scenarios
-# - Think about the storage of scenarios and models
-
-@app.route('/')  # NOTE: This route is needed for health check
-def home():
-    return "ok"
-
-@app.route('/api/health')
-def health():
-    return "ok"
 
 @app.route('/api/get_params')
 def get_params_route():
@@ -59,7 +47,3 @@ def get_scenario(scenario_name):
     with open(abs_path, 'r') as f:
         scenario = json.load(f)
     return scenario
-
-
-if __name__ == '__main__':
-    app.run(debug=True, port=8080)
