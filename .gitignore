@@ -4,7 +4,7 @@
 *.csv
 *args_cache.json
 *generated.py
-
+*.gv*
 *.twbr
 
 # Byte-compiled / optimized / DLL files

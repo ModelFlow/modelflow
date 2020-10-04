@@ -135,7 +135,7 @@ def run_minimization(scenario, models):
         print(f"{args[:-1][i]}: {best_params[i]}")
 
 
-def run_sim(scenario, models, sim_dir):
+def run_sim(scenario, models, sim_dir, should_output_deltas=False):
     tsall0 = time.time()
     model_map = {}
     for model in models:
@@ -183,7 +183,10 @@ def run_sim(scenario, models, sim_dir):
     abs_dir = pathlib.Path(__file__).parent
 
     arg_cachepath = os.path.join(abs_dir, 'args_cache.json')
-    gen_path = os.path.join(abs_dir, 'generated.py')
+    should_output_deltas_str = ''
+    if should_output_deltas:
+        should_output_deltas_str = 'd'
+    gen_path = os.path.join(abs_dir, f'generated{should_output_deltas_str}.py')
     if os.path.exists(arg_cachepath) and os.path.exists(gen_path):
         file_list = []
         times = []
@@ -209,7 +212,8 @@ def run_sim(scenario, models, sim_dir):
             None,  # TODO: states_override
             None,  # TODO: params_override
             no_outputs=False,
-            is_sweep=False
+            is_sweep=False,
+            should_output_deltas=should_output_deltas
         )
 
         with open(arg_cachepath, 'w') as f:
@@ -228,7 +232,6 @@ def run_sim(scenario, models, sim_dir):
         else:
             raise Exception(f"Could not find {arg} in params or state dict")
 
-    print(abs_dir)
     sys.path.insert(0, str(abs_dir))
     rstep = __import__('generated').rstep
     num_steps = scenario['run_for_steps']
@@ -236,7 +239,11 @@ def run_sim(scenario, models, sim_dir):
     cost_and_outputs = rstep(num_steps, *params)
     ts1 = time.time()
 
-    all_state_keys = sorted(list(initial_states_dict.keys()))
+    all_state_keys = list(sorted(list(initial_states_dict.keys())))
+    new_deltas = []
+    for key in all_state_keys:
+        new_deltas.append(key+'_deltas')
+
     output_states = {}
     for k, v in zip(all_state_keys, cost_and_outputs[1:]):
         key_name = k.replace('initial_', '')
@@ -248,6 +255,14 @@ def run_sim(scenario, models, sim_dir):
             "label": key_name,
             "data": newdata
         }
+    if should_output_deltas:
+        delta_start = len(all_state_keys) + 1
+        key_outputs = cost_and_outputs[delta_start].split(',')
+        for i, key_output in enumerate(key_outputs):
+            output_states[key_output] = {
+                "label": key_output,
+                "data": cost_and_outputs[delta_start + i + 1].tolist()
+            }
 
     times = list(range(len(list(output_states.values())[0]['data'])))
     tsall1 = time.time()
@@ -307,6 +322,14 @@ def run_sim(scenario, models, sim_dir):
     # df.to_csv('py_test.csv')
 
 
+# def run_python_sim_with_produce_consume_outputs(scenario, models, sim_dir):
+# Collect all states
+# Collect all params
+# for each model:
+#     create copy of
+#     run each model
+  
+
 # def run_test_step(model, inputs, outputs):
 
 #     # for state in model.states:
@@ -335,7 +358,7 @@ def setup_models(model_infos):
     return SimpleNamespace(**all_state)
 
 
-def generated_numba(model_infos, num_steps, states_override, params_override, no_outputs=False, is_sweep=False):
+def generated_numba(model_infos, num_steps, states_override, params_override, no_outputs=False, is_sweep=False, should_output_deltas=False):
 
     out = "# Generated Code\n"
     # TODO: Handle imports better
@@ -390,6 +413,7 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
     function_lists = ''
     all_olines = ''
     all_costs = '\n    all_costs = 0\n'
+    output_deltas_to_save = []
     for model_info in model_infos:
         model = model_info['model']
         model_name = model.__class__.__name__
@@ -472,8 +496,19 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
 
         olines += f"def {model_name}({all_arg_strs}):\n"
 
+        if should_output_deltas:
+            for new_state in new_states_set:
+                if not 'state_terminate_sim' in new_state:
+                    # function_lists += f'        old_{new_state} = copy({new_state})\n'
+                    function_lists += f'        old_{model_name}_{new_state} = {new_state}\n'
         function_lists += f'        {new_state_strs} = {model_name}({all_out_strs})\n'
 
+        if should_output_deltas:
+            for new_state in new_states_set:
+                if not 'state_terminate_sim' in new_state:
+                    output_deltas_to_save.append(f'{model_name}_{new_state}_deltas')
+                    function_lists += f'        {model_name}_{new_state}_deltas[_i_] = {new_state} - old_{model_name}_{new_state}\n'
+            function_lists += '\n'
         # TODO: Ensure this isn't inside some text
         flines = flines.replace('return', f'return {new_state_strs}')
         newlines = []
@@ -550,6 +585,10 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
             out += f"    {k}_out = np.zeros(num_steps + 1)\n"
             out += f"    {k}_out[0] = initial_{k}\n"
             out += f"    {k} = initial_{k}\n"
+    
+    if should_output_deltas:
+        for k in output_deltas_to_save:
+            out += f"    {k} = np.zeros(num_steps + 1)\n"
 
     out += all_costs
 
@@ -569,7 +608,24 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
         for k in all_state_keys:
             out += f"        {k}_out[_i_ + 1] = {k}\n"
 
-        all_state_strs = ", ".join(all_output_keys)
+
+        if should_output_deltas:
+            # for k in output_deltas_to_save:
+            #     new_output_keys.append(k + "_deltas")
+
+            #     np.vstack((x,y))
+            delta_key_strs = ",".join(output_deltas_to_save)
+            out += f'    delta_key_strs = "{delta_key_strs}"\n'
+            # out += '    delta_values = np.array([])\n'
+            # for key in output_deltas_to_save:
+            #     out += f'    delta_values = np.vstack((delta_values,{key}))\n'
+            # out += '    delta_values = "hi"\n'
+            # out += f'    for key in delta_key_strs.split(","):\n'
+            # out += '        print(key)\n'
+            all_state_strs = ", ".join(all_output_keys + ["delta_key_strs"] + output_deltas_to_save)
+        else:
+            all_state_strs = ", ".join(all_output_keys)
+
         out += f"\n    return all_costs, {all_state_strs}\n"
 
     abs_dir = pathlib.Path(__file__).parent

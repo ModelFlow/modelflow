@@ -29,9 +29,8 @@ class Card extends Component {
       <MenuItem
         active={modifiers.active}
         key={item}
-        label={item}
         onClick={handleClick}
-        text={item}
+        text={item.replace('state_', '')}
       />
     );
   };
@@ -104,7 +103,6 @@ class Card extends Component {
         );
       }
     }
-    console.log(selectedOutputKey);
     return (
       <>
         <div
@@ -122,7 +120,9 @@ class Card extends Component {
           }}
         >
           <div className="card_header">
-            <span className="chart_title">{selectedOutputKey}</span>
+            <span className="chart_title">
+              {selectedOutputKey.replace('state_', '')}
+            </span>
             <span
               style={{ float: 'right', marginTop: '5px', marginRight: '5px' }}
             >
