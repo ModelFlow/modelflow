@@ -33,10 +33,9 @@ npm start
 In a second terminal window after following steps under installation, run:
 ```
 cd website/backend
-python app.py
+python run_server.py
 ```
 In a browser open http://localhost:3000
-
 
 ## Testing
 To run tests (from the modelflow root dir):

@@ -14,7 +14,7 @@ class ResultsGrid extends Component {
   };
 
   render() {
-    const { layout, cards } = this.props;
+    const { layout } = this.props;
     // Note: Although not used, passing in item to Card is needed
     // to trigger a rerender when the card is resized
     return (

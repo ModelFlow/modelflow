@@ -48,7 +48,6 @@ def get_params(scenario, models):
     data = None
     i = 0
     for model_info in scenario['models']:
-        print(model_info)
         model = model_info['model']
         if 'params' in model.definition:
             for param in model.definition['params']:
@@ -88,7 +87,6 @@ def run_minimization(scenario, models):
     params_dict = {}
     data = None
     for model_info in scenario['models']:
-        print(model_info)
         model = model_info['model']
         if 'params' in model.definition:
             for param in model.definition['params']:
@@ -96,7 +94,6 @@ def run_minimization(scenario, models):
                             '_params_' + param['key']] = param
 
         if hasattr(model, 'load_data'):
-            print(f"inside has data {model.__class__.__name__}")
             data = model.__class__.load_data()
 
     # TODO: Support multiple data
@@ -118,9 +115,6 @@ def run_minimization(scenario, models):
     for arg in args[:-1]:
         param = params_dict[arg]
         parameter_ranges.append([param['min'], param['max']])
-
-    # print(args[:-1])
-    # Battery_params_ac_capacity_kw,Battery_params_dc_capacity_kwh,FoodStorage_params_max_food_edbl,PVInverter_params_max_kw_ac,SolarArray_params_scaling_factor
 
     s = Sweep(scenario, data)
     best_params = bb.search_min(f=s.run_sweep,  # given function
@@ -709,7 +703,6 @@ def run_simulation_inner(model_infos, num_steps, states_override, params_overrid
         model = model_info['model']
         data_dict[model.__class__.__name__] = None
         if hasattr(model, 'load_data'):
-            print(f"inside has data {model.__class__.__name__}")
             data_dict[model.__class__.__name__] = model.__class__.load_data()
 
     t0 = time.time()
