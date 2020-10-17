@@ -185,13 +185,14 @@ def run_sim(scenario, models, sim_dir, should_output_deltas=False):
         times = []
         for root, _, filenames in os.walk(sim_dir):
             for filename in filenames:
-                file_list.append(os.path.join(root, filename))
+                if '.py' in filename:
+                    file_list.append(os.path.join(root, filename))
         for filepath in file_list:
             if os.path.isfile(filepath):
                 times.append(os.path.getmtime(filepath))
 
-        oldest_time = list(sorted(times))[0]
-        if oldest_time < os.path.getmtime(arg_cachepath):
+        newest_time = list(sorted(times))[-1]
+        if newest_time < os.path.getmtime(arg_cachepath):
             should_gen = False
 
             with open(arg_cachepath, 'r') as f:
