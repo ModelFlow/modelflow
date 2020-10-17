@@ -29,13 +29,14 @@ class ParamInput extends Component {
     return (
       <>
         {param.agent} {toTitleCase(replaceAll(param.key, '_', ' '))}{' '}
-        {param.value}
+        {Math.round((param.value + Number.EPSILON) * 100) / 100}
         <Slider
           onChange={this.sliderDidUpdate}
           onRelease={this.sliderDidRelease}
           value={param.value}
           min={param.min}
           max={param.max}
+          stepSize={(param.max - param.min) / 100.0}
           labelRenderer={false}
         />
         <br />

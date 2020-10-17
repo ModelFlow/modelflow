@@ -81,8 +81,8 @@ class Human:
             dict(
                 key="max_survivable_percent_atmo_o2",
                 units="decimal_percent",
-                value=0.25,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+                value=1,
+                source="https://www.nasa.gov/pdf/188963main_Extravehicular_Mobility_Unit.pdf",
             ),
             dict(
                 key="max_survivable_percent_atmo_co2",
@@ -138,16 +138,15 @@ class Human:
 
     @staticmethod
     def run_step(io, params, states, data):
-        # Dead humans don't do anything. Convert to food if canibal=True lol?!?
+        # TODO: Look at partial pressures of oxygen, not just percent concentration!!!
+
         if states.is_alive == 0:
-            # TODO: Support different models with different terminations
-            # Seems like raising an exception is an expensive operation
+            # Note: We do this because just using a try catch is expensive in C
             states.terminate_sim = 1
             return
 
-        # TODO: Make constraint checks abstracted
         if states.hours_without_water > params.max_hrs_survivable_with_no_water:
-            # TODO: Support logging events
+            # TODO: Support formal logging events
             # "log("died from lack of water")
             print('died due to lack of water')
             states.is_alive = 0
@@ -172,7 +171,8 @@ class Human:
 
         if o2_concentration > params.max_survivable_percent_atmo_o2:
             states.is_alive = 0
-            print('died due to min_survivable_percent_atmo_o2')
+            # TODO: Support print statement logging
+            print('died due to max_survivable_percent_atmo_o2')
             return
         co2_concentration = io.atmo_co2 / atmosphere_total
         if co2_concentration > params.max_survivable_percent_atmo_co2:
