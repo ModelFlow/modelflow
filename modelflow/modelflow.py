@@ -157,7 +157,6 @@ def run_sim(scenario, models, sim_dir, should_output_deltas=False):
                             '_params_' + param['key']] = param
 
         if hasattr(model, 'load_data'):
-            print(f"inside has data {model.__class__.__name__}")
             data_dict[f"{model.__class__.__name__}_data"] = model.__class__.load_data()
 
         if 'states' in model.definition:
@@ -196,7 +195,7 @@ def run_sim(scenario, models, sim_dir, should_output_deltas=False):
         for filepath in file_list:
             if os.path.isfile(filepath):
                 times.append(os.path.getmtime(filepath))
-        # print(times)
+
         oldest_time = list(sorted(times))[0]
         if oldest_time < os.path.getmtime(arg_cachepath):
             should_gen = False
@@ -205,7 +204,7 @@ def run_sim(scenario, models, sim_dir, should_output_deltas=False):
                 args = json.load(f)
 
     if should_gen:
-        print("Generating numba cache")
+        print("Generating numba cache...")
         args = generated_numba(
             scenario['models'],
             scenario['run_for_steps'],
@@ -218,6 +217,9 @@ def run_sim(scenario, models, sim_dir, should_output_deltas=False):
 
         with open(arg_cachepath, 'w') as f:
             json.dump(args, f)
+    else:
+        print("Using numba cache...")
+
 
     params = []
     for arg in args:
@@ -280,7 +282,7 @@ def run_sim(scenario, models, sim_dir, should_output_deltas=False):
         "time": times,
         "output_states": output_states
     }
-    print(f"Model ran in {ts1 - ts0} total {tsall1 - tsall0} pre {ts0 - tsall0} post {tsall1 - ts1}")
+    # print(f"Model ran in {ts1 - ts0} total {tsall1 - tsall0} pre {ts0 - tsall0} post {tsall1 - ts1}")
     return output
 
     # try:
@@ -391,7 +393,6 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
                 state_dict[state['key']] = state['value']
 
         if hasattr(model, 'load_data'):
-            print(f"inside has data {model.__class__.__name__}")
             data_dict[model.__class__.__name__] = model.__class__.load_data()
 
     for model_info in model_infos:
@@ -462,7 +463,7 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
             flines = flines.replace(state_str, new_name)
 
             if not state_name in state_dict:
-                print(f"Could not find state {state_name}")
+                # print(f"Could not find state {state_name}")
                 continue
 
             all_states[new_name] = state_dict[state_name]
