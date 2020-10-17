@@ -1,0 +1,32 @@
+version: '3'
+services:
+  database:
+    image: "postgres" # use latest official postgres version
+    env_file:
+      - database.env # configure postgres
+    volumes:
+      - database-data:/var/lib/postgresql/data/ # persist data even if container shuts down
+    ports:
+      - 5432:5432
+  backend:
+    build:
+      context: ../
+      dockerfile: ./website/backend/Dockerfile
+    environment:
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=modelflow
+    ports:
+      - "8080:8080"
+    command: ["sh", "-c", "gunicorn backend:app -w 4 -b 0.0.0.0:8080 -t 30"]
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ./Dockerfile
+      args:
+        - REACT_APP_API_URL=http://localhost:8080/api
+    ports:
+      - "3000:3000"
+    container_name: modelflow_frontend
+volumes:
+  database-data: # named volumes can be managed easier using docker-compose

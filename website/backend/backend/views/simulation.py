@@ -36,7 +36,7 @@ def run_sim_route():
 
 def get_sim_dir():
     # TODO: Make generic
-    abs_path = pathlib.Path(__file__).parent.parent.parent.absolute()
+    abs_path = pathlib.Path(__file__).parents[4].absolute()
     abs_path = os.path.join(abs_path, 'examples', 'mars')
     return abs_path
 

@@ -8,9 +8,9 @@ from backend import db
 # - pass in num timestamps as parameter for simulation
 # - in top right add (save and load) scenario views
 
-class ScenarioView:
+class ScenarioView(db.Model):
 	id = db.Column(db.Integer, primary_key=True)
-	title = db.Column(db.string(120))
+	title = db.Column(db.String(120))
 	json_data = db.Column(db.Text, nullable=False)
 	created_at = db.Column(db.DateTime)
 	is_hidden = db.Column(db.Boolean)

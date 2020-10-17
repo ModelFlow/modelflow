@@ -4,4 +4,4 @@ RUN pip install -r requirements.txt
 EXPOSE 8080
 COPY . .
 WORKDIR /website/backend
-CMD ["gunicorn", "wsgi:app", "-w 4", "-b 0.0.0.0:8080", "-t 30"]
+CMD ["gunicorn", "backend:app", "-w 4", "-b 0.0.0.0:8080", "-t 30"]

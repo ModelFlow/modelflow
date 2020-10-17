@@ -41,6 +41,15 @@ function removeItem(array, idx) {
 
 export default function reduce(state = initialState, action = {}) {
   switch (action.type) {
+
+    case 'UPDATE_LAYOUT_AND_CARDS': {
+      return {
+        ...state,
+        layout: { lg: action.layout },
+        cards: action.cards,
+      };
+    }
+
     case 'UPDATE_RESULT_VIEW_LAYOUT': {
       return {
         ...state,
