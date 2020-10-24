@@ -1,6 +1,9 @@
 import pandas as pd
 import argparse
-from graphviz import Digraph
+try:
+    from graphviz import Digraph
+except:
+    print("pip install graphviz to use this feature")
 
 
 def generate_graph(df=None):
