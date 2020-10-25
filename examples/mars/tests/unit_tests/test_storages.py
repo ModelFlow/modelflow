@@ -1,6 +1,6 @@
 import pytest
 from models.storages import WaterStorage
-from modelflow.modelflow import ModelUnitTest
+from modelflow.testing import ModelUnitTest
 
 
 class TestStorage(ModelUnitTest):

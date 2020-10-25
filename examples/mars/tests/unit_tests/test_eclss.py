@@ -1,6 +1,6 @@
 from models.eclss import MultifiltrationPurifierPostTreatment
 from models.eclss import OxygenFromHydrolysis
-from modelflow.modelflow import ModelUnitTest
+from modelflow.testing import ModelUnitTest
 
 
 class TestBasicECLSS(ModelUnitTest):

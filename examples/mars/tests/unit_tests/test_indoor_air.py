@@ -1,6 +1,6 @@
 import pytest
 from models.indoor_air import IndoorAir
-from modelflow.modelflow import ModelUnitTest
+from modelflow.testing import ModelUnitTest
 
 
 class TestIndoorAir(ModelUnitTest):

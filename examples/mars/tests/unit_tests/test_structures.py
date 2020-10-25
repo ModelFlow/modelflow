@@ -1,5 +1,5 @@
 from models.structures import HabitatStructure
-from modelflow.modelflow import ModelUnitTest
+from modelflow.testing import ModelUnitTest
 
 
 class TestStuctures(ModelUnitTest):
