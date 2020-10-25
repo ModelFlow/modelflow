@@ -12,9 +12,7 @@
 - Create local website that automatically documents parameters
 - Create png graphical visualization of flows
 - Add utility for easily running parameter sweeps
-- Create local website to automatically edit parameters
 - Create local website to visualize flows and potentially edit
-- Look into cython for agents and optimizing speed
 - Figure out a way to have certain inputs scaled on other inputs. i.e. lighting determined by habitat volume. Scale atmosphere by volume.
 - Add warnings and events
 - Add perhaps native support for descrete event simulation
@@ -22,6 +20,11 @@
 - Make it easy to be able to swap models
 - Think about whether we want formal support for setting initial values
 - Add documentation to all public modelflow methods
+
+## Done
+- Look into cython for agents and optimizing speed (Used numba)
+- Create local website to automatically edit parameters
+
 
 ## Ideas
 - Replace complicated agents with neural networks trained on parameter sweeps

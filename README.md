@@ -17,10 +17,10 @@ pip install -r requirements.txt
 ```
 
 ## Running an example in terminal
-To run the Mars baseline example:
+To run the Mars default baseline scenario example:
 ```
 cd examples/mars
-python main.py --scenario baseline
+python main.py
 ```
 
 ## Running in website locally

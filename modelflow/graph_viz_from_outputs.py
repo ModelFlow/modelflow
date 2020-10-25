@@ -3,7 +3,7 @@ import argparse
 try:
     from graphviz import Digraph
 except:
-    print("pip install graphviz to use this feature")
+    print("Note: Optional graphviz not installed")
 
 
 def generate_graph(df=None):

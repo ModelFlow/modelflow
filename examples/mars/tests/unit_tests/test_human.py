@@ -1,5 +1,5 @@
 from models.humans import Human
-from modelflow.modelflow import ModelUnitTest
+from modelflow.testing import ModelUnitTest
 
 
 class TestHumans(ModelUnitTest):
