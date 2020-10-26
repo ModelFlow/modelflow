@@ -1,6 +1,6 @@
 import pytest
 from models.battery import Battery
-from modelflow.modelflow import ModelUnitTest
+from modelflow.testing import ModelUnitTest
 
 
 class TestBattery(ModelUnitTest):

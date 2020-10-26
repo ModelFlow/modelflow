@@ -8,6 +8,7 @@ from models.battery import Battery
 from models.lighting import Lighting
 from models.nuclear_reactor import NuclearReactor
 from models.structures import HabitatStructure
+from models.plants import Plants
 from models.eclss import Heater, CH4RemovalAgent, Dehumidifier, ParticulateRemovalTCCS, CO2Removal, CO2ReductionSabatier, OxygenFromHydrolysis, MultifiltrationPurifierPostTreatment, UrineRecyclingProcessor, SolidWasteAerobicBioReactor
 
 def list_models():
@@ -33,5 +34,6 @@ def list_models():
 		OxygenFromHydrolysis(),
 		MultifiltrationPurifierPostTreatment(),
 		UrineRecyclingProcessor(),
-		SolidWasteAerobicBioReactor()
+		SolidWasteAerobicBioReactor(),
+		Plants()
 	]

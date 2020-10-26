@@ -1,5 +1,5 @@
 from models.pv import SolarArray
-from modelflow.modelflow import ModelUnitTest
+from modelflow.testing import ModelUnitTest
 
 
 class TestPV(ModelUnitTest):

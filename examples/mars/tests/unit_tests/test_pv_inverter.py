@@ -1,6 +1,6 @@
 import pytest
 from models.pv_inverter import PVInverter
-from modelflow.modelflow import ModelUnitTest
+from modelflow.testing import ModelUnitTest
 
 
 class TestPVInverter(ModelUnitTest):

@@ -6,34 +6,26 @@ import json
 import re
 import inspect
 import time
-from types import SimpleNamespace
 import pandas as pd
-from . import blackbox as bb
-from math import log10, floor
 
-
-class Sweep():
-
-    def __init__(self, scenario, data):
-        self.scenario = scenario
-        self.data = data
-
-    def run_sweep(self, params):
-        rstep = __import__('generated').rstep
-        # TODO: Figure out a way to pass this through
-        num_steps = self.scenario['run_for_steps']
-        max_cost = 9999999
-        cost = max_cost
-        t0 = time.time()
-        try:
-            cost = rstep(num_steps, *params, self.data)
-            print(f"Ran in {time.time() - t0} {cost}")
-        except Exception as e:
-            print(f"SIM ERROR {e} in {time.time() - t0}")
-        return cost
+numba_installed = False
+try:
+    from numba import jit  # NOQA
+    numba_installed = True
+except Exception:
+    print("Note: Optional numba not installed")
 
 
 def get_params(scenario, models):
+    """Gets all of the parameters that can be tweaked by the user interface
+
+    Args:
+        scenario (dict): Dictionary containing all the models in the scenario
+        models (list): The list of all possible model classes
+
+    Returns:
+        list: A list of dictionaries with info about the parameters
+    """
     model_map = {}
     for model in models:
         model_map[model.__class__.__name__] = model
@@ -45,10 +37,9 @@ def get_params(scenario, models):
 
     # params_dict = {}
     all_params = []
-    data = None
+    # data = None
     i = 0
     for model_info in scenario['models']:
-        print(model_info)
         model = model_info['model']
         if 'params' in model.definition:
             for param in model.definition['params']:
@@ -67,75 +58,20 @@ def get_params(scenario, models):
     return all_params
 
 
-def run_minimization(scenario, models):
-    # if exception is raised then cost is 999999
-    # incorporate timestamp to reward longer lasting simulations?
-    # For is sweep:
-    # - change inputs to just be a param array
-    # - do not save outputs
-    # - return a cost
-    #   - super high cost if early fail
+def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force_fresh_run=False):
+    """Runs the simulation
 
-    model_map = {}
-    for model in models:
-        model_map[model.__class__.__name__] = model
+    Args:
+        scenario (dict): Dictionary containing all the models in the scenario
+        models (list): The list of all possible model classes
+        should_output_deltas (bool): Whether to store the deltas per state per model
+        use_numba (bool): Whether to use the C-optimized numba function or not
+        force_fresh_run (bool): Run with no caching of arguments or generated code
+    """
+    if not numba_installed and use_numba:
+        print("WARNING: Not running with numba because numba is not installed")
+        use_numba = False
 
-    for model in scenario['models']:
-        if model['model'] not in model_map:
-            raise Exception(f"{model['model']} not in model list!")
-        model['model'] = model_map[model['model']]
-
-    params_dict = {}
-    data = None
-    for model_info in scenario['models']:
-        print(model_info)
-        model = model_info['model']
-        if 'params' in model.definition:
-            for param in model.definition['params']:
-                params_dict[model.__class__.__name__ +
-                            '_params_' + param['key']] = param
-
-        if hasattr(model, 'load_data'):
-            print(f"inside has data {model.__class__.__name__}")
-            data = model.__class__.load_data()
-
-    # TODO: Support multiple data
-    # for k, v in data_dict.items():
-    #     all_args.append(f'{k}_data')
-    #     if not is_sweep:
-    #         all_arg_vals.append(v)
-
-    args = generated_numba(
-        scenario['models'],
-        scenario['run_for_steps'],
-        None,  # TODO: states_override
-        None,  # TODO: params_override
-        no_outputs=True,
-        is_sweep=True
-    )
-    parameter_ranges = []
-    # TODO: Handle data arguments better
-    for arg in args[:-1]:
-        param = params_dict[arg]
-        parameter_ranges.append([param['min'], param['max']])
-
-    # print(args[:-1])
-    # Battery_params_ac_capacity_kw,Battery_params_dc_capacity_kwh,FoodStorage_params_max_food_edbl,PVInverter_params_max_kw_ac,SolarArray_params_scaling_factor
-
-    s = Sweep(scenario, data)
-    best_params = bb.search_min(f=s.run_sweep,  # given function
-                                domain=parameter_ranges,
-                                budget=1000,  # total number of function calls available
-                                batch=4,  # number of calls that will be evaluated in parallel
-                                resfile='bb2.csv')
-
-    # TODO: Add cost
-    print("Optimal Parameters are:")
-    for i in range(len(best_params)):
-        print(f"{args[:-1][i]}: {best_params[i]}")
-
-
-def run_sim(scenario, models, sim_dir, should_output_deltas=False):
     tsall0 = time.time()
     model_map = {}
     for model in models:
@@ -157,7 +93,6 @@ def run_sim(scenario, models, sim_dir, should_output_deltas=False):
                             '_params_' + param['key']] = param
 
         if hasattr(model, 'load_data'):
-            print(f"inside has data {model.__class__.__name__}")
             data_dict[f"{model.__class__.__name__}_data"] = model.__class__.load_data()
 
         if 'states' in model.definition:
@@ -175,68 +110,69 @@ def run_sim(scenario, models, sim_dir, should_output_deltas=False):
     #     if not is_sweep:
     #         all_arg_vals.append(v)
 
-    # TODO: add option to run pure python or numba
-
     args = None
     should_gen = True
-
     abs_dir = pathlib.Path(__file__).parent
+    # TODO: Do not hardcode
+    examples_dir = os.path.join(abs_dir.parent, 'examples')
 
     arg_cachepath = os.path.join(abs_dir, 'args_cache.json')
-    should_output_deltas_str = ''
-    if should_output_deltas:
-        should_output_deltas_str = 'd'
-    gen_path = os.path.join(abs_dir, f'generated{should_output_deltas_str}.py')
-    if os.path.exists(arg_cachepath) and os.path.exists(gen_path):
+
+    gen_name = get_gen_name(should_output_deltas, use_numba)
+    gen_path = os.path.join(abs_dir, f'{gen_name}.py')
+    if os.path.exists(arg_cachepath) and not force_fresh_run:
         file_list = []
         times = []
-        for root, _, filenames in os.walk(sim_dir):
+        for root, _, filenames in os.walk(examples_dir):
             for filename in filenames:
-                file_list.append(os.path.join(root, filename))
+                if '.py' in filename:
+                    file_list.append(os.path.join(root, filename))
         for filepath in file_list:
             if os.path.isfile(filepath):
                 times.append(os.path.getmtime(filepath))
-        # print(times)
-        oldest_time = list(sorted(times))[0]
-        if oldest_time < os.path.getmtime(arg_cachepath):
-            should_gen = False
 
-            with open(arg_cachepath, 'r') as f:
-                args = json.load(f)
+        newest_time = list(sorted(times))[-1]
+        if newest_time < os.path.getmtime(arg_cachepath):
+            if os.path.exists(gen_path):
+                should_gen = False
 
-    if should_gen:
-        print("Generating numba cache")
-        args = generated_numba(
+        with open(arg_cachepath, 'r') as f:
+            args = json.load(f)
+
+    if force_fresh_run or should_gen or not os.path.exists(arg_cachepath) or not os.path.exists(gen_path):
+        print("Generating args...")
+        args = generate_numba_compatible_code(
             scenario['models'],
             scenario['run_for_steps'],
-            None,  # TODO: states_override
-            None,  # TODO: params_override
-            no_outputs=False,
+            no_outputs=False,  # Used for sweeping
             is_sweep=False,
-            should_output_deltas=should_output_deltas
+            should_output_deltas=should_output_deltas,
+            use_numba=use_numba
         )
 
         with open(arg_cachepath, 'w') as f:
             json.dump(args, f)
+    else:
+        print("Using args cache...")
 
-    params = []
+    arg_vals = []
     for arg in args:
         if arg in override_params_dict:
-            params.append(override_params_dict[arg])
+            arg_vals.append(override_params_dict[arg])
         elif arg in params_dict:
-            params.append(params_dict[arg]['value'])
+            arg_vals.append(params_dict[arg]['value'])
         elif arg in initial_states_dict:
-            params.append(initial_states_dict[arg])
+            arg_vals.append(initial_states_dict[arg])
         elif arg in data_dict:
-            params.append(data_dict[arg])
+            arg_vals.append(data_dict[arg])
         else:
             raise Exception(f"Could not find {arg} in params or state dict")
 
     sys.path.insert(0, str(abs_dir))
-    rstep = __import__('generated').rstep
+    rstep = __import__(gen_name).rstep
     num_steps = scenario['run_for_steps']
     ts0 = time.time()
-    cost_and_outputs = rstep(num_steps, *params)
+    cost_and_outputs = rstep(num_steps, *arg_vals)
     ts1 = time.time()
 
     all_state_keys = list(sorted(list(initial_states_dict.keys())))
@@ -268,6 +204,7 @@ def run_sim(scenario, models, sim_dir, should_output_deltas=False):
     tsall1 = time.time()
     output = {
         "stats": {
+            "use_numba": use_numba,
             "generating_numba": should_gen,
             "arg_cachepath": arg_cachepath,
             "gen_path": gen_path,
@@ -280,91 +217,18 @@ def run_sim(scenario, models, sim_dir, should_output_deltas=False):
         "time": times,
         "output_states": output_states
     }
-    print(f"Model ran in {ts1 - ts0} total {tsall1 - tsall0} pre {ts0 - tsall0} post {tsall1 - ts1}")
+    # print(f"Model ran in {tsall1 - tsall0:.2} seconds")
     return output
 
-    # try:
 
-    #     print(f"Ran in {time.time() - t0} {cost}")
-    # except Exception as e:
-    #     print(f"SIM ERROR {e} in {time.time() - t0}")
-
-    # if scenario is None and models is None:
-    #     raise Exception("Scenario or scenario and models are required")
-
-    # if models is not None:
-    #     model_map = {}
-    #     for model in models:
-    #         model_map[model.__class__.__name__] = model
-
-    #     for model in scenario['models']:
-    #         if model['model'] not in model_map:
-    #             raise Exception(f"{model['model']} not in model list!")
-    #         model['model'] = model_map[model['model']]
-
-    # df1 = generated_numba(scenario['models'], scenario['run_for_steps'], None, None)
-    # print(df1.columns)
-    # start_date = datetime(2024,1,1)
-    # final_col = []
-    # for i in range(len(df1['datetime'])):
-    #     final_col.append(start_date + timedelta(hours=i))
-    # df1['datetime'] = final_col
-    # df1.to_csv('nb_test.csv')
-
-    # # TODO: This is inelegant
-    # df = run_simulation_inner(scenario['models'], scenario['run_for_steps'],
-    #                             scenario.get('states', {}), scenario.get('params', {}))
-    # start_date = datetime(2024,1,1)
-    # final_col = []
-    # for i in range(len(df['datetime'])):
-    #     final_col.append(start_date + timedelta(hours=i))
-    # df['datetime'] = final_col
-    # df.to_csv('py_test.csv')
-
-
-# def run_python_sim_with_produce_consume_outputs(scenario, models, sim_dir):
-# Collect all states
-# Collect all params
-# for each model:
-#     create copy of
-#     run each model
-  
-
-# def run_test_step(model, inputs, outputs):
-
-#     # for state in model.states:
-#     #     setattr(model, state.key, state.value)
-
-#     # if hasattr(model, 'params'):
-#     #     _params = {}
-#     #     for param in model.params:
-#     #         _params[param.key] = param.value
-#     #         if param.value is None:
-#     #             raise Exception(f"Model {model.name} param {param.key} cannot be None")
-#     #     model._params = SimpleNamespace(**_params)
-#     # else:
-#     #     model._params = None
-
-#     model.run_step(inputs, outputs, model._params, model)
-
-
-def setup_models(model_infos):
-    all_state = {}
-    for model_info in model_infos:
-        model = model_info['model']
-        if hasattr(model, 'states'):
-            for state in model.states:
-                all_state[state.key] = state.value
-    return SimpleNamespace(**all_state)
-
-
-def generated_numba(model_infos, num_steps, states_override, params_override, no_outputs=False, is_sweep=False, should_output_deltas=False):
+def generate_numba_compatible_code(model_infos, num_steps, no_outputs=False, is_sweep=False, should_output_deltas=False, use_numba=False):
 
     out = "# Generated Code\n"
     # TODO: Handle imports better
     out += "import numpy as np\n"
     out += "import math\n"
-    out += "from numba import jit\n"
+    if use_numba:
+        out += "from numba import jit\n"
     out += "\n"
     out += "\n"
 
@@ -391,7 +255,6 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
                 state_dict[state['key']] = state['value']
 
         if hasattr(model, 'load_data'):
-            print(f"inside has data {model.__class__.__name__}")
             data_dict[model.__class__.__name__] = model.__class__.load_data()
 
     for model_info in model_infos:
@@ -407,8 +270,6 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
                 if state not in state_dict:
                     state_dict[state] = 0
 
-    # TODO: call setup for each agent
-
     all_states = {}
     function_lists = ''
     all_olines = ''
@@ -421,7 +282,8 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
         # Exclude first two lines
         flines = '\n'.join(flines.split('\n')[2:])
         olines = ''
-        olines = "@jit(nopython=True, cache=True)\n"
+        if use_numba:
+            olines += "@jit(nopython=True, cache=True)\n"
 
         if hasattr(model, 'cost'):
             clines = ''
@@ -462,7 +324,7 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
             flines = flines.replace(state_str, new_name)
 
             if not state_name in state_dict:
-                print(f"Could not find state {state_name}")
+                # print(f"Could not find state {state_name}")
                 continue
 
             all_states[new_name] = state_dict[state_name]
@@ -553,7 +415,8 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
     all_args_str = ",".join(all_args)
 
     out += all_olines
-    out += "@jit(nopython=True, cache=True)\n"
+    if use_numba:
+        out += "@jit(nopython=True, cache=True)\n"
     out += f"def rstep(num_steps,{all_args_str}):\n"
 
     # Define the non-sweep parameters
@@ -585,7 +448,7 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
             out += f"    {k}_out = np.zeros(num_steps + 1)\n"
             out += f"    {k}_out[0] = initial_{k}\n"
             out += f"    {k} = initial_{k}\n"
-    
+
     if should_output_deltas:
         for k in output_deltas_to_save:
             out += f"    {k} = np.zeros(num_steps + 1)\n"
@@ -604,10 +467,12 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
         out += "\n    return all_costs\n"
     else:
 
+        # TODO: Support datetime outputs
+        # state_datetime_out = np.array(['2020-01-01'] * num_steps, dtype='datetime64')
+
         out += '        ###### Store outputs ######\n'
         for k in all_state_keys:
             out += f"        {k}_out[_i_ + 1] = {k}\n"
-
 
         if should_output_deltas:
             # for k in output_deltas_to_save:
@@ -622,138 +487,26 @@ def generated_numba(model_infos, num_steps, states_override, params_override, no
             # out += '    delta_values = "hi"\n'
             # out += f'    for key in delta_key_strs.split(","):\n'
             # out += '        print(key)\n'
-            all_state_strs = ", ".join(all_output_keys + ["delta_key_strs"] + output_deltas_to_save)
+            all_state_strs = ", ".join(
+                all_output_keys + ["delta_key_strs"] + output_deltas_to_save)
         else:
             all_state_strs = ", ".join(all_output_keys)
 
         out += f"\n    return all_costs, {all_state_strs}\n"
 
     abs_dir = pathlib.Path(__file__).parent
-    with open(os.path.join(abs_dir, 'generated.py'), 'w') as f:
+    gen_path = os.path.join(abs_dir, f'{get_gen_name(should_output_deltas, use_numba)}.py')
+    with open(gen_path, 'w') as f:
         f.write(out)
 
     return all_args
 
-    # TODO: Support datetime eventually
-    # state_datetime_out = np.array(['2020-01-01'] * num_steps, dtype='datetime64')
-    # print(state_datetime_out)
-    # print(state_datetime_out[0])
-    # print(state_datetime_out.dtype)
 
-    # rstep = __import__('generated').rstep
-
-    # t0 = time.time()
-    # outputs = rstep(num_steps, *all_arg_vals)
-    # print(time.time() - t0)
-
-    # t0 = time.time()
-    # outputs = rstep(num_steps, *all_arg_vals)
-    # print(time.time() - t0)
-    # print(only_states)
-    # df = pd.DataFrame(dict(zip(only_states, outputs)))
-    # return df
-
-
-def run_simulation_inner(model_infos, num_steps, states_override, params_override):
-
-    # TODO improve speed
-    all_outputs = []
-
-    # Secretly have a dict called all states
-    # where the inputs and outputs are just that
-    # all_state = setup_models(model_infos)
-    # for key, value in states_override.items():
-    #     print(f"overriding state {key} with {value}")
-    #     if not hasattr(all_state, key):
-    #         raise Exception(f"Tried to override state {key} that doesn't exist")
-    #     setattr(all_state, key, value)
-
-    name_model_map = {}
-    for model_info in model_infos:
-        model = model_info['model']
-        name_model_map[model.__class__.__name__] = model
-
-    params_dict = {}
-    state_dict = {}
-    for model_info in model_infos:
-        model = model_info['model']
-
-        params_dict[model.__class__.__name__] = {}
-        for param in model.definition['params']:
-            params_dict[model.__class__.__name__][param['key']
-                                                  ] = param['value']
-
-        params_dict[model.__class__.__name__] = SimpleNamespace(
-            **params_dict[model.__class__.__name__])
-        if 'states' in model.definition:
-            for state in model.definition['states']:
-                state_dict[state['key']] = state['value']
-    all_state = SimpleNamespace(**state_dict)
-
-    # TODO: Fix param override
-    # for raw_key, value in params_override.items():
-    #     if not "." in raw_key:
-    #         raise Exception("Need . in param_override like Human.food_eaten_per_hr")
-    #     model_name, key = raw_key.split(".")
-    #     if not model_name in name_model_map:
-    #         raise Exception(f"Could not find model {model_name} for param_override {raw_key}")
-
-    #     if not hasattr(name_model_map[model_name]._params,key):
-    #         raise Exception(f"Could not find key {key} for param_override {raw_key}")
-
-    #     setattr(name_model_map[model_name]._params,key, value)
-
-    data_dict = {}
-    for model_info in model_infos:
-        model = model_info['model']
-        data_dict[model.__class__.__name__] = None
-        if hasattr(model, 'load_data'):
-            print(f"inside has data {model.__class__.__name__}")
-            data_dict[model.__class__.__name__] = model.__class__.load_data()
-
-    t0 = time.time()
-    for i in range(num_steps):
-        toutputs = dict()
-        for model_info in model_infos:
-            model = model_info['model']
-            if hasattr(model, 'run_step'):
-                model.__class__.run_step(
-                    all_state, all_state, params_dict[model.__class__.__name__], all_state, data_dict[model.__class__.__name__])
-
-        for key, value in all_state.__dict__.items():
-            toutputs[key] = value
-        all_outputs.append(toutputs)
-    print(time.time() - t0)
-    return pd.DataFrame(all_outputs, columns=list(sorted(all_outputs[0].keys())))
-
-
-class ModelUnitTest():
-    def setup_model(self, model):
-        self.model = model
-        self.io = SimpleNamespace()
-        self.params = {}
-        if 'params' in model.definition:
-            for params in model.definition['params']:
-                self.params[params['key']] = params['value']
-        self.params = SimpleNamespace(**self.params)
-
-        self.states = {}
-        if 'states' in model.definition:
-            for state in model.definition['states']:
-                self.states[state['key']] = state['value']
-        self.states = SimpleNamespace(**self.states)
-        self.data = []
-
-    def run_step(self):
-        self.model.run_step(self.io, self.params, self.states, self.data)
-
-
-
-def obj(**kwargs):
-    return SimpleNamespace(**kwargs)
-
-
-def round_sig(x, sig=2):
-    if x == 0:
-        return 0
-    return round(x, sig-int(floor(log10(abs(x))))-1)
+def get_gen_name(should_output_deltas, use_numba):
+    should_output_deltas_str = ''
+    if should_output_deltas:
+        should_output_deltas_str = 'd'
+    use_numba_str = ''
+    if use_numba:
+        use_numba_str = 'n'
+    return f'generated{use_numba_str}{should_output_deltas_str}'

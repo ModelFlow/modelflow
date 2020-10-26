@@ -4,8 +4,12 @@
 *.csv
 *args_cache.json
 *generated.py
+*generatedd.py
+*generatedn.py
+*generatednd.py
 *.gv*
 *.twbr
+*.vscode*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -76,6 +76,9 @@
     },
     {
       "model": "MultifiltrationPurifierPostTreatment"
+    },
+    {
+      "model": "Plants"
     }
   ],
   "run_for_steps": 8760
