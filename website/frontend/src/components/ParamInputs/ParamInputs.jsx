@@ -4,16 +4,6 @@ import actions from '../../state/actions';
 import ParamInput from './ParamInput/ParamInput';
 
 class ParamInputs extends Component {
-  componentDidMount() {
-    this.fetchData();
-  }
-
-  fetchData = async () => {
-    const { getParams, runSim } = this.props;
-    const params = await getParams();
-    runSim(params);
-  };
-
   paramDidUpdate = async (index, value) => {
     const { updateParam } = this.props;
     updateParam(index, value);
@@ -21,8 +11,9 @@ class ParamInputs extends Component {
 
   paramDidRelease = async (index, value) => {
     const { updateParam, runSim } = this.props;
-    const params = await updateParam(index, value);
-    runSim(params);
+    // const params = await
+    updateParam(index, value);
+    runSim(); // params
   };
 
   render() {

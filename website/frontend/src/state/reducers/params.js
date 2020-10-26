@@ -10,6 +10,22 @@ export default function reduce(state = initialState, action = {}) {
         params: action.params,
       };
     }
+
+    case 'PARAMS_SET_PARAM_VALUES': {
+      const newArray = state.params.slice();
+      const newMap = {};
+      newArray.forEach((item) => {
+        newMap[item.key] = item.index;
+      });
+      for (let [key, value] of Object.entries(action.paramValues)) {
+        newArray[newMap[key]].value = value;
+      }
+      return {
+        ...state,
+        params: newArray,
+      };
+    }
+
     default:
       return state;
   }

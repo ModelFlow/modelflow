@@ -18,11 +18,7 @@ class Production(Config):
 
 class Development(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = (
-        f"postgresql://{os.environ.get('POSTGRES_USER', 'user')}:"
-        f"{os.environ.get('POSTGRES_PASS', 'pass')}@{os.environ.get('POSTGRES_HOST', '0.0.0.0')}"
-        f"/{os.environ.get('POSTGRES_DB', 'modelflow')}"
-    )
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///modelflow.db'
 
 class Testing(Config):
     TESTING = True

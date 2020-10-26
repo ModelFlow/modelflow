@@ -1,10 +1,10 @@
 import axios from 'axios';
 
-export const runSim = (params) => async (dispatch) => {
+export const runSim = () => async (dispatch, getState) => {
   const { data } = await axios.post(
     `${process.env.REACT_APP_API_URL}/run_sim`,
     {
-      params: params,
+      params: getState().params.params,
     },
   );
   dispatch({

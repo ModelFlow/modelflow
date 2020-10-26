@@ -1,9 +1,11 @@
+import { insertItem } from '../../services/Utilities';
+
 const initialState = {
-  allScenarioViews: [],
-  scenarioView: {
-    cards: [],
-    layout: {},
-    parameters: [],
+  scenarioViews: [],
+  scenarioViewMeta: {
+    created_at: '',
+    id: 0,
+    title: '',
   },
 };
 
@@ -12,13 +14,26 @@ export default function reduce(state = initialState, action = {}) {
     case 'SET_ALL_SCENARIO_VIEWS': {
       return {
         ...state,
-        allScenarioViews: action.views,
+        scenarioViews: action.scenarioViews,
       };
     }
-    case 'SET_SCENARIO_VIEW': {
+    case 'ADD_TO_SCENARIO_VIEW_METAS': {
       return {
         ...state,
-        scenarioView: action.data,
+        scenarioViews: insertItem(state.scenarioViews, {
+          id: action.id,
+          title: action.title,
+          created_at: '',
+        }),
+      };
+    }
+    case 'SCENARIO_VIEW_SET_META': {
+      return {
+        ...state,
+        scenarioViewMeta: {
+          id: action.id,
+          title: action.title,
+        },
       };
     }
 

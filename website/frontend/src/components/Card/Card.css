@@ -13,3 +13,11 @@
   position: absolute;
   font-size: 16px;
 }
+
+/*
+Override the blueprint popup so that the list doesn't get insanely long when querying elements
+*/
+.bp3-popover-content {
+  max-height: 500px;
+  overflow: scroll;
+}

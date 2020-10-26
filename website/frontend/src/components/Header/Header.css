@@ -1,0 +1,53 @@
+
+.global-header {
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-bottom-color: lightgray;
+  height: 40px;
+}
+
+.logo {
+  margin-left: 20px;
+  margin-top: 3px;
+}
+
+.titleSection {
+  margin-left: 210px;
+  position: absolute;
+  margin-top: -31px;
+  width: 450px;
+}
+
+.scenario {
+  font-size: 20px;
+  padding-right: 10px;
+}
+
+.scenarioViewTitle {
+  position: absolute;
+  margin-top: 5px;
+}
+
+.heading-button {
+  float: right;
+  margin-right: 5px;
+  margin-top: 4px;
+}
+
+.load-button {
+  float: right;
+  margin-right: 5px;
+  margin-top: 4px;
+}
+
+.save-button {
+  float: right;
+  margin-right: 5px;
+  margin-top: 4px;
+}
+
+.new-button {
+  float: right;
+  margin-right: 5px;
+  margin-top: 4px;
+}

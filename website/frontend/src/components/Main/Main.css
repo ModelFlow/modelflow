@@ -17,39 +17,3 @@
   border-left: 1px solid lightgray;
   padding: 0px;
 }
-
-.global-header {
-  border-bottom-width: 1px;
-  border-bottom-style: solid;
-  border-bottom-color: lightgray;
-  height: 40px;
-}
-
-.logo {
-  margin-left: 20px;
-  margin-top: 3px;
-}
-
-.titleText {
-  margin-left: 210px;
-  position: absolute;
-  margin-top: -31px;
-}
-
-.heading-button {
-  float: right;
-  margin-right: 5px;
-  margin-top: 4px;
-}
-
-.load-button {
-  float: right;
-  margin-right: 5px;
-  margin-top: 4px;
-}
-
-.save-button {
-  float: right;
-  margin-right: 5px;
-  margin-top: 4px;
-}

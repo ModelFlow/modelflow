@@ -14,3 +14,11 @@ from backend.models import *  # NOQA
 from backend.views.scenario_views import *  # NOQA
 from backend.views.server_health import *  # NOQA
 from backend.views.simulation import *  # NOQA
+
+# Create all the models locally if none exist
+# Note: This must be placed after importing the models
+if os.environ.get('APP_CONFIG') != 'backend.config.Production':
+    db.create_all()
+
+# Comes from backend.views.scenario_views
+seed_data()
