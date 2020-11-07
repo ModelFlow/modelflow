@@ -14,28 +14,32 @@ class ResultsGrid extends Component {
   };
 
   render() {
-    const { layout } = this.props;
-    // Note: Although not used, passing in item to Card is needed
-    // to trigger a rerender when the card is resized
-    return (
-      <ResponsiveGridLayout
-        layouts={layout}
-        rowHeight={30}
-        measureBeforeMount
-        isResizable
-        breakpoints={{ lg: 1200 }}
-        cols={{ lg: 12 }}
-        draggableHandle=".card_header"
-        onLayoutChange={this.onLayoutChange}
-        compactType="vertical"
-      >
-        {layout.lg.map((item) => (
-          <div key={item.i}>
-            <Card uuid={item.i} item={item} />
-          </div>
-        ))}
-      </ResponsiveGridLayout>
-    );
+    const { layout, simError } = this.props;
+    if (simError) {
+      return <div>Error: {simError}</div>;
+    } else {
+      // Note: Although not used, passing in item to Card is needed
+      // to trigger a rerender when the card is resized
+      return (
+        <ResponsiveGridLayout
+          layouts={layout}
+          rowHeight={30}
+          measureBeforeMount
+          isResizable
+          breakpoints={{ lg: 1200 }}
+          cols={{ lg: 12 }}
+          draggableHandle=".card_header"
+          onLayoutChange={this.onLayoutChange}
+          compactType="vertical"
+        >
+          {layout.lg.map((item) => (
+            <div key={item.i}>
+              <Card uuid={item.i} item={item} />
+            </div>
+          ))}
+        </ResponsiveGridLayout>
+      );
+    }
   }
 }
 
@@ -44,9 +48,8 @@ const mapDispatchToProps = {
 };
 
 const mapStateToProps = (state) => ({
-  results: state.sim.results,
-  cards: state.resultViews.cards,
   layout: state.resultViews.layout,
+  simError: state.resultViews.simError,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ResultsGrid);

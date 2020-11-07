@@ -17,7 +17,6 @@ export const updateParam = (index, value) => async (dispatch, getState) => {
     type: 'PARAMS_SET_PARAMS',
     params,
   });
-  return params;
 };
 
 export const getParams = () => async (dispatch) => {

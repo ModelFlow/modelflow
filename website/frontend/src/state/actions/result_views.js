@@ -1,20 +1,17 @@
-export const updateLayout = (layout) => async (dispatch) => {
+import { makeUUID } from '../../services/Utilities';
+
+export const updateLayout = (newLayout) => async (dispatch) => {
   dispatch({
     type: 'UPDATE_RESULT_VIEW_LAYOUT',
-    layout,
+    layout: {
+      lg: newLayout,
+    },
   });
 };
 
 export const addCard = () => async (dispatch) => {
-  function make_uuid() {
-    return (
-      Math.random().toString(36).substring(2, 15) +
-      Math.random().toString(36).substring(2, 15)
-    );
-  }
-
   const card = {
-    uuid: make_uuid(),
+    uuid: makeUUID(),
     outputKey: 'none',
   };
   dispatch({

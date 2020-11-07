@@ -5,7 +5,6 @@ import json
 import pathlib
 from backend import app
 from flask import request
-from flask_cors import CORS
 
 # TODO: DO NOT HARD CODE
 sys.path.insert(0, str(pathlib.Path(__file__).absolute().parents[4]))
@@ -15,6 +14,7 @@ from modelflow.modelflow import get_params, run_sim
 
 @app.route('/api/get_params')
 def get_params_route():
+    # TODO: Allow for loading different scenarios
     scenario_name = request.args.get("scenario", "baseline")
     scenario = get_scenario(scenario_name)
 

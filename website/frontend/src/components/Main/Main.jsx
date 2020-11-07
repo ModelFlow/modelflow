@@ -1,35 +1,31 @@
 import React, { Component } from 'react';
 import './Main.css';
 import { connect } from 'react-redux';
-import { Button } from '@blueprintjs/core';
+import actions from '../../state/actions';
 import ParamInputs from '../ParamInputs/ParamInputs';
 import ResultsGrid from '../ResultsGrid/ResultsGrid';
-import actions from '../../state/actions';
+import Header from '../Header/Header';
 
 class Main extends Component {
-  clickedAddCard = () => {
-    const { addCard } = this.props;
-    addCard();
+  componentDidMount() {
+    const url = new URL(window.location.href);
+    let id = url.searchParams.get('id') || '1';
+    this.fetchData(id);
+  }
+
+  fetchData = async (id) => {
+    const { loadScenarioView, getParams, runSim } = this.props;
+    // TODO: I don't like that two https requests in serial are needed here.
+    // Perhaps get params will be included in the scenario view
+    await getParams();
+    await loadScenarioView(id);
+    await runSim();
   };
 
   render() {
     return (
       <>
-        <div className="global-header">
-          <img
-            className="logo"
-            alt="logo"
-            src="model_flow_horizontal.png"
-            height="30"
-          />
-          <h3 className="bp3-heading titleText">Mars Baseline Simulation</h3>
-          <Button
-            className="heading-button"
-            icon="add"
-            text="Add"
-            onClick={this.clickedAddCard}
-          />
-        </div>
+        <Header />
         <div className="grid-container">
           <div className="paramsCabinet">
             <ParamInputs />
@@ -44,7 +40,9 @@ class Main extends Component {
 }
 
 const mapDispatchToProps = {
-  addCard: actions.resultViews.addCard,
+  loadScenarioView: actions.scenarioViews.loadScenarioView,
+  getParams: actions.params.getParams,
+  runSim: actions.sim.runSim,
 };
 
 const mapStateToProps = (state) => ({});

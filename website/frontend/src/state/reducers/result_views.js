@@ -1,50 +1,33 @@
+import { insertItem, removeItem } from '../../services/Utilities';
+
 const initialState = {
-  cards: {
-    initial1: {
-      outputKey: 'state_enrg_kwh',
-    },
-    initial2: {
-      outputKey: 'state_dc_kwh',
-    },
-  },
+  cards: {},
   layout: {
-    lg: [
-      {
-        i: 'initial1',
-        x: 0,
-        y: 0,
-        w: 6,
-        h: 8,
-      },
-      {
-        i: 'initial2',
-        x: 6,
-        y: 0,
-        w: 6,
-        h: 6,
-      },
-    ],
+    lg: [],
   },
 };
 
-function insertItem(array, item) {
-  const newArray = array.slice();
-  newArray.splice(0, 0, item);
-  return newArray;
-}
-
-function removeItem(array, idx) {
-  const newArray = array.slice();
-  newArray.splice(idx, 1);
-  return newArray;
-}
-
 export default function reduce(state = initialState, action = {}) {
   switch (action.type) {
+    case 'SET_SIM_ERROR': {
+      return {
+        ...state,
+        simError: action.simError,
+      };
+    }
+    case 'UPDATE_LAYOUT_AND_CARDS': {
+      return {
+        ...state,
+        layout: action.layout,
+        cards: action.cards,
+        simError: null,
+      };
+    }
+
     case 'UPDATE_RESULT_VIEW_LAYOUT': {
       return {
         ...state,
-        layout: { lg: action.layout },
+        layout: action.layout,
       };
     }
     case 'ADD_CARD': {

@@ -9,6 +9,7 @@
 *generatednd.py
 *.gv*
 *.twbr
+*.db
 *.vscode*
 
 # Byte-compiled / optimized / DLL files
