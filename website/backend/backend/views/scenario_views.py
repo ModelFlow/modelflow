@@ -8,6 +8,7 @@ from datetime import datetime
 
 @app.route('/api/scenario_views', methods=['GET'])
 def get_scenario_views():
+    print("INSIDE LIST SCENARIO VIEWS")
     # TODO: Handle showing hidden scenario views
     results = db.session.query(ScenarioView)
     results = results.options(defer('json_data'))
@@ -25,7 +26,10 @@ def get_scenario_views():
 @app.route('/api/scenario_view', methods=['GET'])
 def get_scenario_view():
     scenario_view_id = int(request.args.get('id', 0))
+    print(f"the scenario view is {request.args['id']}")
+    print(scenario_view_id)
     scenario_view = ScenarioView.query.filter(ScenarioView.id == scenario_view_id).first()
+    print(f"loading view: {scenario_view}")
     if scenario_view is None:
         return dict(error=f'No scenario view found for id {scenario_view_id}')
     return dict(
@@ -78,6 +82,7 @@ def hide_scenario_view():
 
 def seed_data():
     scenario_count = db.session.query(ScenarioView).count()
+    print(scenario_count)
     if scenario_count == 0:
         print('Seeding new scenario view...')
         scenario_view = ScenarioView()

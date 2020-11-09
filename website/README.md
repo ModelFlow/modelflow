@@ -62,6 +62,7 @@ docker push 805888055623.dkr.ecr.us-west-2.amazonaws.com/modelflow:latest
 cd ...website/backend/aws_deploy
 
 For first time:
+pip install awsebcli
 eb init
 
 eb deploy

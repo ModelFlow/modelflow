@@ -32,7 +32,7 @@ def run_sim_route():
 
     scenario['params'] = body['params']
 
-    return run_sim(scenario, models, get_sim_dir())
+    return run_sim(scenario, models, should_output_deltas=True, use_numba=True)
 
 def get_sim_dir():
     # TODO: Make generic
