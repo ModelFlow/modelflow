@@ -1,5 +1,5 @@
 FROM python:3.7
-COPY requirements.txt prod_requirements.txt
+COPY prod_requirements.txt prod_requirements.txt
 RUN pip install -r prod_requirements.txt
 EXPOSE 8080
 COPY . .
