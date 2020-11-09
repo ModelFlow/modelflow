@@ -11,10 +11,9 @@ class Production(Config):
     DEBUG = False
     SQLALCHEMY_DATABASE_URI = (
         f"postgresql://{os.environ.get('POSTGRES_USER', 'user')}:"
-        f"{os.environ.get('POSTGRES_PASS', 'pass')}@{os.environ.get('POSTGRES_HOST', '0.0.0.0')}"
+        f"{os.environ.get('POSTGRES_PASS', 'pass')}@{os.environ.get('POSTGRES_HOST', '0.0.0.0')}:5432"
         f"/{os.environ.get('POSTGRES_DB', 'modelflow')}"
     )
-
 
 class Development(Config):
     DEBUG = True

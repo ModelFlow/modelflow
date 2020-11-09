@@ -20,5 +20,5 @@ from backend.views.simulation import *  # NOQA
 if os.environ.get('APP_CONFIG') != 'backend.config.Production':
     db.create_all()
 
-# Comes from backend.views.scenario_views
-seed_data()
+    # Comes from backend.views.scenario_views
+    seed_data()
