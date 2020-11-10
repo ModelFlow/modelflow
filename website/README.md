@@ -75,7 +75,7 @@ https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/create-deploy-python-flas
 
 Notes:
 
-1. Create way to export json from models
+1. Create way to export json from models.
 2. Create side bar that show sliders for parameters, text boxes for others
 3. Resizable and movable grid that you can put any plotly chart into
 
