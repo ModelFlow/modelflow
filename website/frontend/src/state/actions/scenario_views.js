@@ -3,17 +3,16 @@ import { updateUrlWithId } from '../../services/Utilities';
 
 function getScenarioData(state) {
   const { params, resultViews } = state;
-  const { layout, cards } = resultViews;
+  const { tabs, selectedTabId, tabsContent } = resultViews;
   const paramValues = {};
   params.params.forEach((param) => {
     paramValues[param.key] = param.value;
   });
   return {
     paramValues,
-    resultsView: {
-      layout,
-      cards,
-    },
+    tabs,
+    selectedTabId,
+    tabsContent,
   };
 }
 
@@ -64,12 +63,12 @@ export const loadScenarioView = (id) => async (dispatch) => {
     return;
   }
 
-  const { paramValues, resultsView } = data.data;
-  const { layout, cards } = resultsView;
+  const { paramValues, tabs, tabsContent, selectedTabId } = data.data;
   dispatch({
-    type: 'UPDATE_LAYOUT_AND_CARDS',
-    layout,
-    cards,
+    type: 'UPDATE_TABS',
+    tabs,
+    tabsContent,
+    selectedTabId,
   });
 
   dispatch({

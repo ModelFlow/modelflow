@@ -3,7 +3,8 @@ import './Main.css';
 import { connect } from 'react-redux';
 import actions from '../../state/actions';
 import ParamInputs from '../ParamInputs/ParamInputs';
-import ResultsGrid from '../ResultsGrid/ResultsGrid';
+// import ResultsGrid from '../ResultsGrid/ResultsGrid';
+import ResultsView from '../ResultsView/ResultsView';
 import Header from '../Header/Header';
 
 class Main extends Component {
@@ -31,7 +32,7 @@ class Main extends Component {
             <ParamInputs />
           </div>
           <div className="resultsDisplay">
-            <ResultsGrid />
+            <ResultsView />
           </div>
         </div>
       </>

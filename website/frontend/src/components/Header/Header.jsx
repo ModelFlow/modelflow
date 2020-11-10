@@ -43,8 +43,6 @@ class Header extends Component {
   };
 
   clickedLoadScenarioView = () => {
-    const { saveScenarioView } = this.props;
-    // saveScenarioView();
     console.log("load scenario view")
   };
 
@@ -158,7 +156,7 @@ class Header extends Component {
           <div className={Classes.DIALOG_BODY}>
             <p>Name your scenario view:</p>
             <input
-              class="bp3-input"
+              className="bp3-input"
               type="text"
               placeholder="name"
               dir="auto"

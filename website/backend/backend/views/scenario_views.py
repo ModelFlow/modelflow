@@ -1,3 +1,4 @@
+import os
 import json
 from backend import app, db
 from backend.models import ScenarioView
@@ -70,6 +71,16 @@ def seed_data_route():
     return {'status': 'ok'}
 
 
+@app.route('/api/clear_data', methods=['GET'])
+def clear_data_route():
+    if os.environ.get('POSTGRES_PASS') is not None:
+        if request.args.get('pass') != os.environ.get('POSTGRES_PASS'):
+            return {'status': 'unauthorized'}
+    num_rows_deleted = db.session.query(ScenarioView).delete()
+    db.session.commit()
+    return {'deleted': num_rows_deleted}
+
+
 @app.route('/api/hide_scenario_view', methods=['GET'])
 def hide_scenario_view():
     scen_id = request.args['id']
@@ -82,7 +93,6 @@ def hide_scenario_view():
 
 def seed_data():
     scenario_count = db.session.query(ScenarioView).count()
-    print(scenario_count)
     if scenario_count == 0:
         print('Seeding new scenario view...')
         scenario_view = ScenarioView()
@@ -91,33 +101,43 @@ def seed_data():
             'paramValues': {
                 'dc_capacity_kwh': 9000,
             },
-            'resultsView': {
-                'cards': {
-                    'initial1': {
-                        'outputKey': 'state_enrg_kwh',
-                    },
-                    'initial2': {
-                        'outputKey': 'state_dc_kwh',
-                    },
-                },
-                'layout': {
-                    "lg":[
-                        {
-                            'i': 'initial1',
-                            'x': 0,
-                            'y': 0,
-                            'w': 6,
-                            'h': 6,
-                        },
-                        {
-                            'i': 'initial2',
-                            'x': 6,
-                            'y': 0,
-                            'w': 6,
-                            'h': 6,
-                        }
-                    ]
+            'tabs': [
+                {
+                    'id': 'energy',
+                    'title': 'Energy'
                 }
+            ],
+            'selectedTabId': 'energy',
+            'tabsContent': {
+                'energy': {
+                    'cards': {
+                        'initial1': {
+                            'outputKey': 'state_enrg_kwh',
+                        },
+                        'initial2': {
+                            'outputKey': 'state_dc_kwh',
+                        },
+                    },
+                    'layout': {
+                        "lg":[
+                            {
+                                'i': 'initial1',
+                                'x': 0,
+                                'y': 0,
+                                'w': 6,
+                                'h': 6,
+                            },
+                            {
+                                'i': 'initial2',
+                                'x': 6,
+                                'y': 0,
+                                'w': 6,
+                                'h': 6,
+                            }
+                        ]
+                    }
+                }
+                
             }   
         })
         scenario_view.is_hidden = False

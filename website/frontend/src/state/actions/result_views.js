@@ -34,3 +34,36 @@ export const updateCardOutputKey = (uuid, outputKey) => async (dispatch) => {
     outputKey,
   });
 };
+
+export const addTab = () => async (dispatch) => {
+  const tab = {
+    id: makeUUID(),
+    title: '',
+  };
+  dispatch({
+    type: 'ADD_TAB',
+    tab,
+  });
+};
+
+export const removeTab = (id) => async (dispatch) => {
+  dispatch({
+    type: 'REMOVE_TAB',
+    id,
+  });
+};
+
+export const switchTab = (selectedTabId) => async (dispatch) => {
+  dispatch({
+    type: 'SWITCH_TAB',
+    selectedTabId,
+  });
+};
+
+export const editTabTitle = (id, title) => async (dispatch) => {
+  dispatch({
+    type: 'EDIT_TAB_TITLE',
+    id,
+    title,
+  });
+};
