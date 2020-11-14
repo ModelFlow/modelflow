@@ -5,7 +5,7 @@ class Plants:
             dict(
                 key="co2_consumed",
                 units="kg/hr",
-                value=0.04 kg removed per hour,
+                value= 0.04,
                 source="See Variables module document",
                 min=0,   # Including a min and max automatically creates slider on website
                 max=1
