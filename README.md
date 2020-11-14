@@ -32,7 +32,8 @@ npm start
 ```
 In a second terminal window after following steps under installation, run:
 ```
-cd website/backend
+source venv/bin/activate
+cd modelflow/website/backend
 python run_server.py
 ```
 In a browser open http://localhost:3000
