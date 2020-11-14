@@ -5,9 +5,9 @@ class Battery:
             dict(
                 key="dc_capacity_kwh",
                 units="kwh",
-                value=4000,
+                value=500,
                 min=0,
-                max=10000,
+                max=1000,
                 source="FAKE"
             ),
             dict(
