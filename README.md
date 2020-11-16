@@ -4,7 +4,7 @@
 Python framework and web interface for creating and sharing agent based models.
 
 ![](screenshots/modelflow_2020_09_20.png)
-*Simple Mars Base Example Results Visualized in Experimental Modelflow Interface https://modelflow.io*
+*Simple Mars Base Example Results Visualized in the Modelflow Interface https://modelflow.io*
 
 ## Installation
 Requires python 3.6 or later
