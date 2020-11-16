@@ -26,6 +26,12 @@ export function insertItem(array, item) {
   return newArray;
 }
 
+export function appendItem(array, item) {
+  const newArray = array.slice();
+  newArray.push(item);
+  return newArray;
+}
+
 export function removeItem(array, idx) {
   const newArray = array.slice();
   newArray.splice(idx, 1);

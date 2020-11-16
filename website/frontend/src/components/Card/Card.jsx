@@ -41,7 +41,8 @@ class Card extends Component {
   };
 
   render() {
-    const { results, cards, uuid } = this.props;
+    const { results, tabsContent, uuid, tabId } = this.props;
+    const { cards } = tabsContent[tabId];
     const selectedOutputKey = cards[uuid].outputKey;
     const { output_states } = results;
 
@@ -147,8 +148,8 @@ const mapDispatchToProps = {
 };
 
 const mapStateToProps = (state) => ({
+  tabsContent: state.resultViews.tabsContent,
   results: state.sim.results,
-  cards: state.resultViews.cards,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Card);
