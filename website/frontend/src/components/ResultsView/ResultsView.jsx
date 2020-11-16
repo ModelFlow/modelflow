@@ -15,7 +15,7 @@ import actions from '../../state/actions';
 
 class ResultsView extends Component {
   state = {
-    isOpen: true,
+    isOpen: false,
   };
 
   handleOpen = () => {
@@ -27,20 +27,16 @@ class ResultsView extends Component {
   };
 
   addTab = () => {
-    console.log('added tab');
     const { addTab } = this.props;
     addTab();
   };
 
   removeTab = (id) => {
-    console.log(`remove tab ${id}`);
     const { removeTab } = this.props;
     removeTab(id);
   };
 
   handleTabTitleChange = (tabId, e) => {
-    console.log(tabId)
-    console.log(e)
     const { editTabTitle } = this.props;
     editTabTitle(tabId, e.target.value);
   };

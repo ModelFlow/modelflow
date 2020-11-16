@@ -42,9 +42,7 @@ class Header extends Component {
     });
   };
 
-  clickedLoadScenarioView = () => {
-    console.log("load scenario view")
-  };
+  clickedLoadScenarioView = () => {};
 
   handleOpen = () => {
     this.setState({ isOpen: true });
