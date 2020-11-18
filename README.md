@@ -7,7 +7,7 @@ Python framework and web interface for creating and sharing agent based models.
 *Simple Mars Base Example Results Visualized in the Modelflow Interface https://modelflow.io*
 
 ## Installation
-Requires python 3.6 or later
+Requires python 3.6 or later. See Windows instructions at bottom.
 ```
 cd ..
 python3 -m venv venv
@@ -54,3 +54,37 @@ Pure Python is extremely slow with some basic examples taking roughly 0.5 second
 ## Notes
 See [NOTES.md](NOTES.md) for TODOs and ideas
 
+## Usage on Windows
+
+```
+# One time installation
+python3 -m venv venv
+cd .\venv\Scripts\
+.\activate.bat
+cd ..\..
+pip install -r requirements.txt
+
+# Running model
+cd .\venv\Scripts\
+.\activate.bat
+cd ..\..
+cd .\examples\mars
+python .\main.py
+python -m pytest
+
+# To run backend
+# In a separate window (I was using VS Code)
+cd .\venv\Scripts\
+.\activate.bat
+cd ..\..
+cd .\website\backend\
+python .\run_server.py
+
+# To run frontend
+# In a separate window (I was using VS Code)
+# First install https://nodejs.org/en/
+# If using VS Code you must right click and launch run as administrator
+cd .\website\frontend\
+npm install
+npm start
+```
