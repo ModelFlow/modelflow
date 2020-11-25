@@ -60,13 +60,13 @@ See [NOTES.md](NOTES.md) for TODOs and ideas
 # One time installation
 python3 -m venv venv
 cd .\venv\Scripts\
-.\activate.bat
+.\activate
 cd ..\..
 pip install -r requirements.txt
 
 # Running model
 cd .\venv\Scripts\
-.\activate.bat
+.\activate
 cd ..\..
 cd .\examples\mars
 python .\main.py
@@ -75,7 +75,7 @@ python -m pytest
 # To run backend
 # In a separate window (I was using VS Code)
 cd .\venv\Scripts\
-.\activate.bat
+.\activate
 cd ..\..
 cd .\website\backend\
 python .\run_server.py
