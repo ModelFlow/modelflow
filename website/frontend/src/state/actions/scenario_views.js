@@ -41,13 +41,11 @@ export const newScenarioView = (title) => async (dispatch, getState) => {
 };
 
 export const saveScenarioView = () => async (dispatch, getState) => {
-  const { data } = await axios.post(
-    `${process.env.REACT_APP_API_URL}/update_scenario_view`,
-    {
-      id: getState().scenarioViews.scenarioViewMeta.id,
-      data: getScenarioData(getState()),
-    },
-  );
+  // const { data } =
+  await axios.post(`${process.env.REACT_APP_API_URL}/update_scenario_view`, {
+    id: getState().scenarioViews.scenarioViewMeta.id,
+    data: getScenarioData(getState()),
+  });
   // TODO: use result from status here
 };
 

@@ -12,12 +12,13 @@ import { createStore, applyMiddleware, combineReducers } from 'redux';
 
 const store = createStore(combineReducers(reducers), applyMiddleware(thunk));
 
+// Note strictmode breaks flow chart
 ReactDOM.render(
-  <React.StrictMode>
+  <>
     <Provider store={store}>
       <Main />
     </Provider>{' '}
-  </React.StrictMode>,
+  </>,
   document.getElementById('root'),
 );
 

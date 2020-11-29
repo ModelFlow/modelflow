@@ -8,6 +8,7 @@ const defaultResultGrid = {
 };
 
 const initialState = {
+  mainViewType: 'flow',
   simError: null,
   tabs: [
     {
@@ -35,6 +36,13 @@ export default function reduce(state = initialState, action = {}) {
         tabs: action.tabs,
         tabsContent: action.tabsContent,
         selectedTabId: action.selectedTabId,
+      };
+    }
+
+    case 'UPDATE_TABS_CONTENT': {
+      return {
+        ...state,
+        tabsContent: action.tabsContent,
       };
     }
 

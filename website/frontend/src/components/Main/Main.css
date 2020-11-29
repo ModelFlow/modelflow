@@ -5,6 +5,14 @@
   height: 100vh;
 }
 
+.flow-container {
+  display: grid;
+  grid-template-columns: auto;
+  background-color: #F5F8FA;
+  height: 100vh;
+  overflow: hidden;
+}
+
 .paramsCabinet {
   background-color: white;
   border-left: 1px solid lightgray;
@@ -16,4 +24,5 @@
   background-color: #F5F8FA;
   border-left: 1px solid lightgray;
   padding: 0px;
+  overflow-y: scroll;
 }

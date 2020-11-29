@@ -4,6 +4,7 @@
   border-bottom-style: solid;
   border-bottom-color: lightgray;
   height: 40px;
+  /* position: fixed; */
 }
 
 .logo {
@@ -15,7 +16,7 @@
   margin-left: 210px;
   position: absolute;
   margin-top: -31px;
-  width: 450px;
+  width: 380px;
 }
 
 .scenario {
@@ -47,6 +48,12 @@
 }
 
 .new-button {
+  float: right;
+  margin-right: 5px;
+  margin-top: 4px;
+}
+
+.flow-results-switch {
   float: right;
   margin-right: 5px;
   margin-top: 4px;

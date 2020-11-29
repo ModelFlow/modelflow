@@ -5,6 +5,7 @@ import actions from '../../state/actions';
 import ParamInputs from '../ParamInputs/ParamInputs';
 // import ResultsGrid from '../ResultsGrid/ResultsGrid';
 import ResultsView from '../ResultsView/ResultsView';
+import FlowView from '../FlowView/FlowView';
 import Header from '../Header/Header';
 
 class Main extends Component {
@@ -24,9 +25,16 @@ class Main extends Component {
   };
 
   render() {
-    return (
-      <>
-        <Header />
+    const { mainViewType } = this.props;
+    let mainView = null;
+    if (mainViewType === 'flow') {
+      mainView = (
+        <div className="flow-container">
+          <FlowView />
+        </div>
+      );
+    } else {
+      mainView = (
         <div className="grid-container">
           <div className="paramsCabinet">
             <ParamInputs />
@@ -35,6 +43,13 @@ class Main extends Component {
             <ResultsView />
           </div>
         </div>
+      );
+    }
+    //         
+    return (
+      <>
+        <Header />
+        {mainView}
       </>
     );
   }
@@ -46,6 +61,8 @@ const mapDispatchToProps = {
   runSim: actions.sim.runSim,
 };
 
-const mapStateToProps = (state) => ({});
+const mapStateToProps = (state) => ({
+  mainViewType: state.common.mainViewType,
+});
 
 export default connect(mapStateToProps, mapDispatchToProps)(Main);

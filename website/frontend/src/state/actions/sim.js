@@ -12,3 +12,9 @@ export const runSim = () => async (dispatch, getState) => {
     results: data,
   });
 };
+
+export const requestForceUpdate = () => async (dispatch) => {
+  dispatch({
+    type: 'INCREMENT_FORCE_UPDATE_COUNTER',
+  });
+};
