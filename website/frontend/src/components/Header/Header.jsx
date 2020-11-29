@@ -42,6 +42,12 @@ class Header extends Component {
     });
   };
 
+  clickedSwitchFlowOrResults = () => {
+    const { switchMainViewType } = this.props;
+    console.log("switch main view type")
+    switchMainViewType();
+  };
+
   clickedLoadScenarioView = () => {};
 
   handleOpen = () => {
@@ -92,7 +98,7 @@ class Header extends Component {
   };
 
   render() {
-    const { scenarioViews, scenarioViewMeta } = this.props;
+    const { scenarioViews, scenarioViewMeta, mainViewType } = this.props;
     const { title } = scenarioViewMeta;
     const { isOpen, newName } = this.state;
     return (
@@ -138,6 +144,15 @@ class Header extends Component {
               onClick={this.clickedLoadScenarioView}
             />
           </Select>
+
+          <Button
+            className="flow-results-switch"
+            icon={
+              mainViewType === 'flow' ? 'timeline-line-chart' : 'data-lineage'
+            }
+            text={mainViewType === 'flow' ? 'Model' : 'Flow'}
+            onClick={this.clickedSwitchFlowOrResults}
+          />
         </div>
 
         <Dialog
@@ -189,11 +204,13 @@ const mapDispatchToProps = {
   saveScenarioView: actions.scenarioViews.saveScenarioView,
   loadScenarioView: actions.scenarioViews.loadScenarioView,
   getScenarioViewsList: actions.scenarioViews.getScenarioViewsList,
+  switchMainViewType: actions.common.switchMainViewType,
 };
 
 const mapStateToProps = (state) => ({
   scenarioViews: state.scenarioViews.scenarioViews,
   scenarioViewMeta: state.scenarioViews.scenarioViewMeta,
+  mainViewType: state.common.mainViewType,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Header);

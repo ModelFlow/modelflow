@@ -50,6 +50,11 @@ class Card extends Component {
       const { width, height } = this.contentRef.getBoundingClientRect();
       this.size.width = width;
       this.size.height = height;
+    } else {
+      // NOTE THIS IS ULTRA SKETCH
+      // However it currently fixes an issue that causes the graphs to not show up
+      // when switching between the flow and results views.
+      this.forceUpdate();
     }
     let plot = null;
     let selector = null;

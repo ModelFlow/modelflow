@@ -52,7 +52,6 @@ class ResultsView extends Component {
     if (simError) {
       return <div>Error: {simError}</div>;
     }
-
     return (
       <>
         <div className="tabHeader">

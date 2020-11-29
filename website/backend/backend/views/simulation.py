@@ -5,11 +5,10 @@ import json
 import pathlib
 from backend import app
 from flask import request
-
-# TODO: DO NOT HARD CODE
 sys.path.insert(0, str(pathlib.Path(__file__).absolute().parents[4]))
 from examples.mars.models import list_models
 from modelflow.modelflow import get_params, run_sim
+from modelflow.graph_viz_from_outputs import generate_react_flow_chart
 
 
 @app.route('/api/get_params')
@@ -27,12 +26,17 @@ def get_params_route():
 def run_sim_route():
     body = json.loads(request.data)
     scenario_name = body.get("scenario", "baseline")
+    # should_generate_graph = int(body.get("should_generate_graph", 0)) == 1
     scenario = get_scenario(scenario_name)
     models = list_models()
 
     scenario['params'] = body['params']
 
-    return run_sim(scenario, models, should_output_deltas=True, use_numba=True)
+    outputs = run_sim(scenario, models, should_output_deltas=True, use_numba=True)
+    # if should_generate_graph:
+    outputs['flow'] = generate_react_flow_chart(outputs)
+
+    return outputs
 
 def get_sim_dir():
     # TODO: Make generic
