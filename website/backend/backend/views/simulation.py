@@ -7,7 +7,7 @@ from backend import app
 from flask import request
 sys.path.insert(0, str(pathlib.Path(__file__).absolute().parents[4]))
 from examples.mars.models import list_models
-from modelflow.modelflow import get_params, run_sim
+from modelflow.modelflow import get_params_and_initial_states, run_sim
 from modelflow.graph_viz_from_outputs import generate_react_flow_chart
 
 
@@ -19,7 +19,7 @@ def get_params_route():
 
     models = list_models()
 
-    return dict(params=get_params(scenario, models))
+    return get_params_and_initial_states(scenario, models)
 
 
 @app.route('/api/run_sim', methods=["POST"])

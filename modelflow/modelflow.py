@@ -16,7 +16,7 @@ except Exception:
     print("Note: Optional numba not installed")
 
 
-def get_params(scenario, models):
+def get_params_and_initial_states(scenario, models):
     """Gets all of the parameters that can be tweaked by the user interface
 
     Args:
@@ -37,6 +37,7 @@ def get_params(scenario, models):
 
     # params_dict = {}
     all_params = []
+    initial_states = []
     # data = None
     i = 0
     for model_info in scenario['models']:
@@ -49,13 +50,20 @@ def get_params(scenario, models):
                 param['index'] = i
                 all_params.append(param)
                 i += 1
+
+        if 'states' in model.definition:
+            for state in model.definition['states']:
+                initial_states.append(dict(
+                    new_key=f"initial_state_{state['key']}",
+                    value=state['value']
+                ))
                 # params_dict[model.__class__.__name__+ '_params_' + param['key']] = param
 
         # if hasattr(model, 'load_data'):
         #     print(f"inside has data {model.__class__.__name__}")
         #     data = model.__class__.load_data()
 
-    return all_params
+    return dict(params=all_params, initial_states=initial_states)
 
 
 def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force_fresh_run=True):
