@@ -14,8 +14,9 @@ class Card extends Component {
 
   handleValueChange = (newOutputKey) => {
     // this.setState({ selectedItem });
-    const { uuid, updateCardOutputKey } = this.props;
+    const { uuid, updateCardOutputKey, runSim } = this.props;
     updateCardOutputKey(uuid, newOutputKey);
+    runSim();
   };
 
   filterItem = (query, item) =>
@@ -44,7 +45,7 @@ class Card extends Component {
     const { results, tabsContent, uuid, tabId } = this.props;
     const { cards } = tabsContent[tabId];
     const selectedOutputKey = cards[uuid].outputKey;
-    const { output_states } = results;
+    const { output_states, all_output_states_keys } = results;
 
     if (this.contentRef) {
       const { width, height } = this.contentRef.getBoundingClientRect();
@@ -62,7 +63,7 @@ class Card extends Component {
     if (this.size.width && results && output_states) {
       selector = (
         <Select
-          items={Object.keys(output_states)}
+          items={all_output_states_keys}
           activeItem={selectedOutputKey}
           noResults={<MenuItem disabled text="No results." />}
           onItemSelect={this.handleValueChange}
@@ -150,6 +151,7 @@ class Card extends Component {
 const mapDispatchToProps = {
   removeCard: actions.resultViews.removeCard,
   updateCardOutputKey: actions.resultViews.updateCardOutputKey,
+  runSim: actions.sim.runSim,
 };
 
 const mapStateToProps = (state) => ({
