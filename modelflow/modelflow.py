@@ -58,7 +58,7 @@ def get_params(scenario, models):
     return all_params
 
 
-def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force_fresh_run=False):
+def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force_fresh_run=True):
     """Runs the simulation
 
     Args:
@@ -77,9 +77,18 @@ def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force
     for model in models:
         model_map[model.__class__.__name__] = model
 
+    count_dict = {}
     for model in scenario['models']:
         if model['model'] not in model_map:
             raise Exception(f"{model['model']} not in model list!")
+
+        count_key = 'count_' + model['model']
+        if 'count' in model:
+            count_dict[count_key] = model['count']
+        else:
+            count_dict[count_key] = 1
+
+        # TODO: Don't like how we change the types here. This is kinda confusing
         model['model'] = model_map[model['model']]
 
     params_dict = {}
@@ -144,6 +153,7 @@ def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force
         args = generate_numba_compatible_code(
             scenario['models'],
             scenario['run_for_steps'],
+            count_dict,
             no_outputs=False,  # Used for sweeping
             is_sweep=False,
             should_output_deltas=should_output_deltas,
@@ -165,8 +175,10 @@ def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force
             arg_vals.append(initial_states_dict[arg])
         elif arg in data_dict:
             arg_vals.append(data_dict[arg])
+        elif arg in count_dict:
+            arg_vals.append(count_dict[arg])
         else:
-            raise Exception(f"Could not find {arg} in params or state dict")
+            raise Exception(f"Could not find {arg} in params, state or count dict")
 
     sys.path.insert(0, str(abs_dir))
     rstep = __import__(gen_name).rstep
@@ -221,7 +233,7 @@ def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force
     return output
 
 
-def generate_numba_compatible_code(model_infos, num_steps, no_outputs=False, is_sweep=False, should_output_deltas=False, use_numba=False):
+def generate_numba_compatible_code(model_infos, num_steps, count_dict, no_outputs=False, is_sweep=False, should_output_deltas=False, use_numba=False):
 
     out = "# Generated Code\n"
     # TODO: Handle imports better
@@ -363,7 +375,11 @@ def generate_numba_compatible_code(model_infos, num_steps, no_outputs=False, is_
                 if not 'state_terminate_sim' in new_state:
                     # function_lists += f'        old_{new_state} = copy({new_state})\n'
                     function_lists += f'        old_{model_name}_{new_state} = {new_state}\n'
-        function_lists += f'        {new_state_strs} = {model_name}({all_out_strs})\n'
+
+        # Ex: if there are 4 people, then we'd run the agend 4 times
+        function_lists += f'        for _ in range(count_{model_name}):\n'
+        function_lists += f'            {new_state_strs} = {model_name}({all_out_strs})\n'
+        # function_lists += f'        {new_state_strs} = {model_name}({all_out_strs})\n'
 
         if should_output_deltas:
             for new_state in new_states_set:
@@ -386,7 +402,7 @@ def generate_numba_compatible_code(model_infos, num_steps, no_outputs=False, is_
     # for k, v in all_dicts.items():
     #     all_kwargs.append("{key}={value}")
     all_args = []
-    all_arg_vals = []
+    # all_arg_vals = []
     exclude_sweep_params = []
     for k in sorted(list(all_params.keys())):
         if is_sweep:
@@ -395,7 +411,7 @@ def generate_numba_compatible_code(model_infos, num_steps, no_outputs=False, is_
                 exclude_sweep_params.append(k)
         else:
             all_args.append(k)
-            all_arg_vals.append(all_params[k])
+            # all_arg_vals.append(all_params[k])
 
     all_output_keys = []
     only_states = []
@@ -406,11 +422,13 @@ def generate_numba_compatible_code(model_infos, num_steps, no_outputs=False, is_
             all_output_keys.append(k+"_out")
         if not is_sweep:
             all_args.append(f"initial_{k}")
-            all_arg_vals.append(all_states[k])
+            # all_arg_vals.append(all_states[k])
 
     for k, v in data_dict.items():
         all_args.append(f'{k}_data')
-        all_arg_vals.append(v)
+        # all_arg_vals.append(v)
+
+    all_args += list(sorted(list(count_dict.keys())))
 
     all_args_str = ",".join(all_args)
 

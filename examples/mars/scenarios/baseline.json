@@ -31,6 +31,7 @@
     },
     {
       "model": "Human",
+      "count": 1,
       "links": [
         "indoor_air",
         "potable_water_storage",
