@@ -45,7 +45,7 @@ class Main extends Component {
         </div>
       );
     }
-    //         
+
     return (
       <>
         <Header />

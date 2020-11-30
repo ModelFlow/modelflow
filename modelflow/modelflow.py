@@ -58,7 +58,7 @@ def get_params(scenario, models):
     return all_params
 
 
-def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force_fresh_run=True):
+def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force_fresh_run=False):
     """Runs the simulation
 
     Args:
