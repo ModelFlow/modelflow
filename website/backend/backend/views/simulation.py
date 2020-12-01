@@ -27,14 +27,23 @@ def run_sim_route():
     body = json.loads(request.data)
     scenario_name = body.get("scenario", "baseline")
     # should_generate_graph = int(body.get("should_generate_graph", 0)) == 1
+    output_keys = body.get("output_keys", None)
     scenario = get_scenario(scenario_name)
     models = list_models()
 
     scenario['params'] = body['params']
 
     outputs = run_sim(scenario, models, should_output_deltas=True, use_numba=True)
+
     # if should_generate_graph:
     outputs['flow'] = generate_react_flow_chart(outputs)
+
+    # Only send back the data that is requested by the frontend
+    outputs['all_output_states_keys'] = list(outputs['output_states'].keys())
+    if output_keys is not None:
+        keys_to_delete = list(set(outputs['all_output_states_keys']) - set(output_keys))
+        for key in keys_to_delete:
+            outputs['output_states'].pop(key, None)
 
     return outputs
 

@@ -75,9 +75,14 @@ class Header extends Component {
   };
 
   handleValueChange = (newItem) => {
-    const { loadScenarioView } = this.props;
+    this.fetchData(newItem);
+  };
+
+  fetchData = async (newItem) => {
+    const { loadScenarioView, runSim } = this.props;
     const { id } = newItem;
-    loadScenarioView(id);
+    await loadScenarioView(id);
+    await runSim();
   };
 
   filterItem = (query, item) =>
@@ -205,6 +210,7 @@ const mapDispatchToProps = {
   loadScenarioView: actions.scenarioViews.loadScenarioView,
   getScenarioViewsList: actions.scenarioViews.getScenarioViewsList,
   switchMainViewType: actions.common.switchMainViewType,
+  runSim: actions.sim.runSim,
 };
 
 const mapStateToProps = (state) => ({

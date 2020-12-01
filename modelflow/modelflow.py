@@ -66,7 +66,7 @@ def get_params_and_initial_states(scenario, models):
     return dict(params=all_params, initial_states=initial_states)
 
 
-def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force_fresh_run=True):
+def run_sim(scenario, models, should_output_deltas=False, use_numba=False, force_fresh_run=False):
     """Runs the simulation
 
     Args:

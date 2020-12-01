@@ -15,6 +15,8 @@ const initialState = {
   forceUpdateCounter: 0,
 };
 
+// TODO: Remove all of these flow things from sim.js and into their own file
+
 function createNode(name) {
   return new DefaultNodeModel(name, 'rgb(0,192,255)');
 }
