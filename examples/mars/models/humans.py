@@ -61,6 +61,12 @@ class Human:
                 source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
             dict(
+                key="Days of O2/water needed",
+                units="Days",
+                value=210,
+                source="Assume that ISRU water mining happens within 30 days of landing",
+            ),
+            dict(
                 key="max_hrs_survivable_with_no_water",
                 units="hr",
                 value=72,

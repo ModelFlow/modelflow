@@ -16,6 +16,20 @@ class NuclearReactor:
                 value=4500,
                 source="https://ats-fns.fi/images/files/2019/syp2019/presentations/PS2_PVenneri_NuclearTechnologyForSpaceSettlementsAndExploration.pdf",
                 notes="Mass for UltraSafe Nuclear Technology's space reactor"
+            ),
+            dict(
+                key="Lifespan",
+                units="years",
+                value=10,
+                source="https://ats-fns.fi/images/files/2019/syp2019/presentations/PS2_PVenneri_NuclearTechnologyForSpaceSettlementsAndExploration.pdf",
+                notes="Mass for UltraSafe Nuclear Technology's space reactor"
+            ),
+            dict(
+                key="Heat Production",
+                units="kelvin",
+                value= 1150,
+                source="https://ats-fns.fi/images/files/2019/syp2019/presentations/PS2_PVenneri_NuclearTechnologyForSpaceSettlementsAndExploration.pdf",
+                notes="Mass for UltraSafe Nuclear Technology's space reactor"
             )
         ],
         "states": [],
