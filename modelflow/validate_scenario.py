@@ -1,0 +1,1 @@
+# For each model's connected state, ensure that there is another model who has a state with the exact same key

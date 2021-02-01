@@ -1,143 +1,145 @@
 
 class Human:
-    definition = {
-        "name": "human",
-        "parent": "habitat",
-        "linked_input_states": [
-            "atmo_o2",
-            "atmo_co2",
-            "atmo_n2",
-            "h2o_potb",
-            "food_edbl"
-        ],
-        "linked_output_states": [
-            "atmo_co2",
-            "atmo_h2o",
-            "h2o_urin",
-            "h2o_waste",
-            "heat_diff_kwh"
-        ],
-        "params": [
-            dict(
-                key="atmo_o2_consumption",
-                units="kg/hr",
-                value=0.021583,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="h2o_consumption",
-                units="kg/hr",
-                value=0.165833,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="atmo_co2_output",
-                units="kg/hr",
-                value=0.025916,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="atmo_h2o_output",
-                units="kg/hr",
-                value=0.079167,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="h2o_urin",
-                units="kg/hr",
-                value=0.0625,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="h2o_waste",
-                units="kg/hr",
-                value=0.087083,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="food_consumption",
-                units="kg/hr",
-                value=0.062917,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="max_hrs_survivable_with_no_water",
-                units="hr",
-                value=72,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="max_hrs_survivable_with_no_food",
-                units="hr",
-                value=480,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="min_survivable_percent_atmo_o2",
-                units="decimal_percent",
-                value=0.08,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="max_survivable_percent_atmo_o2",
-                units="decimal_percent",
-                value=1,
-                source="https://www.nasa.gov/pdf/188963main_Extravehicular_Mobility_Unit.pdf",
-            ),
-            dict(
-                key="max_survivable_percent_atmo_co2",
-                units="decimal_percent",
-                value=0.01,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="max_hrs_survivable_with_no_food",
-                units="hr",
-                value=480,
-                source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-            ),
-            dict(
-                key="max_survivable_temperature",
-                units="C",
-                value=48,
-                source="google",
-            ),
-            dict(
-                key="min_survivable_temperature",
-                description="While obviously below 0C is survivable, if the habitat interior freezes, you're probably a gonner",
-                units="C",
-                value=0,
-                source="google",
-            ),
-            dict(
-                key="heat_output_kwh",
-                description="Heating io of humans",
-                units="kwh",
-                value=0.1,
-                source="google",
-            )
-        ],
-        "states": [
-            dict(
-                key="is_alive",
-                units="boolean",
-                value=1
-            ),
-            dict(
-                key="hours_without_food",
-                units="hours",
-                value=0
-            ),
-            dict(
-                key="hours_without_water",
-                units="hours",
-                value=0
-            )
-        ]
-    }
+    name = "human"
+    params = [
+        dict(
+            key="atmo_o2_consumption",
+            units="kg/hr",
+            value=0.021583,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="h2o_consumption",
+            units="kg/hr",
+            value=0.165833,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="atmo_co2_output",
+            units="kg/hr",
+            value=0.025916,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="atmo_h2o_output",
+            units="kg/hr",
+            value=0.079167,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="h2o_urin",
+            units="kg/hr",
+            value=0.0625,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="h2o_waste",
+            units="kg/hr",
+            value=0.087083,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="food_consumption",
+            units="kg/hr",
+            value=0.062917,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="max_hrs_survivable_with_no_water",
+            units="hr",
+            value=72,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="max_hrs_survivable_with_no_food",
+            units="hr",
+            value=480,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="min_survivable_percent_atmo_o2",
+            units="decimal_percent",
+            value=0.08,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="max_survivable_percent_atmo_o2",
+            units="decimal_percent",
+            value=1,
+            source="https://www.nasa.gov/pdf/188963main_Extravehicular_Mobility_Unit.pdf",
+        ),
+        dict(
+            key="max_survivable_percent_atmo_co2",
+            units="decimal_percent",
+            value=0.01,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="max_hrs_survivable_with_no_food",
+            units="hr",
+            value=480,
+            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+        ),
+        dict(
+            key="max_survivable_temperature",
+            units="C",
+            value=48,
+            source="google",
+        ),
+        dict(
+            key="min_survivable_temperature",
+            description="While obviously below 0C is survivable, if the habitat interior freezes, you're probably a gonner",
+            units="C",
+            value=0,
+            source="google",
+        ),
+        dict(
+            key="heat_output_kwh",
+            description="Heating io of humans",
+            units="kwh",
+            value=0.1,
+            source="google",
+        ),
+        dict(
+            key="mass",
+            description="average mass",
+            units="kg",
+            value=68,
+            source="google",
+        ),
+        dict(
+            key="volume",
+            description="average volume",
+            units="m3",
+            value=2,
+            source="google",
+        )
+    ],
+    states = [
+        dict(
+            key="activity_state",
+            units='enum',
+            value='TODO'
+        ),
+        dict(
+            key="is_alive",
+            units="boolean",
+            value=1
+        ),
+        dict(
+            key="hours_without_food",
+            units="hours",
+            value=0
+        ),
+        dict(
+            key="hours_without_water",
+            units="hours",
+            value=0
+        )
+    ]
 
     @staticmethod
-    def run_step(io, params, states, data):
+    def run_step(io, params, states, data, utils):
         # TODO: Look at partial pressures of oxygen, not just percent concentration!!!
 
         if states.is_alive == 0:
@@ -190,9 +192,9 @@ class Human:
             print('died due to too low temp')
             return
 
-        if io.food_edbl == 0:
+        if io.food == 0:
             states.hours_without_food += 1
-        io.food_edbl -= min(params.food_consumption, io.food_edbl)
+        io.food -= min(params.food_consumption, io.food)
 
         if io.h2o_potb == 0:
             states.hours_without_water += 1

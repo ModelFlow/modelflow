@@ -1,3 +1,5 @@
+# TODO: Note we need to differentiate between the living space atmosphere and stored gases
+
 class IndoorAir:
 
     # Note: Extremely high level calculations could be made like

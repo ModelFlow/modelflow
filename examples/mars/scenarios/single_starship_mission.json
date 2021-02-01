@@ -1,0 +1,97 @@
+{
+  "root_path": "modelflow/examples/mars",
+  "model_instances": [
+    {
+      "unique_key": "time",
+      "model_class": "Time",
+      "nickname": "Simulation Space & Time",
+      "parent_instance_key": null
+    },
+    {
+      "unique_key": "starship1",
+      "model_class": "Starship",
+      "nickname": "Starship 1",
+      "parent_instance_key": "time"
+    },
+    {
+      "unique_key": "crew1",
+      "model_class": "Human",
+      "nickname": "Crew 1",
+      "parent_instance_key": "starship1"
+    },
+    {
+      "unique_key": "crew2",
+      "model_class": "Human",
+      "nickname": "Crew 2",
+      "parent_instance_key": "starship1"
+    },
+    {
+      "unique_key": "indoor_air",
+      "model_class": "IndoorAir",
+      "nickname": "Starship Atmosphere",
+      "notes": "This does not accurately capture the need to store air separately or pressures",
+      "parent_instance_key": "starship1"
+    },
+    {
+      "unique_key": "onboard_pv",
+      "model_class": "Onboard PV",
+      "nickname": "Onboard Solar Panels",
+      "parent_instance_key": "starship1"
+    },
+    {
+      "unique_key": "starship_battery",
+      "model_class": "StarshipBattery",
+      "nickname": "Onboard Battery",
+      "parent_instance_key": "starship1"
+    }
+
+  ],
+  "model_classes": [
+    {
+      "class_name": "Starship",
+      "path": "models/starship.py"
+    },
+    {
+      "class_name": "Human",
+      "path": "models/human.py"
+    },
+    {
+      "class_name": "IndoorAir",
+      "path": "models/indoor_air.py"
+    },
+    {
+      "class_name": "StarshipPV",
+      "path": "models/starship_pv.py"
+    },
+    {
+      "class_name": "StarshipBattery",
+      "path": "models/starship_battery.py"
+    },
+    {
+      "class_name": "StarshipPotableWaterStorage",
+      "path": "models/starship_storages.py"
+    },
+    {
+      "class_name": "StarshipLiquidWaste",
+      "path": "models/starship_storages.py"
+    },
+    {
+      "class_name": "StarshipSolidWaste",
+      "path": "models/starship_storages.py"
+    },
+    {
+      "class_name": "StarshipFoodStorage",
+      "path": "models/starship_storages.py"
+    },
+    {
+      "class_name": "StarshipBattery",
+      "path": "models/starship_battery.py"
+    }
+  ],
+  "output_processors": [
+    {
+      "path": "output_processors/basic.py",
+      "function": "ensure_all_crew_survival"
+    }
+  ]
+}
