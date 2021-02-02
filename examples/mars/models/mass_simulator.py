@@ -1,8 +1,8 @@
 
-class DummyMass:
-    name = "Dummy Mass"
+class MassSimulator:
+    name = "Mass Simulator"
     description = "Dummy mass used for testing"
-    params = [
+    states = [
         dict(
             key="mass",
             units="kg",
@@ -16,8 +16,6 @@ class DummyMass:
             source="fake",
         )
     ]
-
-    states = []
 
     @staticmethod
     def run_step(io, params, states, data, utils):
