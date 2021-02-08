@@ -16,6 +16,24 @@ base_scenario = {
         "max_num_steps": 1000,
     },
     "model_instances": {
+        "mass_simulator": {
+            "model_class": MassSimulator,
+            "label": "Mass Simulator",
+            "parent_instance_key": "starship",
+            "overrides": {
+                "mass": 1,
+                "volume": 1
+            }
+        },
+        "mass_simulator2": {
+            "model_class": MassSimulator,
+            "label": "Mass Simulator 2",
+            "parent_instance_key": "starship",
+            "overrides": {
+                "mass": 2,
+                "volume": 2
+            }
+        },
         "time": {
             "model_class": Time,
             "label": "Simulation Space & Time",
@@ -41,18 +59,10 @@ base_scenario = {
             "label": "Mars Surface",
             "parent_instance_key": "time",
         },
-        "mass_simulator": {
-            "model_class": MassSimulator,
-            "label": "Mass Simulator",
-            "parent_instance_key": "starship",
-            "overrides": {
-                "mass": 1,
-                "volume": 1
-            }
-        },
+
 
     }
 }
 
 outputs = run_scenario(base_scenario)
-print(outputs)
+print("done")

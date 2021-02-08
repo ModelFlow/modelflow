@@ -15,7 +15,7 @@ class Time:
     name = "Time"
     description = "The module handles the time keeping"
     params = []
-    states = [
+    shared_states = [
         dict(
             key="utc_start",
             label="UTC Start",
@@ -32,12 +32,12 @@ class Time:
         dict(
             key="seconds_per_sim_step",
             label="Seconds per sim step",
-            notes="This is made a state instead of a parameter so it is accessible to other modules via io",
+            notes="This is made a state instead of a parameter so it is accessible to other modules via shared states",
             value=3600,
             units="Seconds",
         ),
     ]
 
     @staticmethod
-    def run_step(io, params, states, data, utils):
-        states.current_utc += states.seconds_per_sim_step
+    def run_step(shared_states, private_states, params, data, utils):
+        shared_states.current_utc += shared_states.seconds_per_sim_step
