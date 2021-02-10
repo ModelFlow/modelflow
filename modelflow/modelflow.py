@@ -38,7 +38,7 @@ class Utils:
     def change_parent_to(self, new_parent_key):
         from_key = self.instance_info['key']
         if new_parent_key not in self.model_instance_map:
-            raise Exception(f"Cannot move '{from_key}' since destination key '{new_parent_key}' does not exist")
+            raise SimulationError(f"Cannot move '{from_key}' since destination key '{new_parent_key}' does not exist")
 
         self.tree.move_node(from_key, new_parent_key)
 
@@ -56,27 +56,60 @@ def run_scenario(scenario):
 
     validate_scenario(scenario)
 
+    # Add the unique from the model_instances map to the values
+    for key, value in scenario['model_instances'].items():
+        value['key'] = key
+    model_instances_values = scenario['model_instances'].values()
+
+    max_steps = setup_global_sim_params(scenario)
+
+    tree = create_tree(scenario['model_instances'])
+    
+    shared_states_map, shared_states, private_states_map, private_states, _, params, utils_map = \
+        setup_vars_and_utils(scenario['model_instances'], tree)
+
+    shared_states_output, private_states_output, tree_outputs = init_outputs(shared_states_map, private_states_map)
+    try:
+        for _ in range(max_steps):
+            for instance_info in model_instances_values:            
+                key = instance_info['key']
+
+                instance_info['model_class'].run_step(
+                    shared_states, private_states[key], params[key], "TODO", utils_map[key])
+
+                for field_key in private_states_map[key]:
+                    private_states_output[key][field_key].append(getattr(private_states[key], field_key))
+
+            for key in shared_states_map:
+                shared_states_output[key].append(getattr(shared_states, key))
+
+            tree_out = tree.to_dict(with_data=False)
+            tree_outputs.append(tree_out)
+    except SimulationError as e:
+        return dict(error=str(e))
+
+    return dict(shared_states=shared_states_output, private_states=private_states_output, trees=tree_outputs)
+
+def setup_global_sim_params(scenario):
     max_steps = DEFAULT_MAX_STEPS
     if "simulation_params" in scenario:
         if  "max_num_steps" in scenario["simulation_params"]:
             max_steps = scenario["simulation_params"]["max_num_steps"]
+    return max_steps
 
-    # Add key to values
-    for key, value in scenario['model_instances'].items():
-        value['key'] = key
 
-    tree = create_tree(scenario['model_instances'])
-    print(tree)
-
+def setup_vars_and_utils(model_instance_map, tree):
     shared_states_map = {}
     private_states_map = {}
     private_states = {}
     params_map = {}
     params = {}
-    for info in scenario['model_instances'].values():
+    utils_map = {}
+    for info in model_instance_map.values():
 
         actual_instance = info['model_class']
         class_name = actual_instance.__class__.__name__
+        instance_key = info['key']
 
         param_map = {}
         if hasattr(actual_instance, 'params'):
@@ -123,19 +156,26 @@ def run_scenario(scenario):
                 shared_state_map[override_key] = value
 
             if override_key in private_state_map:
+                print("inside overriding private state")
+                print(override_key, value)
                 private_state_map[override_key] = value
 
-        params_map[info['key']] = param_map
-        params[info['key']] = SimpleNamespace(**param_map)
-        private_states_map[info['key']] = private_state_map
-        private_states[info['key']] = SimpleNamespace(**private_state_map)
+        params_map[instance_key] = param_map
+        params[instance_key] = SimpleNamespace(**param_map)
+        private_states_map[instance_key] = private_state_map
+        private_states[instance_key] = SimpleNamespace(**private_state_map)
 
         for state_key, value in shared_state_map.items():
             shared_states_map[state_key] = value
 
-    instance_infos = scenario['model_instances'].values()
-    # print(instance_infos)
+        print(tree)
+        utils_map[instance_key] = Utils(info, model_instance_map, tree, private_states, params_map)
+
     shared_states = SimpleNamespace(**shared_states_map)
+
+    return shared_states_map, shared_states, private_states_map, private_states, params_map, params, utils_map
+
+def init_outputs(shared_states_map, private_states_map):
     shared_states_output = {}
     for key in shared_states_map:
         shared_states_output[key] = []
@@ -147,32 +187,7 @@ def run_scenario(scenario):
             private_states_output[instance_key][key] = []
 
     tree_outputs = []
-    try:
-        for i in range(max_steps):
-            print(i)
-            for instance_info in instance_infos:            
-                print(instance_info['model_class'])
-                key = instance_info['key']
-
-                # NOTE: As a performance optimization this doesn't have to happen every timestamp
-                model_instance_map = scenario['model_instances']
-                utils = Utils(instance_info, model_instance_map, tree, private_states, params_map)
-                instance_info['model_class'].run_step(shared_states, private_states[key], params[key], "TODO", utils)
-
-                for field_key in private_states_map[key]:
-                    private_states_output[key][field_key].append(getattr(private_states[key], field_key))
-
-            for key in shared_states_map:
-                shared_states_output[key].append(getattr(shared_states, key))
-
-            tree_out = tree.to_dict(with_data=False)
-            tree_outputs.append(tree_out)
-    except SimulationError as e:
-        return dict(error=str(e))
-
-    print("Finished simulation")
-    return dict(shared_states=shared_states_output, private_states=private_states_output, trees=tree_outputs)
-
+    return shared_states_output, private_states_output, tree_outputs
 
 def validate_scenario(scenario):
     if not "model_instances" in scenario:

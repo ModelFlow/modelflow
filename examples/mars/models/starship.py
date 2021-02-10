@@ -100,8 +100,6 @@ class Starship:
             value=1234,
             source='fake'
         ),
-        # TODO: For fun use some sim like KSP to see how much fuel is used by TMI, EDL etc
-        # and have accurate events for that.
         dict(
             key="lox",
             label="Liquid Oxygen Fuel",

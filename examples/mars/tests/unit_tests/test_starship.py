@@ -62,6 +62,7 @@ class TestStarship():
 
     def test_statuses(self):
         outputs = run_scenario(base_scenario)
+        print(outputs)
         status_arr = outputs['private_states']['starship']['status']
         assert status_arr[0] == 'Pre-launch'
         assert status_arr[23] == 'Launching from LEO'
@@ -73,20 +74,19 @@ class TestStarship():
         assert status_arr[95] == 'Landing on Earth'
         assert status_arr[96] == 'Landed on Earth'
 
-    def test_invalid_schema_changes(self):
+    def test_invalid_schema_change(self):
         bad_scenario = copy.deepcopy(base_scenario)
         bad_scenario['model_instances'].pop("mars_surface", None)
         outputs = run_scenario(bad_scenario)
-        assert outputs['error'] == "No instance mars_surface found"
+        assert outputs['error'] == "Cannot move 'starship' since destination key 'mars_surface' does not exist"
 
-    def test_valid_schema_changes(self):
+    def test_valid_schema_change(self):
         outputs = run_scenario(base_scenario)
         assert outputs['trees'][0] == {'time': {'children': [{'interplanetary_space': {'children': [{'starship': {'children': ['mass_simulator']}}]}}, 'mars_surface']}}
-        assert outputs['trees'][48] == {'time': {'children': [{'interplanetary_space': {'children': [{'starship': {'children': ['mass_simulator']}}]}}, 'mars_surface']}}
-        assert outputs['trees'][49] == {'time': {'children': ['interplanetary_space', {'mars_surface', {'children': [{'starship': {'children': ['mass_simulator']}}]}}]}}
+        assert outputs['trees'][47] == {'time': {'children': ['interplanetary_space', {'mars_surface': {'children': [{'starship': {'children': ['mass_simulator']}}]}}]}}
 
     def test_pre_launch_checks(self):
         bad_scenario = copy.deepcopy(base_scenario)
-        bad_scenario['model_instances']["mass_simulator"]["mass"] = 100000000000
-        outputs = run_scenario(base_scenario)
+        bad_scenario['model_instances']["mass_simulator"]["overrides"]["mass"] = 100000000000
+        outputs = run_scenario(bad_scenario)
         assert outputs['error'] == "Exceeded payload initial mass capacity"
