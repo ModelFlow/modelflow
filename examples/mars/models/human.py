@@ -114,8 +114,9 @@ class Human:
             value=2,
             source="google",
         )
-    ],
-    states = [
+    ]
+
+    private_states = [
         dict(
             key="activity_state",
             units='enum',
@@ -139,69 +140,65 @@ class Human:
     ]
 
     @staticmethod
-    def run_step(io, params, states, data, utils):
+    def run_step(shared_states, private_states, params, data, utils):
         # TODO: Look at partial pressures of oxygen, not just percent concentration!!!
 
-        if states.is_alive == 0:
-            # Note: We do this because just using a try catch is expensive in C
-            states.terminate_sim = 1
+        if private_states.is_alive == 0:
             return
 
-        if states.hours_without_water > params.max_hrs_survivable_with_no_water:
-            # TODO: Support formal logging events
-            # "log("died from lack of water")
-            print('died due to lack of water')
-            states.is_alive = 0
+        if private_states.hours_without_water > params.max_hrs_survivable_with_no_water:
+            private_states.is_alive = 0
+            utils.log_event('died due to lack of water')
             return
 
-        if states.hours_without_food > params.max_hrs_survivable_with_no_food:
-            states.is_alive = 0
-            print('died due to lack of food')
+        if private_states.hours_without_food > params.max_hrs_survivable_with_no_food:
+            private_states.is_alive = 0
+            utils.log_event('died due to lack of food')
             return
 
-        atmosphere_total = io.atmo_o2 + io.atmo_co2 + io.atmo_n2
-        o2_concentration = io.atmo_o2 / atmosphere_total
-        if io.atmo_o2 == 0:
-            states.is_alive = 0
-            print('died due to no o2')
+        atmosphere_total = shared_states.atmo_o2 + shared_states.atmo_co2 + shared_states.atmo_n2
+        o2_concentration = shared_states.atmo_o2 / atmosphere_total
+        if shared_states.atmo_o2 == 0:
+            private_states.is_alive = 0
+            utils.log_event('died due to no o2')
             return
 
         if o2_concentration < params.min_survivable_percent_atmo_o2:
-            states.is_alive = 0
+            private_states.is_alive = 0
             print('died due to min_survivable_percent_atmo_o2')
             return
 
+        # NOTE: You won't actually die from 100% O2 but makes eventual fire almost certain
         if o2_concentration > params.max_survivable_percent_atmo_o2:
-            states.is_alive = 0
-            # TODO: Support print statement logging
-            print('died due to max_survivable_percent_atmo_o2')
+            private_states.is_alive = 0
+            utils.log_event('died due to likely fire from max_survivable_percent_atmo_o2')
             return
-        co2_concentration = io.atmo_co2 / atmosphere_total
+        co2_concentration = shared_states.atmo_co2 / atmosphere_total
         if co2_concentration > params.max_survivable_percent_atmo_co2:
-            states.is_alive = 0
-            print('died due to too much co2')
+            private_states.is_alive = 0
+            utils.log_event('died due to too much co2')
             return
 
-        if io.atmo_temp > params.max_survivable_temperature:
-            states.is_alive = 0
-            print('died due to too high temp')
+        if shared_states.atmo_temp > params.max_survivable_temperature:
+            private_states.is_alive = 0
+            utils.log_event('died due to too high temp')
             return
 
-        if io.atmo_temp < params.min_survivable_temperature:
-            states.is_alive = 0
-            print('died due to too low temp')
+        if shared_states.atmo_temp < params.min_survivable_temperature:
+            private_states.is_alive = 0
+            utils.log_event('died due to too low temp')
             return
 
-        if io.food == 0:
-            states.hours_without_food += 1
-        io.food -= min(params.food_consumption, io.food)
+        if shared_states.food == 0:
+            private_states.hours_without_food += 1
+        shared_states.food -= min(params.food_consumption, shared_states.food)
 
-        if io.h2o_potb == 0:
-            states.hours_without_water += 1
-        io.h2o_potb -= min(params.h2o_consumption, io.h2o_potb)
-        io.atmo_o2 -= min(params.atmo_o2_consumption, io.atmo_o2)
-        io.atmo_co2 += params.atmo_co2_output
-        io.atmo_h2o += params.atmo_h2o_output
-        io.h2o_urin += params.h2o_urin
-        io.h2o_waste += params.h2o_waste
-        io.heat_diff_kwh += params.heat_output_kwh
+        if shared_states.h2o_potb == 0:
+            private_states.hours_without_water += 1
+        shared_states.h2o_potb -= min(params.h2o_consumption, shared_states.h2o_potb)
+        shared_states.atmo_o2 -= min(params.atmo_o2_consumption, shared_states.atmo_o2)
+        shared_states.atmo_co2 += params.atmo_co2_output
+        shared_states.atmo_h2o += params.atmo_h2o_output
+        shared_states.h2o_urin += params.h2o_urin
+        shared_states.h2o_waste += params.h2o_waste
+        shared_states.heat_diff_kwh += params.heat_output_kwh
