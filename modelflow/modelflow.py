@@ -156,8 +156,6 @@ def setup_vars_and_utils(model_instance_map, tree):
                 shared_state_map[override_key] = value
 
             if override_key in private_state_map:
-                print("inside overriding private state")
-                print(override_key, value)
                 private_state_map[override_key] = value
 
         params_map[instance_key] = param_map
@@ -168,7 +166,6 @@ def setup_vars_and_utils(model_instance_map, tree):
         for state_key, value in shared_state_map.items():
             shared_states_map[state_key] = value
 
-        print(tree)
         utils_map[instance_key] = Utils(info, model_instance_map, tree, private_states, params_map)
 
     shared_states = SimpleNamespace(**shared_states_map)
