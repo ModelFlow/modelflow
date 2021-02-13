@@ -21,9 +21,27 @@ class misc_consumption:
                 source="NASA"
             ),
             dict(
-                key="Wh_per_kg",
+                key="wipes_and_towels",
                 units="kg/person/day",
                 value= 0.04875,
+                source="NASA"
+            ),
+            dict(
+                key="trash_bags",
+                units="kg/person/day",
+                value= 0.00275,
+                source="NASA"
+            ),
+            dict(
+                key="operational_supplies",
+                units="kg/person",
+                value= 25,
+                source="NASA"
+            ),
+            dict(
+                key="healthcare_consumables",
+                units="kg/person/day",
+                value= .0225,
                 source="NASA"
             )
         ]
