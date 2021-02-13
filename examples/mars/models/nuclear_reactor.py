@@ -13,10 +13,16 @@ class NuclearReactor:
             dict(
                 key="mass",
                 units="kg",
-                value=1500,
-                source="https://en.wikipedia.org/wiki/Kilopower",
+                value=1800,
+                source="https://ntrs.nasa.gov/api/citations/20160012354/downloads/20160012354.pdf",
                 notes="The space rated 10 kWe Kilopower for Mars is expected to mass 1500 kg in total (with a 226 kg core) and contain 43.7 kg of U235"
-            )
+            ),
+            dict(
+                key="lifespan",
+                units="years",
+                value=10,
+                source="https://ntrs.nasa.gov/api/citations/20160012354/downloads/20160012354.pdf"
+                )
         ],
         "states": [],
         "linked_output_states": [
