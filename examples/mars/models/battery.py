@@ -29,6 +29,19 @@ class Battery:
                 units="Wh/kg",
                 value=200,
                 source="wikipedia"
+            ),
+            dict(
+                key = "battery_mass",
+                units = "kg",
+                value = 8000,
+                source = "CALCULATED"
+            ),
+            dict(
+                key = "battery_volume",
+                units = "m3",
+                vallue = 3,
+                source = "CALCULATED",
+                notes = "Very low compared to Megapack",
             )
         ],
         "states": [

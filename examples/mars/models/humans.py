@@ -72,6 +72,7 @@ class Human:
                 value=480,
                 source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
             ),
+            //Why are all of the following different values but the same name?
             dict(
                 key="min_survivable_percent_atmo_o2",
                 units="decimal_percent",
@@ -115,7 +116,15 @@ class Human:
                 units="kwh",
                 value=0.1,
                 source="google",
-            )
+            ),
+            dict(
+                key = "mass_per_human",
+                description = "Average mass per human",
+                units = "kg",
+                value = 62,
+                source = "wikipedia",
+            ),
+
         ],
         "states": [
             dict(
