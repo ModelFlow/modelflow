@@ -9,7 +9,7 @@ class Human:
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
-            key="h2o_consumption",
+            key="potable_water_consumption",
             units="kg/hr",
             value=0.165833,
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
@@ -27,13 +27,13 @@ class Human:
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
-            key="h2o_urin",
+            key="urine_output",
             units="kg/hr",
             value=0.0625,
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
-            key="h2o_waste",
+            key="solid_waste",
             units="kg/hr",
             value=0.087083,
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
@@ -193,12 +193,12 @@ class Human:
             private_states.hours_without_food += 1
         shared_states.food -= min(params.food_consumption, shared_states.food)
 
-        if shared_states.h2o_potb == 0:
+        if shared_states.potable_water == 0:
             private_states.hours_without_water += 1
-        shared_states.h2o_potb -= min(params.h2o_consumption, shared_states.h2o_potb)
+        shared_states.potable_water -= min(params.potable_water_consumption, shared_states.potable_water)
         shared_states.atmo_o2 -= min(params.atmo_o2_consumption, shared_states.atmo_o2)
         shared_states.atmo_co2 += params.atmo_co2_output
         shared_states.atmo_h2o += params.atmo_h2o_output
-        shared_states.h2o_urin += params.h2o_urin
-        shared_states.h2o_waste += params.h2o_waste
+        shared_states.urine += params.urine_output
+        shared_states.solid_waste += params.solid_waste_output
         shared_states.heat_diff_kwh += params.heat_output_kwh

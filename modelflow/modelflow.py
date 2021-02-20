@@ -52,6 +52,9 @@ class Utils:
         
         return the_sum
 
+    def has_parent_instance_named(self, name):
+        return self.tree.get_node(self.instance_info['key']).parent.tag == name
+
 def run_scenario(scenario):
 
     validate_scenario(scenario)
@@ -64,7 +67,7 @@ def run_scenario(scenario):
     max_steps = setup_global_sim_params(scenario)
 
     tree = create_tree(scenario['model_instances'])
-    
+    print(tree)
     shared_states_map, shared_states, private_states_map, private_states, _, params, utils_map = \
         setup_vars_and_utils(scenario['model_instances'], tree)
 

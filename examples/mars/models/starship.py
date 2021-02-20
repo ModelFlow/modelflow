@@ -89,7 +89,6 @@ class Starship:
             confidence=0,
             source="fake",
         )
-
     ]
 
     shared_states = [

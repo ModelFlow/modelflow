@@ -25,7 +25,7 @@ class StarshipPotableWaterStorage:
             key="mass",
             units="kg",
             value=0,
-        )
+        ),
         dict(
             key="volume",
             units="m3",
