@@ -44,6 +44,15 @@ To run tests (from the modelflow root dir):
 pytest
 ```
 
+## Schema
+
+## Models
+
+- **Params (Parameters)**: These are mostly constants that can be tweaked
+- **States**: These are values that change overtime and can be accesses internally and by default by other models within scope as well
+
+
+
 ## Model Performance
 Pure Python is extremely slow with some basic examples taking roughly 0.5 seconds for a single run. Therefore, Modelflow supports using [Numba](https://numba.pydata.org/) to automatically convert all the models to C which can lead to a *100x speed up*. This does come with a tradeoff of complexity and certain limitations on what you can do inside model run functions. Currently all models are combined into a single function in a temporary file called `generated.py` allowing Numba to convert it to C. This process takes 3-4 seconds, but subsequent calls take from 0.1 to 0.0008 seconds depending on how you measure. This speed is important if you are trying to sweep across many parameterizations. 
 
