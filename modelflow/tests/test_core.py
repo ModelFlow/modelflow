@@ -1,3 +1,79 @@
+from modelflow.modelflow import run_scenario
+
+
+class PrivateExampleModel:   
+    states = [
+        dict(
+            key="private_example",
+            label="Private Example",
+            value=0,
+            private=True
+        )
+    ]
+
+    @staticmethod
+    def run_step(states, params, utils):
+        states.private_example += 1
+
+
+
+class TestPrivate():
+    scenario = {
+        "simulation_params": {
+            "max_num_steps": 3,
+        },
+        "model_instances": {
+            "private_ex": {
+                "model_class": PrivateExampleModel,
+                "label": "Private Example Instance",
+            }
+        }
+    }
+
+    def test_statuses(self):
+        outputs = run_scenario(self.scenario)
+        assert len(outputs['states']['private_ex']['private_example']) == 3
+        assert outputs['states']['private_ex']['private_example'][0] == 1
+        assert outputs['states']['private_ex']['private_example'][1] == 2
+        assert outputs['states']['private_ex']['private_example'][2] == 3
+
+
+class SharedStateExampleModel:   
+    states = [
+        dict(
+            key="shared_example",
+            label="Shared Example",
+            value=0
+        )
+    ]
+
+    @staticmethod
+    def run_step(states, params, utils):
+        states.shared_example += 1
+
+
+
+class TestSharedState():
+    scenario = {
+        "simulation_params": {
+            "max_num_steps": 3,
+        },
+        "model_instances": {
+            "shared_ex": {
+                "model_class": SharedStateExampleModel,
+                "label": "Shared Example Instance",
+            }
+        }
+    }
+
+    def test_statuses(self):
+        outputs = run_scenario(self.scenario)
+        assert len(outputs['states']['shared_ex']['shared_example']) == 3
+        assert outputs['states']['shared_ex']['shared_example'][0] == 1
+        assert outputs['states']['shared_ex']['shared_example'][1] == 2
+        assert outputs['states']['shared_ex']['shared_example'][2] == 3
+
+
 # import sys
 # import os
 # import json

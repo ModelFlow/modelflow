@@ -1,3 +1,5 @@
+from modelflow.modelflow import run_scenario
+
 class Starship:
     name = "starship"
     description = "Note: this container assumes that every child object has a mass and volume parameter or state"
@@ -91,7 +93,7 @@ class Starship:
         )
     ]
 
-    shared_states = [
+    states = [
         dict(
             key="distance_from_sun",
             notes="Used for calculating the decrease in solar production from Earth to Mars",
@@ -110,25 +112,22 @@ class Starship:
             label="Liquid Methane Fuel",
             units="kg",
             value=263736
-        )
-    ]
-
-    private_states = [
+        ),
         dict(
             key="status",
             label="Status",
-            value="Traveling to Mars",
+            value="No Status",
+            private=True
         )
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
-
-        seconds_since_launch = shared_states.current_utc - params.launch_utc
+    def run_step(states, params, utils):
+        seconds_since_launch = states.current_utc - params.launch_utc
         days_since_mission_start = seconds_since_launch / 60 / 60 / 24
 
         if days_since_mission_start < 0:
-            private_states.status = 'Pre-launch'
+            states.status = 'Pre-launch'
 
         elif days_since_mission_start == 0:
 
@@ -155,16 +154,16 @@ class Starship:
 
             utils.log_metric(name="Initial Payload Used Volume", value=total_mass, units="kg")
 
-            private_states.status = 'Launching from LEO'
+            states.status = 'Launching from LEO'
 
         elif days_since_mission_start > 0 and days_since_mission_start < params.travel_days_to_mars:
-            private_states.status = 'Traveling to Mars'
+            states.status = 'Traveling to Mars'
 
             # distance from sun = data_lookup[days_passed] # For accurate number
-            shared_states.distance_from_sun += params.distance_change_per_hour
+            states.distance_from_sun += params.distance_change_per_hour
 
         elif days_since_mission_start == params.travel_days_to_mars:
-            private_states.status = 'Mars Landing'
+            states.status = 'Mars Landing'
 
             utils.log_event("Mars Landing")
 
@@ -173,7 +172,7 @@ class Starship:
         elif days_since_mission_start >= params.travel_days_to_mars and days_since_mission_start < params.travel_days_to_mars + params.mars_stay_days:
             # Note: distance from sun is still important here for solar panels.
             # Perhaps should not be associated with starship? unkonwn
-            private_states.status = 'On Mars Surface'
+            states.status = 'On Mars Surface'
 
         elif days_since_mission_start == params.travel_days_to_mars + params.mars_stay_days:
             # Pre launch checks
@@ -184,28 +183,28 @@ class Starship:
 
             utils.log_event("Mars Ascent")
 
-            private_states.status = 'Launching from Mars'
+            states.status = 'Launching from Mars'
 
             utils.change_parent_to("interplanetary_space")
 
         elif days_since_mission_start > params.travel_days_to_mars + params.mars_stay_days and days_since_mission_start < params.travel_days_to_mars + params.mars_stay_days + params.travel_days_from_mars:
 
             # distance from sun = data_lookup[days_passed] # For accurate number
-            shared_states.distance_from_sun -= params.distance_change_per_hour
+            states.distance_from_sun -= params.distance_change_per_hour
 
-            private_states.status = 'Traveling to Earth'
+            states.status = 'Traveling to Earth'
 
 
         elif days_since_mission_start == params.travel_days_to_mars + params.mars_stay_days + params.travel_days_from_mars:
             utils.log_event("Earth Landing")
 
-            private_states.status = 'Landing on Earth'
+            states.status = 'Landing on Earth'
 
         elif days_since_mission_start > params.travel_days_to_mars + params.mars_stay_days + params.travel_days_from_mars:
             # No longer simulated on earth surface
             # TODO: some way to permanently remove instance from simulation.
             # utils.remove_self()
 
-            private_states.status = 'Landed on Earth'
+            states.status = 'Landed on Earth'
         else:
             utils.terminate_sim_with_error("Invalid Days Passed Option")

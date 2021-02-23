@@ -25,7 +25,7 @@ class BatteryAndInverter:
             source="FAKE"
         ),
         dict(
-            key="Wh_per_kg",
+            key="wh_per_kg",
             units="Wh/kg",
             value=200,
             source="FAKE"
@@ -38,7 +38,7 @@ class BatteryAndInverter:
         )
     ]
 
-    shared_states = [
+    states = [
         dict(
             key="available_dc_kwh",
             units="kwh",
@@ -49,50 +49,51 @@ class BatteryAndInverter:
             notes="The is the way that generators send kwh to battery",
             units="kwh",
             value=0
-        )
-    ]
-
-    private_states = [
+        ),
         dict(
             key="mass",
             units="kg",
-            value=0,  # Calculated
+            value=0,
+            private=True,
         ),
         dict(
             key="volume",
             units="m3",
-            vallue=0,  # Calculated
+            value=0,
+            private=True,
         )
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
+    def run_step(states, params, utils):
 
-        if private_states.mass == 0:
+
+        if states.mass == 0:
             inverter_mass = 0 # TODO: Incorporate inverter mass
-            private_states.mass = 1 / ( params.Wh_per_kg / 1000) * params.dc_capacity_kwh + inverter_mass
-            private_states.volume = params.m3_per_kWh * params.dc_capacity_kwh
+            states.mass = 1 / ( params.wh_per_kg / 1000) * params.capacity_dc_kwh + inverter_mass
+            states.volume = params.m3_per_kwh * params.capacity_dc_kwh
 
-        if shared_states.available_dc_kwh < 0:
+        if states.available_dc_kwh < 0:
             utils.terminate_sim_with_error("available_dc_kwh was negative")
 
-        if shared_states.available_dc_kwh == 0:
+        if states.available_dc_kwh == 0:
             utils.log_warning("Available AC kWh is zero!")
 
         # Due to current limitations in modeling setup
         # Apply the full round trip battery efficiency for
         # energy added to the battery instead of part when added in
         # and part when added out
-        shared_states.available_dc_kwh += shared_states.generated_dc_kwh * params.roundtrip_efficiency
+        states.available_dc_kwh += states.generated_dc_kwh * params.roundtrip_efficiency
 
         # TODO: Check whether this shoudl be ac or dc
-        if shared_states.available_dc_kwh > params.dc_capacity_kwh:
-            shared_states.available_dc_kwh = params.dc_capacity_kwh
+        if states.available_dc_kwh > params.capacity_dc_kwh:
+            states.available_dc_kwh = params.capacity_dc_kwh
 
         # Reset the input DC bus so PV etc can be added in next sim tick
-        shared_states.generated_dc_kwh = 0
+        states.generated_dc_kwh = 0
 
-        shared_states.available_dc_kwh = min(shared_states.available_dc_kwh, params.ac_capacity_kw)
+        # Hack for clipping by max available power
+        states.available_dc_kwh = min(states.available_dc_kwh, params.capacity_dc_kw)
 
 
 # class DCDCInverter:
@@ -126,7 +127,7 @@ class BatteryAndInverter:
 #             """
 #         )
 #     ],
-#     shared_states = [
+#     states = [
 #         dict(
 #             key="available_dc_kwh",
 #             units="kwh",
@@ -135,10 +136,11 @@ class BatteryAndInverter:
 #     ]
 
 #     @staticmethod
-#     def run_step(shared_states, private_states, params, data, utils):
-#         if shared_states.available_dc_kwh < 0:
+#     def run_step(states, params, utils):
+
+#         if states.available_dc_kwh < 0:
 #             utils.terminate_sim_with_error(
 #                 "available_dc_kwh was negative in in pv inverter")
 
-#         shared_states.available_dc_kwh += min(
-#             shared_states.available_dc_kwh * params.one_way_efficiency, params.max_kw_ac)
+#         states.available_dc_kwh += min(
+#             states.available_dc_kwh * params.one_way_efficiency, params.max_kw_ac)

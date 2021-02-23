@@ -16,7 +16,7 @@ from modelflow.modelflow import run_scenario
 
 class TestElectricalSystems():
 
-    base_scenario = {
+    scenario = {
         "simulation_params": {
             "max_num_steps": 1000,
         },
@@ -36,7 +36,7 @@ class TestElectricalSystems():
                 "label": "Starship",
                 "parent_instance_key": "interplanetary_space",
                 "overrides": {
-                    "launch_utc": 3600 * 24,
+                    "launch_utc": 0,
                     "travel_days_to_mars": 1,
                     "travel_days_from_mars": 1,
                     "mars_stay_days": 1
@@ -56,6 +56,9 @@ class TestElectricalSystems():
                 "model_class": StarshipIntegratedPV,
                 "label": "Starship Integrated PV",
                 "parent_instance_key": "starship",
+                # "connections": {
+                #     "generated_dc_kwh": "battery_and_inverter"
+                # }
             },
             "surface_pv": {
                 "model_class": SurfacePV,
@@ -75,6 +78,6 @@ class TestElectricalSystems():
         }
     }
 
-
-def test_electrical_systems():
-    pass
+    def test_electrical_systems(self):
+        outputs = run_scenario(self.scenario)
+        # TODO: Write tests

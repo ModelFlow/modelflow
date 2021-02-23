@@ -9,15 +9,14 @@ class StarshipRadiators:
             key="deep_space_max_heat_rejection_kw",
             units="kw",
             value=200,
-            source="fake",
+            source="fake"
         ),
         dict(
             key="mars_max_heat_rejection_kw",
             units="kw",
             value=100,
-            source="fake",
+            source="fake"
         )
-
     ]
 
     @staticmethod

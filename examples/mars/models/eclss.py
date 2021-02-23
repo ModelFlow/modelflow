@@ -44,17 +44,18 @@ class UrineProcessorAssembly:
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
-        if shared_states.h2o_urin < params.min_h2o_urin_consumed_per_hour:
+    def run_step(states, params, utils):
+
+        if states.h2o_urin < params.min_h2o_urin_consumed_per_hour:
             return
-        if shared_states.available_dc_kwh < params.ac_kwh_consumed_per_hour:
+        if states.available_dc_kwh < params.ac_kwh_consumed_per_hour:
             return
 
-        shared_states.urine -= min(shared_states.h2o_urin, params.h2o_urin_consumed_per_hour)
-        shared_states.available_dc_kwh -= min(shared_states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
+        states.urine -= min(states.h2o_urin, params.h2o_urin_consumed_per_hour)
+        states.available_dc_kwh -= min(states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
 
-        shared_states.unfiltered_h2o += params.h2o_tret_output_per_hour
-        shared_states.solid_waste += params.solid_waste_output_per_hour
+        states.unfiltered_h2o += params.h2o_tret_output_per_hour
+        states.solid_waste += params.solid_waste_output_per_hour
 
 
 class WaterProcessorAssembly:
@@ -94,16 +95,17 @@ class WaterProcessorAssembly:
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
-        if shared_states.unfiltered_water < params.h2o_tret_consumed_per_hour:
+    def run_step(states, params, utils):
+
+        if states.unfiltered_water < params.h2o_tret_consumed_per_hour:
             return
-        if shared_states.available_dc_kwh < params.enrg_kwh_consumed_per_hour:
+        if states.available_dc_kwh < params.enrg_kwh_consumed_per_hour:
             return
 
-        shared_states.unfiltered_h2o -= min(shared_states.unfiltered_h2o, params.h2o_tret_consumed_per_hour)
-        shared_states.enrg_kwh -= min(shared_states.available_dc_kwh, params.enrg_kwh_consumed_per_hour)
+        states.unfiltered_h2o -= min(states.unfiltered_h2o, params.h2o_tret_consumed_per_hour)
+        states.enrg_kwh -= min(states.available_dc_kwh, params.enrg_kwh_consumed_per_hour)
 
-        shared_states.potable_water += params.h2o_potb_output_per_hour
+        states.potable_water += params.h2o_potb_output_per_hour
 
 
 class HydrolysisSystem:
@@ -157,23 +159,24 @@ class HydrolysisSystem:
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
-        total_atmosphere = shared_states.atmo_o2 + shared_states.atmo_n2 + shared_states.atmo_co2
-        o2_ratio = shared_states.atmo_o2 / float(total_atmosphere)
+    def run_step(states, params, utils):
+
+        total_atmosphere = states.atmo_o2 + states.atmo_n2 + states.atmo_co2
+        o2_ratio = states.atmo_o2 / float(total_atmosphere)
         if o2_ratio >= params.run_below_atmo_o2_ratio:
             return
 
-        if shared_states.potable_water < params.potable_water_consumed_per_hour:
+        if states.potable_water < params.potable_water_consumed_per_hour:
             return
 
-        if shared_states.enrg_kwh < params.enrg_kwh_consumed_per_hour:
+        if states.enrg_kwh < params.enrg_kwh_consumed_per_hour:
             return
 
-        shared_states.potable_water -= min(shared_states.potable_water, params.potable_water_consumed_per_hour)
-        shared_states.enrg_kwh -= min(shared_states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
+        states.potable_water -= min(states.potable_water, params.potable_water_consumed_per_hour)
+        states.enrg_kwh -= min(states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
 
-        shared_states.atmo_h2 += params.atmo_h2_output_per_hour
-        shared_states.atmo_o2 += params.atmo_o2_output_per_hour
+        states.atmo_h2 += params.atmo_h2_output_per_hour
+        states.atmo_o2 += params.atmo_o2_output_per_hour
 
 
 
@@ -237,28 +240,29 @@ class SabatierReactor:
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
+    def run_step(states, params, utils):
 
-        total_atmosphere = shared_states.atmo_o2 + shared_states.atmo_n2 + shared_states.atmo_co2
-        co2_ratio = shared_states.atmo_co2 / float(total_atmosphere)
+
+        total_atmosphere = states.atmo_o2 + states.atmo_n2 + states.atmo_co2
+        co2_ratio = states.atmo_co2 / float(total_atmosphere)
         if co2_ratio <= params.run_above_atmo_co2_ratio:
             return False
 
-        if shared_states.atmo_h2 < params.atmo_h2_consumed_per_hour:
+        if states.atmo_h2 < params.atmo_h2_consumed_per_hour:
             return
 
-        if shared_states.atmo_co2 < params.atmo_co2_consumed_per_hour:
+        if states.atmo_co2 < params.atmo_co2_consumed_per_hour:
             return
 
-        if shared_states.enrg_kwh < params.enrg_kwh_consumed_per_hour:
+        if states.enrg_kwh < params.enrg_kwh_consumed_per_hour:
             return
 
-        shared_states.atmo_h2 -= min(shared_states.atmo_h2, params.h2o_potb_consumed_per_hour)
-        shared_states.atmo_co2 -= min(shared_states.atmo_co2, params.atmo_co2_consumed_per_hour)
-        shared_states.enrg_kwh -= min(shared_states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
+        states.atmo_h2 -= min(states.atmo_h2, params.h2o_potb_consumed_per_hour)
+        states.atmo_co2 -= min(states.atmo_co2, params.atmo_co2_consumed_per_hour)
+        states.enrg_kwh -= min(states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
 
-        shared_states.atmo_ch4 += params.atmo_ch4_output_per_hour
-        shared_states.solid_waste += params.solid_waste_output_per_hour
+        states.atmo_ch4 += params.atmo_ch4_output_per_hour
+        states.solid_waste += params.solid_waste_output_per_hour
 
 
 class CO2Scubbers:
@@ -302,20 +306,21 @@ class CO2Scubbers:
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
-        total_atmosphere = shared_states.atmo_o2 + shared_states.atmo_n2 + shared_states.atmo_co2
-        co2_ratio = shared_states.atmo_co2 / float(total_atmosphere)
+    def run_step(states, params, utils):
+
+        total_atmosphere = states.atmo_o2 + states.atmo_n2 + states.atmo_co2
+        co2_ratio = states.atmo_co2 / float(total_atmosphere)
         if co2_ratio <= params.run_above_atmo_co2_ratio:
             return
 
-        if shared_states.atmo_co2 < params.atmo_co2_consumed_per_hour:
+        if states.atmo_co2 < params.atmo_co2_consumed_per_hour:
             return
 
-        if shared_states.enrg_kwh < params.enrg_kwh_consumed_per_hour:
+        if states.enrg_kwh < params.enrg_kwh_consumed_per_hour:
             return
 
-        shared_states.atmo_co2 -= min(shared_states.atmo_co2, params.atmo_co2_consumed_per_hour)
-        shared_states.enrg_kwh -= min(shared_states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
+        states.atmo_co2 -= min(states.atmo_co2, params.atmo_co2_consumed_per_hour)
+        states.enrg_kwh -= min(states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
 
         # TODO: Where does the output go
 
@@ -362,7 +367,8 @@ class Heater:
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
+    def run_step(states, params, utils):
+
         # Dumb heater
         # max power if below deadband
 
@@ -372,6 +378,6 @@ class Heater:
 
         # Don't run if within deadband of target temp or above
 
-        if shared_states.atmo_temp < params.target_temp - params.temp_dead_band:
+        if states.atmo_temp < params.target_temp - params.temp_dead_band:
             # TODO: Replace with a smart heating strategy
-            shared_states.heat_diff_kwh += params.min_kw_output
+            states.heat_diff_kwh += params.min_kw_output

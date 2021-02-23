@@ -15,11 +15,11 @@ class Time:
     name = "Time"
     description = "The module handles the time keeping"
     params = []
-    shared_states = [
+    states = [
         dict(
             key="utc_start",
             label="UTC Start",
-            notes="This is made a state instead of a parameter so it is accessible to other modules via io",
+            notes="This is made a state instead of a parameter so it is accessible to other modules",
             value=1794729600,
             units="UTC Timestamp",
         ),
@@ -32,7 +32,7 @@ class Time:
         dict(
             key="seconds_per_sim_step",
             label="Seconds per sim step",
-            notes="This is made a state instead of a parameter so it is accessible to other modules via shared states",
+            notes="This is made a state instead of a parameter so it is accessible to other modules",
             value=3600,
             units="Seconds",
         ),
@@ -46,13 +46,14 @@ class Time:
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
+    def run_step(states, params, utils):
+
         # TODO: Handle Mars Coordinated Time vs. earth UTC stuff
-        shared_states.current_utc += shared_states.seconds_per_sim_step
+        states.current_utc += states.seconds_per_sim_step
 
         # TODO: Integrate with actual landing site location
-        shared_states.hours_since_mars_midnight += shared_states.seconds_per_sim_step / 3600
+        states.hours_since_mars_midnight += states.seconds_per_sim_step / 3600
         # TODO: Handle fact that mars sol is not 24 hours and this is completely wrong
-        if shared_states.hours_since_mars_midnight >= 24:
-            shared_states.hours_since_mars_midnight = 0
+        if states.hours_since_mars_midnight >= 24:
+            states.hours_since_mars_midnight = 0
 

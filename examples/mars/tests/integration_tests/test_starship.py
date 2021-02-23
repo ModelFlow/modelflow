@@ -5,13 +5,12 @@ from models.starship import Starship
 from models.mars_surface import MarsSurface
 from models.mass_simulator import MassSimulator
 from models.interplanetary_space import InterplanetarySpace
-
 from modelflow.modelflow import run_scenario
 
 
 class TestStarship():
 
-    base_scenario = {
+    scenario = {
         "simulation_params": {
             "max_num_steps": 1000,
         },
@@ -61,9 +60,10 @@ class TestStarship():
 
 
     def test_statuses(self):
-        outputs = run_scenario(self.base_scenario)
-        print(outputs)
-        status_arr = outputs['private_states']['starship']['status']
+        outputs = run_scenario(self.scenario)
+        # print(outputs)
+        status_arr = outputs['states']['starship']['status']
+        # print(status_arr)
         assert status_arr[0] == 'Pre-launch'
         assert status_arr[23] == 'Launching from LEO'
         assert status_arr[24] == 'Traveling to Mars'
@@ -75,18 +75,18 @@ class TestStarship():
         assert status_arr[96] == 'Landed on Earth'
 
     def test_invalid_schema_change(self):
-        bad_scenario = copy.deepcopy(self.base_scenario)
+        bad_scenario = copy.deepcopy(self.scenario)
         bad_scenario['model_instances'].pop("mars_surface", None)
         outputs = run_scenario(bad_scenario)
         assert outputs['error'] == "Cannot move 'starship' since destination key 'mars_surface' does not exist"
 
     def test_valid_schema_change(self):
-        outputs = run_scenario(self.base_scenario)
+        outputs = run_scenario(self.scenario)
         assert outputs['trees'][0] == {'time': {'children': [{'interplanetary_space': {'children': [{'starship': {'children': ['mass_simulator']}}]}}, 'mars_surface']}}
         assert outputs['trees'][47] == {'time': {'children': ['interplanetary_space', {'mars_surface': {'children': [{'starship': {'children': ['mass_simulator']}}]}}]}}
 
     def test_pre_launch_checks(self):
-        bad_scenario = copy.deepcopy(self.base_scenario)
+        bad_scenario = copy.deepcopy(self.scenario)
         bad_scenario['model_instances']["mass_simulator"]["overrides"]["mass"] = 100000000000
         outputs = run_scenario(bad_scenario)
         assert outputs['error'] == "Exceeded payload initial mass capacity"
