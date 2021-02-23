@@ -25,15 +25,15 @@ base_scenario = {
                 "volume": 1
             }
         },
-        "mass_simulator2": {
-            "model_class": MassSimulator,
-            "label": "Mass Simulator 2",
-            "parent_instance_key": "starship",
-            "overrides": {
-                "mass": 2,
-                "volume": 2
-            }
-        },
+        # "mass_simulator2": {
+        #     "model_class": MassSimulator,
+        #     "label": "Mass Simulator 2",
+        #     "parent_instance_key": "starship",
+        #     "overrides": {
+        #         "mass": 2,
+        #         "volume": 2
+        #     }
+        # },
         "time": {
             "model_class": Time,
             "label": "Simulation Space & Time",

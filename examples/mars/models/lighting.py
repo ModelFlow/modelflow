@@ -22,5 +22,6 @@ class Lighting:
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
-        shared_states.available_dc_kwh -= min(params.enrg_kwh_use, shared_states.available_dc_kwh)
+    def run_step(states, params, utils):
+
+        states.available_dc_kwh -= min(params.enrg_kwh_use, states.available_dc_kwh)

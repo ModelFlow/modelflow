@@ -7,7 +7,7 @@ class IndoorAir:
             value=1.05
         )
     ]
-    shared_states = [
+    states = [
         dict(
             key="atmo_co2",
             units="kg",
@@ -62,16 +62,14 @@ class IndoorAir:
             units="kwh",
             value=0,
             source="FAKE",
-        )
-    ]
-
-    private_states = [
+        ),
         dict(
             key="mass",
             description="Sum of all atmosphere components",
             units="kg",
             value=0,
             source="google",
+            private=True,
         ),
         dict(
             key="volume",
@@ -79,44 +77,46 @@ class IndoorAir:
             units="m3",
             value=0,
             source="NONE",
+            private=True,
         )
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
+    def run_step(states, params, utils):
+
         # TODO: Create a more accurate model that varies specific heat of air based on temperature, moisture
-        mass_of_air = shared_states.atmo_co2 + shared_states.atmo_o2 + shared_states.atmo_n2 + shared_states.atmo_ch4
+        mass_of_air = states.atmo_co2 + states.atmo_o2 + states.atmo_n2 + states.atmo_ch4
         KJ_required_to_heat_1_deg_c = mass_of_air * params.specific_heat_of_air
         kwh_required_to_heat_1_deg_c = KJ_required_to_heat_1_deg_c / 3600
-        temp_diff = kwh_required_to_heat_1_deg_c * shared_states.heat_diff_kwh
-        shared_states.atmo_temp += temp_diff
-        shared_states.heat_diff_kwh = 0 # Reset this every step
+        temp_diff = kwh_required_to_heat_1_deg_c * states.heat_diff_kwh
+        states.atmo_temp += temp_diff
+        states.heat_diff_kwh = 0 # Reset this every step
 
         max_val = 10000
-        if shared_states.atmo_o2 > max_val:
-            shared_states.atmo_o2 = max_val
-        if shared_states.atmo_co2 > max_val:
-            shared_states.atmo_co2 = max_val        
-        if shared_states.atmo_n2 > max_val:
-            shared_states.atmo_n2 = max_val        
-        if shared_states.atmo_h2o > max_val:
-            shared_states.atmo_h2o = max_val        
-        if shared_states.atmo_ch4 > max_val:
-            shared_states.atmo_ch4 = max_val
-        if shared_states.atmo_h2 > max_val:
-            shared_states.atmo_h2 = max_val
+        if states.atmo_o2 > max_val:
+            states.atmo_o2 = max_val
+        if states.atmo_co2 > max_val:
+            states.atmo_co2 = max_val        
+        if states.atmo_n2 > max_val:
+            states.atmo_n2 = max_val        
+        if states.atmo_h2o > max_val:
+            states.atmo_h2o = max_val        
+        if states.atmo_ch4 > max_val:
+            states.atmo_ch4 = max_val
+        if states.atmo_h2 > max_val:
+            states.atmo_h2 = max_val
 
-        if shared_states.atmo_o2 < 0:
-            shared_states.atmo_o2 = 0
-        if shared_states.atmo_co2 < 0:
-            shared_states.atmo_co2 = 0        
-        if shared_states.atmo_n2 < 0:
-            shared_states.atmo_n2 = 0        
-        if shared_states.atmo_h2o < 0:
-            shared_states.atmo_h2o = 0        
-        if shared_states.atmo_ch4 < 0:
-            shared_states.atmo_ch4 = 0
-        if shared_states.atmo_h2 < 0:
-            shared_states.atmo_h2 = 0
+        if states.atmo_o2 < 0:
+            states.atmo_o2 = 0
+        if states.atmo_co2 < 0:
+            states.atmo_co2 = 0        
+        if states.atmo_n2 < 0:
+            states.atmo_n2 = 0        
+        if states.atmo_h2o < 0:
+            states.atmo_h2o = 0        
+        if states.atmo_ch4 < 0:
+            states.atmo_ch4 = 0
+        if states.atmo_h2 < 0:
+            states.atmo_h2 = 0
 
-        private_states.mass = shared_states.atmo_n2 + shared_states.atmo_o2 + shared_states.atmo_co2 + shared_states.atmo_ch4 + shared_states.atmo_h2
+        states.mass = states.atmo_n2 + states.atmo_o2 + states.atmo_co2 + states.atmo_ch4 + states.atmo_h2

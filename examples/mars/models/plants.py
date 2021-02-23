@@ -26,17 +26,20 @@ class Plants:
             max=1.5
         )
     ],
-    private_states = [
+    states = [
         dict(
-            key="plant_mass",
+            key="mass",
             units="kg",
-            value=1.2  # FAKE
-        ),
+            value=1.2,
+            source="FAKE",
+            private=True,
+        )
         # TODO: Add health metrics etc, day night cycle, edible etc
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
+    def run_step(states, params, utils):
+
         """
         The logic for the model goes here:
 
@@ -52,14 +55,14 @@ class Plants:
 
         # Take CO2 from the atmosphere either ensuring we don't take
         # more than the atmosphere has
-        shared_states.atmo_co2 -= min(params.co2_consumed, shared_states.atmo_co2)
+        states.atmo_co2 -= min(params.co2_consumed, states.atmo_co2)
 
         # Don't generate o2 if we run out of oxygen
-        if shared_states.atmo_co2 == 0:
+        if states.atmo_co2 == 0:
             return
 
         # Output oxygen
-        shared_states.atmo_o2 += params.o2_produced
+        states.atmo_o2 += params.o2_produced
 
         # Ensure the plant is growing every day forever :)
-        private_states.plant_mass += params.mass_increase_per_hour
+        states.plant_mass += params.mass_increase_per_hour

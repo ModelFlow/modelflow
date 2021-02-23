@@ -10,11 +10,11 @@ DEFAULT_MAX_STEPS = 1000
 
 class Utils:
 
-    def __init__(self, instance_info, model_instance_map, tree, private_states, params):
+    def __init__(self, instance_info, model_instance_map, private_states_map, tree, params):
         self.instance_info = instance_info
         self.model_instance_map = model_instance_map
         self.tree = tree
-        self.private_states = private_states
+        self.private_states_map = private_states_map
         self.params = params
     
     def log_event(self, msg):
@@ -50,13 +50,58 @@ class Utils:
         the_sum = 0
         for node in tree.expand_tree():
             # Add the attribute whether it is a private state or param
-            the_sum += getattr(self.private_states[tree[node].tag], field_key, 0)
+            the_sum += self.private_states_map[tree[node].tag].get(field_key, 0)
             the_sum += getattr(self.params[tree[node].tag], field_key, 0)
         
         return the_sum
 
     def has_parent_instance_named(self, name):
-        return self.tree.get_node(self.instance_info['key']).parent.tag == name
+        node = self.tree.get_node(self.instance_info['key'])
+        while not node.is_root():
+            parent_id = node.predecessor(self.tree.identifier)
+            node = self.tree.get_node(parent_id)
+            if node.tag == name:
+                return True
+        return False
+
+        print()
+        # parents = list(self.tree.get_node(self.instance_info['key'])._predecessor.values())
+        # print(parents)
+        # if len(parents) > 0:
+        #     return parents[0] == name
+        # return False
+
+class StateFetcher():
+
+    def __init__(self, key, tree, shared_states_map, private_state_map):
+        # Set the instance dictionary directly to avoid calls to __setattr__ during initialization
+        self.__dict__['_key'] = key
+        self.__dict__['_tree'] = tree
+        self.__dict__['_shared_states_map'] = shared_states_map
+        self.__dict__['_private_state_map'] = private_state_map
+
+    def __getattr__(self, name):        
+        # Check to see if it might be a private state
+        # If so, then just check the private map
+        if name in self._private_state_map:
+            return self._private_state_map[name]
+
+        # TODO: Actual recursive search
+        for instance_key in self._shared_states_map:
+            for state_name in self._shared_states_map[instance_key]:
+                if state_name == name:
+                    return self._shared_states_map[instance_key][state_name]
+
+    def __setattr__(self, name, value):        
+        if name in self._private_state_map:
+            self._private_state_map[name] = value
+
+        # TODO: Actual recursive search
+        for instance_key in self._shared_states_map:
+            for state_name in self._shared_states_map[instance_key]:
+                if state_name == name:
+                    self._shared_states_map[instance_key][state_name] = value
+
 
 def run_scenario(scenario):
 
@@ -70,31 +115,30 @@ def run_scenario(scenario):
     max_steps = setup_global_sim_params(scenario)
 
     tree = create_tree(scenario['model_instances'])
-    print(tree)
-    shared_states_map, shared_states, private_states_map, private_states, _, params, utils_map = \
-        setup_vars_and_utils(scenario['model_instances'], tree)
+    shared_states_map, private_states_map, params, utils_map = setup_vars_and_utils(scenario['model_instances'], tree)
 
-    shared_states_output, private_states_output, tree_outputs = init_outputs(shared_states_map, private_states_map)
+    states_output, tree_outputs = init_outputs(shared_states_map, private_states_map)
+    
     try:
         for _ in range(max_steps):
             for instance_info in model_instances_values:            
                 key = instance_info['key']
-
-                instance_info['model_class'].run_step(
-                    shared_states, private_states[key], params[key], "TODO", utils_map[key])
+                # TODO: as a performance optimization we probably don't need to instantiate this every time
+                state_fetcher = StateFetcher(key, tree, shared_states_map, private_states_map[key])
+                instance_info['model_class'].run_step(state_fetcher, params[key], utils_map[key])
 
                 for field_key in private_states_map[key]:
-                    private_states_output[key][field_key].append(getattr(private_states[key], field_key))
+                    states_output[key][field_key].append(private_states_map[key][field_key])
 
-            for key in shared_states_map:
-                shared_states_output[key].append(getattr(shared_states, key))
+                for field_key in shared_states_map[key]:
+                    states_output[key][field_key].append(shared_states_map[key][field_key])
 
             tree_out = tree.to_dict(with_data=False)
             tree_outputs.append(tree_out)
     except SimulationError as e:
         return dict(error=str(e))
 
-    return dict(shared_states=shared_states_output, private_states=private_states_output, trees=tree_outputs)
+    return dict(states=states_output, trees=tree_outputs)
 
 def setup_global_sim_params(scenario):
     max_steps = DEFAULT_MAX_STEPS
@@ -107,14 +151,12 @@ def setup_global_sim_params(scenario):
 def setup_vars_and_utils(model_instance_map, tree):
     shared_states_map = {}
     private_states_map = {}
-    private_states = {}
-    params_map = {}
     params = {}
     utils_map = {}
     for info in model_instance_map.values():
 
         actual_instance = info['model_class']
-        class_name = actual_instance.__class__.__name__
+        class_name = actual_instance.__name__
         instance_key = info['key']
 
         param_map = {}
@@ -128,29 +170,27 @@ def setup_vars_and_utils(model_instance_map, tree):
 
                 param_map[param['key']] = param['value']
 
-        shared_state_map = {}
-        if hasattr(actual_instance, 'shared_states'):
-            for shared_state in actual_instance.shared_states:
-                if not 'key' in shared_state:
-                    raise Exception(f"A shared_state in {class_name} has no key")
+        if not instance_key in shared_states_map:
+            shared_states_map[instance_key] = {}
+            private_states_map[instance_key] = {}
 
-                if not 'value' in shared_state:
-                    raise Exception(f"shared_state {param['key']} in {class_name} has no value")
+        # NOTE: Another way to do this would be to have a is_private map
 
-                shared_state_map[shared_state['key']] = shared_state['value']
+        if hasattr(actual_instance, 'states'):
 
-        private_state_map = {}
-        if hasattr(actual_instance, 'private_states'):
-            for private_state in actual_instance.private_states:
-                if not 'key' in private_state:
-                    raise Exception(f"A private_state in {class_name} has no key")
+            for state in actual_instance.states:
+                if not 'key' in state:
+                    raise Exception(f"A state in {class_name} has no key")
 
-                if not 'value' in private_state:
-                    raise Exception(f"private_state {param['key']} in {class_name} has no value")
+                if not 'value' in state:
+                    raise Exception(f"state {state['key']} in {class_name} has no value")
 
-                private_state_map[private_state['key']] = private_state['value']
+                if 'private' in state and state['private']:
+                    private_states_map[instance_key][state['key']] = state['value']
+                else:
+                    shared_states_map[instance_key][state['key']] = state['value']
 
-        intersection = param_map.keys() & shared_state_map.keys() & private_state_map.keys()
+        intersection = param_map.keys() & shared_states_map[instance_key].keys() & private_states_map[instance_key].keys()
         if len(intersection) > 0:
             raise Exception(f"Duplicate keys currently not supported. Found in {class_name}: {intersection}")
 
@@ -158,39 +198,33 @@ def setup_vars_and_utils(model_instance_map, tree):
             if override_key in param_map:
                 param_map[override_key] = value
 
-            if override_key in shared_state_map:
-                shared_state_map[override_key] = value
+            if override_key in shared_states_map[instance_key]:
+                shared_states_map[instance_key][override_key] = value
 
-            if override_key in private_state_map:
-                private_state_map[override_key] = value
+            if override_key in private_states_map[instance_key]:
+                private_states_map[instance_key][override_key] = value
 
-        params_map[instance_key] = param_map
         params[instance_key] = SimpleNamespace(**param_map)
-        private_states_map[instance_key] = private_state_map
-        private_states[instance_key] = SimpleNamespace(**private_state_map)
 
-        for state_key, value in shared_state_map.items():
-            shared_states_map[state_key] = value
+        utils_map[instance_key] = Utils(info, model_instance_map, private_states_map, tree, params)
 
-        utils_map[instance_key] = Utils(info, model_instance_map, tree, private_states, params_map)
-
-    shared_states = SimpleNamespace(**shared_states_map)
-
-    return shared_states_map, shared_states, private_states_map, private_states, params_map, params, utils_map
+    return shared_states_map, private_states_map, params, utils_map
 
 def init_outputs(shared_states_map, private_states_map):
-    shared_states_output = {}
-    for key in shared_states_map:
-        shared_states_output[key] = []
-
-    private_states_output = {}
+    states_output = {}
     for instance_key, inner_map in private_states_map.items():
-        private_states_output[instance_key] = {}
+        states_output[instance_key] = {}
         for key in inner_map:
-            private_states_output[instance_key][key] = []
+            states_output[instance_key][key] = []
+    
+    for instance_key, inner_map in shared_states_map.items():
+        if instance_key not in states_output:
+            states_output[instance_key] = {}
+        for key in inner_map:
+            states_output[instance_key][key] = []
 
     tree_outputs = []
-    return shared_states_output, private_states_output, tree_outputs
+    return states_output, tree_outputs
 
 def validate_scenario(scenario):
     if not "model_instances" in scenario:

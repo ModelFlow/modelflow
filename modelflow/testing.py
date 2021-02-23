@@ -3,7 +3,7 @@ from types import SimpleNamespace
 class SimulationError(Exception):
     pass
 
-class Utils:
+class MockUtils:
     
     def log_event(self, msg):
         # TODO: Implement log event properly
@@ -30,7 +30,7 @@ class Utils:
         raise Exception("NOT YET TESTABLE IN UNIT TESTS")
 
 class ModelUnitTest():
-    def setup_model(self, model, shared_states={}):
+    def setup_model(self, model, states={}):
         self.model = model
 
         params = {}
@@ -39,23 +39,17 @@ class ModelUnitTest():
                 params[p['key']] = p['value']
         self.params = SimpleNamespace(**params)
 
-        tmp_shared_states = {}
-        if hasattr(model, 'shared_states'):
-            for state in model.shared_states:
-                tmp_shared_states[state['key']] = state['value']
+        tmp_states = {}
+        if hasattr(model, 'states'):
+            for state in model.states:
+                tmp_states[state['key']] = state['value']
+        
+        print(tmp_states)
         # Override any initial passed in shared states
-        for key in shared_states:
-            tmp_shared_states[key] = shared_states[key]
+        for key in states:
+            tmp_states[key] = states[key]
 
-        self.shared_states = SimpleNamespace(**tmp_shared_states)
-
-        private_states = {}
-        if hasattr(model, 'private_states'):
-            for state in model.private_states:
-                private_states[state['key']] = state['value']
-        self.private_states = SimpleNamespace(**private_states)
-
-        self.data = []
+        self.states = SimpleNamespace(**tmp_states)
 
     def run_step(self):
-        self.model.run_step(self.shared_states, self.private_states, self.params, self.data, Utils())
+        self.model.run_step(self.states, self.params, MockUtils())

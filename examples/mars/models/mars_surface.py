@@ -19,11 +19,11 @@ class MarsSurface:
             value=0,
             units="c",
             source='fake'
-        ),
-
+        )
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
+    def run_step(states, params, utils):
+
         # TODO: Have temperature change with time
         pass

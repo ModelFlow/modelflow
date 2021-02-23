@@ -34,7 +34,8 @@ class StarshipPotableWaterStorage:
     ]
 
     @staticmethod
-    def run_step(io, params, states, data):
+    def run_step(states, params, utils):
+
         states.mass = states.h2o_potb
         states.volume = states.mass * params.m3_per_kg
 
@@ -67,7 +68,8 @@ class StarshipSolidWasteStorage:
     ]
 
     @staticmethod
-    def run_step(io, params, states, data):
+    def run_step(states, params, utils):
+
         if states.solid_waste < 0:
             utils.terminate_sim_with_error("solid_waste < 0")
 
@@ -90,7 +92,8 @@ class StarshipLiquidWasteStorage:
     }
 
     @staticmethod
-    def run_step(io, params, states, data):
+    def run_step(states, params, utils):
+
         if states.h2o_urin < 0:
             raise Exception("h2o_urin < 0")
 
@@ -148,7 +151,8 @@ class FoodStorage:
     #     return states.food_edbl
 
     @staticmethod
-    def run_step(io, params, states, data, utils):
+    def run_step(states, params, utils):
+
         states.mass = states.food
         states.volume = states.mass * params.m3_per_kg
 

@@ -29,72 +29,78 @@ class SurfacePV:
         )
     ]
 
-    private_states = [
+    states = [
         dict(
             key="mass",
             units="kg",
             value=100,
             source="fake",
+            private=True
         ),
         dict(
             key="volume",
             units="m3",
             value=100,
             source="fake",
+            private=True
         ),
         dict(
             key="status",
             units="string",
-            value="packed"
+            value="packed",
+            private=True
         ),
         dict(
             key="deployed_hours",
             units="hours",
-            value=0
+            value=0,
+            private=True
         ),
         dict(
             key="deploying_hours",
             units="hours",
-            value=0
+            value=0,
+            private=True
         )
 
     ]
 
     @staticmethod
-    def run_step(shared_states, private_states, params, data, utils):
+    def run_step(states, params, utils):
+
         # TODO: Handle that an example where the parent location is outside
         # but there is a shared electrical connection
         if not utils.has_parent_instance_named("mars_surface"):
             return
     
-        if private_states.status == 'packed':
-            private_states.status == 'deploying'
+        if states.status == 'packed':
+            states.status == 'deploying'
             # Assuming that as soon as you land on the surface, deployment starts
 
-        elif private_states.status == 'deploying':
-            private_states.deploying_hours += 1
-            if private_states.deploying_hours > params.hours_to_deploy:
-                private_states.status == 'deployed'
+        elif states.status == 'deploying':
+            states.deploying_hours += 1
+            if states.deploying_hours > params.hours_to_deploy:
+                states.status == 'deployed'
 
                 instance_key = utils.get_instance_key()
                 utils.log_event(f"Surface PV instance '{instance_key}' deployed")
 
-        elif private_states.status == 'deployed':
-            private_states.deployed_hours += 1
+        elif states.status == 'deployed':
+            states.deployed_hours += 1
 
-            degradation = 1 - private_states.deployed_hours * params.degredation_per_hour
+            degradation = 1 - states.deployed_hours * params.degredation_per_hour
 
             # Note: Assuming that we are not using the integrated starship PV on Mars to not degrade it
 
             # ULTRA FAKE PV MODEL...plz change
-            if shared_states.hours_since_mars_midnight > 6 and shared_states.hours_since_mars_midnight <= 7:
-                shared_states.kwh_generated += params.rated_pv_kw_dc_output * 0.5 * degradation
-            elif shared_states.hours_since_mars_midnight > 7 and shared_states.hours_since_mars_midnight < 17:
-                shared_states.kwh_generated += params.rated_pv_kw_dc_output * degradation
-            elif shared_states.hours_since_mars_midnight >= 17 and shared_states.hours_since_mars_midnight < 18:
-                shared_states.kwh_generated += params.rated_pv_kw_dc_output * 0.5 * degradation
+            if states.hours_since_mars_midnight > 6 and states.hours_since_mars_midnight <= 7:
+                states.kwh_generated += params.rated_pv_kw_dc_output * 0.5 * degradation
+            elif states.hours_since_mars_midnight > 7 and states.hours_since_mars_midnight < 17:
+                states.kwh_generated += params.rated_pv_kw_dc_output * degradation
+            elif states.hours_since_mars_midnight >= 17 and states.hours_since_mars_midnight < 18:
+                states.kwh_generated += params.rated_pv_kw_dc_output * 0.5 * degradation
             else:
-                shared_states.kwh_generated += 0
+                states.kwh_generated += 0
 
 # Reminder of old pv data that came from CSV of earth
 
