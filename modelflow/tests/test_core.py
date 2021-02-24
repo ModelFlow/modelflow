@@ -5,7 +5,6 @@ class PrivateExampleModel:
     states = [
         dict(
             key="private_example",
-            label="Private Example",
             value=0,
             private=True
         )
@@ -24,8 +23,7 @@ class TestPrivate():
         },
         "model_instances": {
             "private_ex": {
-                "model_class": PrivateExampleModel,
-                "label": "Private Example Instance",
+                "model_class": PrivateExampleModel
             }
         }
     }
@@ -42,7 +40,6 @@ class SharedStateExampleModel:
     states = [
         dict(
             key="shared_example",
-            label="Shared Example",
             value=0
         )
     ]
@@ -60,18 +57,180 @@ class TestSharedState():
         },
         "model_instances": {
             "shared_ex": {
-                "model_class": SharedStateExampleModel,
-                "label": "Shared Example Instance",
+                "model_class": SharedStateExampleModel
             }
         }
     }
 
-    def test_statuses(self):
+    def test_simple_shared_state(self):
         outputs = run_scenario(self.scenario)
         assert len(outputs['states']['shared_ex']['shared_example']) == 3
         assert outputs['states']['shared_ex']['shared_example'][0] == 1
         assert outputs['states']['shared_ex']['shared_example'][1] == 2
         assert outputs['states']['shared_ex']['shared_example'][2] == 3
+
+class Root:   
+    pass
+
+class AGroup:   
+    pass
+
+class AConsumer:   
+    @staticmethod
+    def run_step(states, params, utils):
+        states.shared_state -= 1
+
+class AProducer:
+    params = [
+        dict(
+            key="production_per_step",
+            value=5
+        )
+    ]
+
+    states = [
+        dict(
+            key="shared_state",
+            value=10
+        )
+    ]
+
+    @staticmethod
+    def run_step(states, params, utils):
+        states.shared_state += params.production_per_step
+
+
+class TestFindingOutsideSharedState():
+    scenario = {
+        "simulation_params": {
+            "max_num_steps": 3,
+        },
+        "model_instances": {
+            "root": {
+                "model_class": Root,
+            },
+            "level1_group": {
+                "model_class": AGroup,
+                "parent_instance_key": "root",
+            },
+            "level1_partA": {
+                "model_class": AProducer,
+                "parent_instance_key": "root",
+            },
+            "level2_partA": {
+                "model_class": AConsumer,
+                "parent_instance_key": "level1_group",
+            }
+        }
+    }
+
+    # NOTE: There should be proper user defined prioritization setting
+
+    def test_location_based_shared_state(self):
+
+        outputs = run_scenario(self.scenario)
+        print(outputs['states']['level1_partA']['shared_state'])
+        assert len(outputs['states']['level1_partA']['shared_state']) == 3
+        assert outputs['states']['level1_partA']['shared_state'][0] == 15
+        assert outputs['states']['level1_partA']['shared_state'][1] == 19
+        assert outputs['states']['level1_partA']['shared_state'][2] == 23
+
+
+class TestSimpleSameNamedSharedState():
+    scenario = {
+        "simulation_params": {
+            "max_num_steps": 2
+        },
+        "model_instances": {
+            "root": {
+                "model_class": Root
+            },
+            "group1": {
+                "model_class": AGroup,
+                "parent_instance_key": "root"
+            },
+            "group1_producer": {
+                "model_class": AProducer,
+                "parent_instance_key": "group1"
+            },
+            "group2": {
+                "model_class": AGroup,
+                "parent_instance_key": "root"
+            },
+            "group2_producer": {
+                "model_class": AProducer,
+                "parent_instance_key": "group2",
+                "overrides": {
+                    "shared_state": 100
+                }
+            }
+        }
+    }
+
+    def test_simple_same_named_shared_state(self):
+        outputs = run_scenario(self.scenario)
+        print(outputs['states']['group1_producer']['shared_state'])
+        print(outputs['states']['group2_producer']['shared_state'])
+
+        assert len(outputs['states']['group1_producer']['shared_state']) == 2
+        assert outputs['states']['group1_producer']['shared_state'][0] == 15
+        assert outputs['states']['group1_producer']['shared_state'][1] == 20
+
+        assert len(outputs['states']['group2_producer']['shared_state']) == 2
+        assert outputs['states']['group2_producer']['shared_state'][0] == 105
+        assert outputs['states']['group2_producer']['shared_state'][1] == 110
+
+class TestSameNamedSharedState():
+    scenario = {
+        "simulation_params": {
+            "max_num_steps": 2
+        },
+        "model_instances": {
+            "root": {
+                "model_class": Root
+            },
+            "group1": {
+                "model_class": AGroup,
+                "parent_instance_key": "root"
+            },
+            "group1_producer": {
+                "model_class": AProducer,
+                "parent_instance_key": "group1"
+            },
+            "group1_consumer": {
+                "model_class": AConsumer,
+                "parent_instance_key": "group1"
+            },
+            "group2": {
+                "model_class": AGroup,
+                "parent_instance_key": "root"
+            },
+            "group2_producer": {
+                "model_class": AProducer,
+                "parent_instance_key": "group2",
+                "overrides": {
+                    "shared_state": 100
+                }
+            },
+            "group2_consumer": {
+                "model_class": AConsumer,
+                "parent_instance_key": "group2"
+            }
+        }
+    }
+
+    def test_same_named_shared_state(self):
+        outputs = run_scenario(self.scenario)
+
+        assert len(outputs['states']['group1_producer']['shared_state']) == 2
+        assert outputs['states']['group1_producer']['shared_state'][0] == 15
+        assert outputs['states']['group1_producer']['shared_state'][1] == 19
+
+        assert len(outputs['states']['group2_producer']['shared_state']) == 2
+        assert outputs['states']['group2_producer']['shared_state'][0] == 105
+        assert outputs['states']['group2_producer']['shared_state'][1] == 109
+
+
 
 
 # import sys

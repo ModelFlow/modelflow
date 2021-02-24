@@ -20,7 +20,7 @@ pip install -r requirements.txt
 To run the Mars default baseline scenario example:
 ```
 cd examples/mars
-python main.py
+python demo.py
 ```
 
 ## Running in website locally
@@ -39,61 +39,89 @@ python run_server.py
 In a browser open http://localhost:3000
 
 ## Testing
-To run tests (from the modelflow root dir):
+Run tests from the modelflow root dir using:
 ```
 pytest
 ```
 
-## Schema
-
 ## Models
 
-- **Params (Parameters)**: These are mostly constants that can be tweaked
+```
+class AProducer:
+    params = [
+        dict(
+            key="production_per_step",
+            value=5
+        )
+    ]
+
+    states = [
+        dict(
+            key="shared_state",
+            value=10
+        )
+    ]
+
+    @staticmethod
+    def run_step(states, params, utils):
+        states.shared_state += params.production_per_step
+
+```
+
 - **States**: These are values that change overtime and can be accesses internally and by default by other models within scope as well
+- **Params**: These are mostly constants that can be tweaked
+- **Utils**: This is a library of functions that can be used
 
 
+## Schema
 
-## Model Performance
-Pure Python is extremely slow with some basic examples taking roughly 0.5 seconds for a single run. Therefore, Modelflow supports using [Numba](https://numba.pydata.org/) to automatically convert all the models to C which can lead to a *100x speed up*. This does come with a tradeoff of complexity and certain limitations on what you can do inside model run functions. Currently all models are combined into a single function in a temporary file called `generated.py` allowing Numba to convert it to C. This process takes 3-4 seconds, but subsequent calls take from 0.1 to 0.0008 seconds depending on how you measure. This speed is important if you are trying to sweep across many parameterizations. 
+```
+ scenario = {
+        "simulation_params": {
+            "max_num_steps": 2
+        },
+        "model_instances": {
+            "root": {
+                "model_class": Root
+            },
+            "group1": {
+                "model_class": AGroup,
+                "parent_instance_key": "root"
+            },
+            "group1_producer": {
+                "model_class": AProducer,
+                "parent_instance_key": "group1"
+            },
+            "group1_consumer": {
+                "model_class": AConsumer,
+                "parent_instance_key": "group1"
+            },
+            "group2": {
+                "model_class": AGroup,
+                "parent_instance_key": "root"
+            },
+            "group2_producer": {
+                "model_class": AProducer,
+                "parent_instance_key": "group2",
+                "overrides": {
+                    "shared_state": 100
+                }
+            },
+            "group2_consumer": {
+                "model_class": AConsumer,
+                "parent_instance_key": "group2"
+            }
+        }
+    }
+```
+Defines the location hierarchy and connections between models with optional overrides of attributes
 
 ## Inspiration
+
+- Sydney Do's thesis http://strategic.mit.edu/docs/PhD_2016_do.pdf
 - Wolfram Alpha System Modeler: https://www.wolfram.com/system-modeler/examples/energy/energy-consumption-model.html
 - SIMOC (Mars Habitat Simulation): https://ngs.simoc.space/entry
 
 ## Notes
 See [NOTES.md](NOTES.md) for TODOs and ideas
-
-## Usage on Windows
-
-```
-# One time installation
-python3 -m venv venv
-cd .\venv\Scripts\
-.\activate
-cd ..\..
-pip install -r requirements.txt
-
-# Running model
-cd .\venv\Scripts\
-.\activate
-cd ..\..
-cd .\examples\mars
-python .\main.py
-python -m pytest
-
-# To run backend
-# In a separate window (I was using VS Code)
-cd .\venv\Scripts\
-.\activate
-cd ..\..
-cd .\website\backend\
-python .\run_server.py
-
-# To run frontend
-# In a separate window (I was using VS Code)
-# First install https://nodejs.org/en/
-# If using VS Code you must right click and launch run as administrator
-cd .\website\frontend\
-npm install
-npm start
-```
+See [Windows.md](Windows.md) for windows specific instructions
