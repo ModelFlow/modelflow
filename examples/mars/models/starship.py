@@ -1,5 +1,3 @@
-from modelflow.modelflow import run_scenario
-
 class Starship:
     name = "starship"
     description = "Note: this container assumes that every child object has a mass and volume parameter or state"

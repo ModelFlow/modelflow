@@ -64,12 +64,6 @@ class Utils:
                 return True
         return False
 
-        print()
-        # parents = list(self.tree.get_node(self.instance_info['key'])._predecessor.values())
-        # print(parents)
-        # if len(parents) > 0:
-        #     return parents[0] == name
-        # return False
 
 class StateFetcher():
 
@@ -86,22 +80,37 @@ class StateFetcher():
         if name in self._private_state_map:
             return self._private_state_map[name]
 
-        # TODO: Actual recursive search
-        for instance_key in self._shared_states_map:
-            for state_name in self._shared_states_map[instance_key]:
-                if state_name == name:
-                    return self._shared_states_map[instance_key][state_name]
+        if name in self._shared_states_map[self._key]:
+            return self._shared_states_map[self._key][name]
+
+        instance_key = self.get_closest_instance_key(name)
+        return self._shared_states_map[instance_key][name]
 
     def __setattr__(self, name, value):        
         if name in self._private_state_map:
             self._private_state_map[name] = value
+            return
 
-        # TODO: Actual recursive search
-        for instance_key in self._shared_states_map:
-            for state_name in self._shared_states_map[instance_key]:
-                if state_name == name:
-                    self._shared_states_map[instance_key][state_name] = value
+        if name in self._shared_states_map[self._key]:
+            self._shared_states_map[self._key][name] = value
+            return
 
+        instance_key = self.get_closest_instance_key(name)
+        self._shared_states_map[instance_key][name] = value
+
+    def get_closest_instance_key(self, name):
+        # TODO: Use caching when there is no state changes to make this way faster
+
+        node = self._tree.get_node(self._key)
+        while not node.is_root():
+            parent_id = node.predecessor(self._tree.identifier)
+            node = self._tree.get_node(parent_id)
+            tree = self._tree.subtree(node.tag)
+            for key in tree.expand_tree():
+                for state_name in self._shared_states_map[key]:
+                    if state_name == name:
+                        return key
+        raise Exception(f"Sim state key not found {key}")
 
 def run_scenario(scenario):
 
@@ -121,7 +130,10 @@ def run_scenario(scenario):
     
     try:
         for _ in range(max_steps):
-            for instance_info in model_instances_values:            
+            for instance_info in model_instances_values:
+                if not hasattr(instance_info['model_class'], 'run_step'):
+                    continue
+
                 key = instance_info['key']
                 # TODO: as a performance optimization we probably don't need to instantiate this every time
                 state_fetcher = StateFetcher(key, tree, shared_states_map, private_states_map[key])
