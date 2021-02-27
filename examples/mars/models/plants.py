@@ -1,5 +1,5 @@
 class Plants:
-    name = "plants",
+    name = "plants"
     params = [
         dict(
             key="co2_consumed",
@@ -39,7 +39,6 @@ class Plants:
 
     @staticmethod
     def run_step(states, params, utils):
-
         """
         The logic for the model goes here:
 
