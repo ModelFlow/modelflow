@@ -1,6 +1,6 @@
 class Space_Exploration_Vehicle:
     name = "SpaceExplorationVehicle"
-    description = "Nasa's proposed SEV "
+    description = "Nasa's proposed SEV"
     params = [
         dict(
             key="mass",
@@ -30,7 +30,7 @@ class Space_Exploration_Vehicle:
             value=2,
             source="https://www.nasa.gov/pdf/464826main_SEV_FactSheet_508.pdf",
 
-	 ),
+        ),
         dict(
             key="emergency_capacity",
             description="number of people who can travel in the SEV in case of an emergency",
@@ -54,25 +54,26 @@ class Space_Exploration_Vehicle:
             value=14,
             source="https://www.nasa.gov/pdf/464826main_SEV_FactSheet_508.pdf",
 
-         ),
+        ),
         dict(
             key="safe_range",
             description="Range of exploration",
             units="miles",
-            value= 125,
+            value=125,
             source="https://www.nasa.gov/pdf/464826main_SEV_FactSheet_508.pdf",
-	    notes="Factsheet said it's the safe range for two or more SEVs, unknown what that means",
+            notes="Factsheet said it's the safe range for two or more SEVs, unknown what that means",
 
         )
 
     ]
 
-    private_states = [
+    states = [
         dict(
             key="status",
             label="Status",
-            value="Traveling",
+            value="Packed",
+            private=True,
         )
     ]
 
-    #No status methods
+    # TODO: Add run_step method
