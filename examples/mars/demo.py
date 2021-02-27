@@ -1,7 +1,4 @@
 import sys
-
-import copy
-import pytest
 from models.time import Time
 from models.starship import Starship
 from models.mass_simulator import MassSimulator
@@ -13,7 +10,7 @@ from modelflow.modelflow import run_scenario  # NOQA
 
 base_scenario = {
     "simulation_params": {
-        "max_num_steps": 1000,
+        "max_num_steps": 1000
     },
     "model_instances": {
         "mass_simulator": {
@@ -25,15 +22,15 @@ base_scenario = {
                 "volume": 1
             }
         },
-        # "mass_simulator2": {
-        #     "model_class": MassSimulator,
-        #     "label": "Mass Simulator 2",
-        #     "parent_instance_key": "starship",
-        #     "overrides": {
-        #         "mass": 2,
-        #         "volume": 2
-        #     }
-        # },
+        "mass_simulator2": {
+            "model_class": MassSimulator,
+            "label": "Mass Simulator 2",
+            "parent_instance_key": "starship",
+            "overrides": {
+                "mass": 2,
+                "volume": 2
+            }
+        },
         "time": {
             "model_class": Time,
             "label": "Simulation Space & Time",
@@ -57,10 +54,8 @@ base_scenario = {
         "mars_surface": {
             "model_class": MarsSurface,
             "label": "Mars Surface",
-            "parent_instance_key": "time",
-        },
-
-
+            "parent_instance_key": "time"
+        }
     }
 }
 

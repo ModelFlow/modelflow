@@ -20,7 +20,7 @@ pip install -r requirements.txt
 source venv/bin/activate
 
 # Run the backend
-python app.py
+python run_server.py
 
 # ---- In second window:
 cd frontend

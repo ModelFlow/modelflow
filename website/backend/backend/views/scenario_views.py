@@ -103,20 +103,17 @@ def seed_data():
             },
             'tabs': [
                 {
-                    'id': 'energy',
-                    'title': 'Energy'
+                    'id': 'test',
+                    'title': 'Test'
                 }
             ],
-            'selectedTabId': 'energy',
+            'selectedTabId': 'test',
             'tabsContent': {
-                'energy': {
+                'test': {
                     'cards': {
                         'initial1': {
-                            'outputKey': 'state_enrg_kwh',
-                        },
-                        'initial2': {
-                            'outputKey': 'state_dc_kwh',
-                        },
+                            'outputKey': 'time___current_utc'
+                        }
                     },
                     'layout': {
                         "lg":[
@@ -125,20 +122,12 @@ def seed_data():
                                 'x': 0,
                                 'y': 0,
                                 'w': 6,
-                                'h': 6,
-                            },
-                            {
-                                'i': 'initial2',
-                                'x': 6,
-                                'y': 0,
-                                'w': 6,
-                                'h': 6,
+                                'h': 6
                             }
                         ]
                     }
                 }
-                
-            }   
+            }
         })
         scenario_view.is_hidden = False
         scenario_view.created_at = datetime.now()
