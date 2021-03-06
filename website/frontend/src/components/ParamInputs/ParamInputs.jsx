@@ -21,16 +21,16 @@ class ParamInputs extends Component {
     return (
       <>
         {params.map((param) => {
-          if (param.max) {
-            return (
-              <ParamInput
-                key={param.index}
-                param={param}
-                paramDidUpdate={this.paramDidUpdate}
-                paramDidRelease={this.paramDidRelease}
-              />
-            );
-          }
+          // if (param.max) {
+          return (
+            <ParamInput
+              key={param.index}
+              param={param}
+              paramDidUpdate={this.paramDidUpdate}
+              paramDidRelease={this.paramDidRelease}
+            />
+          );
+          // }
           return null;
         })}
       </>

@@ -1,15 +1,49 @@
 {
-  "states": {
+  "simulation_params": {
+      "max_num_steps": 1000
   },
-  "params": {
-  },
-  "models": [
-    {
-      "model": "SolarArray",
-      "links": [
-        "pv_inverter"
-      ]
-    }
-  ],
-  "run_for_steps": 8760
+  "model_instances": {
+      "mass_simulator": {
+          "model_class": "models/mass_simulator.py::MassSimulator",
+          "label": "Mass Simulator",
+          "parent_instance_key": "starship",
+          "overrides": {
+            "mass": 1,
+            "volume": 1
+          }
+      },
+      "mass_simulator2": {
+          "model_class": "models/mass_simulator.py::MassSimulator",
+          "label": "Mass Simulator 2",
+          "parent_instance_key": "starship",
+          "overrides": {
+            "mass": 2,
+            "volume": 2
+          }
+      },
+      "time": {
+          "model_class": "models/time.py::Time",
+          "label": "Simulation Space & Time",
+          "overrides": {
+              "utc_start": 0,
+              "seconds_per_sim_step": 3600
+          }
+      },
+      "starship": {
+          "model_class": "models/starship.py::Starship",
+          "label": "Starship",
+          "parent_instance_key": "time",
+          "overrides": {
+            "launch_utc": 86400,
+            "travel_days_to_mars": 1,
+            "travel_days_from_mars": 1,
+            "mars_stay_days": 1
+          }
+      },
+      "mars_surface": {
+        "model_class": "models/mars_surface.py::MarsSurface",
+        "label": "Mars Surface",
+        "parent_instance_key": "time"
+      }
+  }
 }

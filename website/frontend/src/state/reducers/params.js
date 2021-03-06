@@ -18,7 +18,9 @@ export default function reduce(state = initialState, action = {}) {
         newMap[item.key] = item.index;
       });
       for (let [key, value] of Object.entries(action.paramValues)) {
-        newArray[newMap[key]].value = value;
+        if (key in newMap) {
+          newArray[newMap[key]].value = value;
+        }
       }
       return {
         ...state,
