@@ -26,7 +26,7 @@ class Time:
         dict(
             key="current_utc",
             label="Current UTC",
-            value=1794729600,
+            value=-1,
             units="UTC Timestamp",
         ),
         dict(
@@ -47,7 +47,8 @@ class Time:
 
     @staticmethod
     def run_step(states, params, utils):
-
+        if states.current_utc == -1:
+            states.current_utc = states.utc_start
         # TODO: Handle Mars Coordinated Time vs. earth UTC stuff
         states.current_utc += states.seconds_per_sim_step
 

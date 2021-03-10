@@ -12,6 +12,11 @@
             "volume": 1
           }
       },
+      "interplanetary_space": {
+        "model_class": "models/interplanetary_space.py::InterplanetarySpace",
+        "label": "Interplanetary Space",
+        "parent_instance_key": "time"
+      },
       "mass_simulator2": {
           "model_class": "models/mass_simulator.py::MassSimulator",
           "label": "Mass Simulator 2",
@@ -34,7 +39,7 @@
           "label": "Starship",
           "parent_instance_key": "time",
           "overrides": {
-            "launch_utc": 86400,
+            "launch_utc": 0,
             "travel_days_to_mars": 1,
             "travel_days_from_mars": 1,
             "mars_stay_days": 1

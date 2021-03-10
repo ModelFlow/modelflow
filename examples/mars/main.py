@@ -27,7 +27,14 @@ def main(args):
         scenario = json.load(f)
 
     outputs = run_scenario(scenario)
-    print(outputs['states']['time'].keys())
+    if 'error' in outputs:
+        raise Exception(f"Sim Error: {outputs['error']}")
+
+    df = pd.DataFrame()
+    for instance_key, dicts in outputs['states'].items():
+        for field_key, data in dicts.items():
+            df[f'{instance_key}_{field_key}'] = data
+    df.to_csv(args.output, index=False)
 
     # models = list_models()
 
@@ -53,7 +60,7 @@ def main(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Mars Simulation')
     parser.add_argument('-s', '--scenario', type=str, help='Name or path to scenario to run', default='test')
-    # parser.add_argument('-o', '--output', type=str, default='output.csv', help='Path of the csv to output.')
+    parser.add_argument('-o', '--output', type=str, default='output.csv', help='Path of the csv to output.')
     # # parser.add_argument('-m', '--minimization', action='store_true', help='Run minimization sweep')
     # parser.add_argument('-d', '--should_output_deltas', action='store_true', help='Output the deltas of each model state')
     # parser.add_argument('-g', '--generate_graph', action='store_true', help='Generate a graph of models connectivity')

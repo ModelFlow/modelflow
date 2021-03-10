@@ -20,7 +20,7 @@ pip install -r requirements.txt
 To run the Mars default baseline scenario example:
 ```
 cd examples/mars
-python demo.py
+python main.py
 ```
 
 ## Running in website locally
