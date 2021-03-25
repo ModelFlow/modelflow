@@ -17,11 +17,11 @@ class StarshipIntegratedPV:
     @staticmethod
     def run_step(states, params, utils):
 
-        if utils.has_parent_instance_named("interplanetary_space"):
+        if utils.has_a_parent_instance_named("interplanetary_space"):
             # This assumes that each simulation timestep is 1 hour
             states.generated_dc_kwh += params.rated_pv_kw_dc_output
 
-        elif utils.has_parent_instance_named("mars_surface"):
+        elif utils.has_a_parent_instance_named("mars_surface"):
             # Assuming that we are not using the integrated starship PV on Mars to not degrade it
             states.generated_dc_kwh += 0
         else:

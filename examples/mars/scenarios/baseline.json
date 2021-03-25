@@ -15,7 +15,7 @@
     "starship": {
         "model_class": "models/starship.py::Starship",
         "label": "Starship",
-        "parent_instance_key": "time"
+        "parent_instance_key": "interplanetary_space"
     },
     "mars_surface": {
       "model_class": "models/mars_surface.py::MarsSurface",
@@ -41,62 +41,96 @@
       "model_class": "models/lighting.py::Lighting",
       "label": "Lighting",
       "parent_instance_key": "starship"
+    },
+    "human1": {
+      "model_class": "models/human.py::Human",
+      "label": "Human",
+      "parent_instance_key": "starship"
+    },
+    "human2": {
+      "model_class": "models/human.py::Human",
+      "label": "Human",
+      "parent_instance_key": "starship"
+    },
+    "human3": {
+      "model_class": "models/human.py::Human",
+      "label": "Human",
+      "parent_instance_key": "starship"
+    },
+    "human4": {
+      "model_class": "models/human.py::Human",
+      "label": "Human",
+      "parent_instance_key": "starship"
+    },
+    "human5": {
+      "model_class": "models/human.py::Human",
+      "label": "Human",
+      "parent_instance_key": "starship"
+    },
+    "human6": {
+      "model_class": "models/human.py::Human",
+      "label": "Human",
+      "parent_instance_key": "starship"
+    },
+    "indoor_air": {
+      "model_class": "models/indoor_air.py::IndoorAir",
+      "label": "IndoorAir",
+      "parent_instance_key": "starship"
+    },
+    "potable_water_storage": {
+      "model_class": "models/starship_storages.py::StarshipPotableWaterStorage",
+      "label": "StarshipPotableWaterStorage",
+      "parent_instance_key": "starship"
+    },
+    "solid_waste_storage": {
+      "model_class": "models/starship_storages.py::StarshipSolidWasteStorage",
+      "label": "StarshipSolidWasteStorage",
+      "parent_instance_key": "starship"
+    },
+    "liquid_waste_storage": {
+      "model_class": "models/starship_storages.py::StarshipLiquidWasteStorage",
+      "label": "StarshipLiquidWasteStorage",
+      "parent_instance_key": "starship"
+    },
+    "food_storage": {
+      "model_class": "models/starship_storages.py::FoodStorage",
+      "label": "FoodStorage",
+      "parent_instance_key": "starship"
+    },
+    "heater": {
+      "model_class": "models/eclss.py::Heater",
+      "label": "Heater",
+      "parent_instance_key": "starship"
+    },
+    "radiators": {
+      "model_class": "models/starship_integrated_radiators.py::StarshipRadiators",
+      "label": "Radiators",
+      "parent_instance_key": "starship"
+    },
+    "urine_recovery": {
+      "model_class": "models/eclss.py::UrineProcessorAssembly",
+      "label": "Urine Recovery",
+      "parent_instance_key": "starship"
+    },
+    "water_recovery": {
+      "model_class": "models/eclss.py::WaterProcessorAssembly",
+      "label": "Water Recovery",
+      "parent_instance_key": "starship"
+    },
+    "hydrolysis_system": {
+      "model_class": "models/eclss.py::HydrolysisSystem",
+      "label": "Hydrolysis System",
+      "parent_instance_key": "starship"
+    },
+    "eclss_sabatier": {
+      "model_class": "models/eclss.py::SabatierReactor",
+      "label": "ECLSS Sabatier Reactor",
+      "parent_instance_key": "starship"
+    },
+    "co2_scrubbers": {
+      "model_class": "models/eclss.py::CO2Scubbers",
+      "label": "CO2 Scrubbers",
+      "parent_instance_key": "starship"
     }
-
-  },
-  "notes": [
-
-    {
-      "model": "Human",
-      "count": 1,
-      "links": [
-        "indoor_air",
-        "potable_water_storage",
-        "food_storage",
-        "waste_storage"
-      ]
-    },
-    {
-      "model": "IndoorAir"
-    },
-    {
-      "model": "WaterStorage"
-    },
-    {
-      "model": "FoodStorage"
-    },
-    {
-      "model": "WasteStorage"
-    },
-    {
-      "model": "HabitatStructure",
-      "links": [
-        "indoor_air"
-      ]
-    },
-    {
-      "model": "Heater",
-      "links": [
-        "heater"
-      ]
-    },
-    {
-      "model": "CO2Removal",
-      "links": [
-        "indoor_air"
-      ]
-    },
-    {
-      "model": "OxygenFromHydrolysis"
-    },
-    {
-      "model": "UrineRecyclingProcessor"
-    },
-    {
-      "model": "MultifiltrationPurifierPostTreatment"
-    },
-    {
-      "model": "Plants"
-    }
-  ]
+  }
 }

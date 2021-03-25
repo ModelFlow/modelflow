@@ -182,9 +182,9 @@ class HydrolysisSystem:
 
 
 class SabatierReactor:
-    name= "Sabatier Reactor"
-    notes= "It is unclear whether the ISRU sabatier reactor can be used here"
-    description= "Reduces carbon dioxide without requiring venting"
+    name = "Sabatier Reactor"
+    notes = "It is unclear whether the ISRU sabatier reactor can be used here"
+    description = "Reduces carbon dioxide without requiring venting"
     params= [
         dict(
             # NOTE: Super confusing that it says solid waste
@@ -266,9 +266,9 @@ class SabatierReactor:
 
 
 class CO2Scubbers:
-    name="co2_removal"
-    description= "Zeolite beds that capture CO2 from the atmosphere"
-    params= [
+    name = "co2_removal"
+    description = "Zeolite beds that capture CO2 from the atmosphere"
+    params = [
         dict(
             # NOTE: Super confusing that it says solid waste
             # but then it is h2o waste that is output from human

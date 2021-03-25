@@ -59,7 +59,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run Mars Simulation')
-    parser.add_argument('-s', '--scenario', type=str, help='Name or path to scenario to run', default='test')
+    parser.add_argument('-s', '--scenario', type=str, help='Name or path to scenario to run', default='baseline')
     parser.add_argument('-o', '--output', type=str, default='output.csv', help='Path of the csv to output.')
     # # parser.add_argument('-m', '--minimization', action='store_true', help='Run minimization sweep')
     # parser.add_argument('-d', '--should_output_deltas', action='store_true', help='Output the deltas of each model state')

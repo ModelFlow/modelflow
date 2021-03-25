@@ -57,13 +57,21 @@ class Utils:
 
         return the_sum
 
-    def has_parent_instance_named(self, name):
+    def has_a_parent_instance_named(self, name):
         node = self.tree.get_node(self.instance_info["key"])
         while not node.is_root():
             parent_id = node.predecessor(self.tree.identifier)
             node = self.tree.get_node(parent_id)
             if node.tag == name:
                 return True
+        return False
+
+    def parent_is(self, name):
+        node = self.tree.get_node(self.instance_info["key"])
+        parent_id = node.predecessor(self.tree.identifier)
+        node = self.tree.get_node(parent_id)
+        if node.tag == name:
+            return True
         return False
 
 

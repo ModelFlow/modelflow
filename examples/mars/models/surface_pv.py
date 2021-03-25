@@ -70,7 +70,7 @@ class SurfacePV:
 
         # TODO: Handle that an example where the parent location is outside
         # but there is a shared electrical connection
-        if not utils.has_parent_instance_named("mars_surface"):
+        if not utils.parent_is("mars_surface"):
             return
     
         if states.status == 'packed':
