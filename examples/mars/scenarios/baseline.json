@@ -87,9 +87,14 @@
       "label": "StarshipSolidWasteStorage",
       "parent_instance_key": "starship"
     },
-    "liquid_waste_storage": {
-      "model_class": "models/starship_storages.py::StarshipLiquidWasteStorage",
-      "label": "StarshipLiquidWasteStorage",
+    "urine_storage": {
+      "model_class": "models/starship_storages.py::StarshipUrineStorage",
+      "label": "StarshipUrineStorage",
+      "parent_instance_key": "starship"
+    },
+    "unfiltered_water": {
+      "model_class": "models/starship_storages.py::StarshipUnfilteredWaterStorage",
+      "label": "StarshipUnfilteredWaterStorage",
       "parent_instance_key": "starship"
     },
     "food_storage": {

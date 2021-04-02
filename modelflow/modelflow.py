@@ -119,7 +119,14 @@ class StateFetcher:
                 for state_name in self._shared_states_map[key]:
                     if state_name == name:
                         return key
-        raise Exception(f"Sim state key not found {key}")
+        all_states = []
+        for info in self._shared_states_map.values():
+            for key in info:
+                all_states.append(key)
+        all_states += list(self._private_state_map.keys())
+        print("List of all states:")
+        print(sorted(all_states))
+        raise Exception(f"No state exists with the key '{name}'. You probably have a typo. Check out the above list of states.")
 
 
 def run_scenario(scenario):
@@ -148,8 +155,13 @@ def run_scenario(scenario):
                 key = instance_info["key"]
                 # TODO: as a performance optimization we probably don't need to instantiate this every time
                 state_fetcher = StateFetcher(key, tree, shared_states_map, private_states_map[key])
-                instance_info["model_class"].run_step(state_fetcher, params[key], utils_map[key])
-
+                try:
+                    instance_info["model_class"].run_step(state_fetcher, params[key], utils_map[key])
+                except SimulationError as e:
+                    return dict(error=str(e))
+                except Exception as e:
+                    print(f"Model: '{instance_info['model_class'].__name__}' encountered an error!")
+                    raise e
                 for field_key in private_states_map[key]:
                     states_output[key][field_key].append(private_states_map[key][field_key])
 

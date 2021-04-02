@@ -3,20 +3,20 @@ class UrineProcessorAssembly:
     description = "First stage recovery of urine"
     params = [
         dict(
-            key="max_h2o_urin_consumed_per_hour",
+            key="max_urine_consumed_per_hour",
             notes="9 kg/day / 24 per wikipedia",
             units="kg/hr",
             value=0.375,
             source="https://en.wikipedia.org/wiki/ISS_ECLSS",
         ),
         dict(
-            key="min_h2o_urin_consumed_per_hour",
+            key="min_urine_consumed_per_hour",
             units="kg/hr",
             value=0.1,
             source="fake",
         ),
         dict(
-            key="ac_kwh_consumed_per_hour",
+            key="dc_kwh_consumed_per_hour",
             notes="TODO: Should be per kg input",
             units="kwh",
             value=1.501,
@@ -46,16 +46,17 @@ class UrineProcessorAssembly:
     @staticmethod
     def run_step(states, params, utils):
 
-        if states.h2o_urin < params.min_h2o_urin_consumed_per_hour:
+        if states.urine < params.min_urine_consumed_per_hour:
             return
-        if states.available_dc_kwh < params.ac_kwh_consumed_per_hour:
+        if states.available_dc_kwh < params.dc_kwh_consumed_per_hour:
             return
 
-        states.urine -= min(states.h2o_urin, params.h2o_urin_consumed_per_hour)
-        states.available_dc_kwh -= min(states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
+        urine_processed = min(states.urine, params.max_urine_consumed_per_hour)
+        states.urine -= urine_processed
+        states.available_dc_kwh -= min(states.available_dc_kwh, params.dc_kwh_consumed_per_hour)
 
-        states.unfiltered_h2o += params.h2o_tret_output_per_hour
-        states.solid_waste += params.solid_waste_output_per_hour
+        states.unfiltered_water += urine_processed
+        # states.solid_waste += params.solid_waste_output_per_hour
 
 
 class WaterProcessorAssembly:
@@ -69,13 +70,13 @@ class WaterProcessorAssembly:
             source="https://ntrs.nasa.gov/api/citations/20050207388/downloads/20050207388.pdf",
         ),
         dict(
-            key="enrg_kwh_consumed_per_hour",
+            key="dc_kwh_consumed_per_hour",
             units="kwh",
             value=1.501,
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
-            key="h2o_potb_output_per_hour",
+            key="potable_water_output_per_hour",
             units="kg/hr",
             value=4.75,
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
@@ -99,13 +100,13 @@ class WaterProcessorAssembly:
 
         if states.unfiltered_water < params.h2o_tret_consumed_per_hour:
             return
-        if states.available_dc_kwh < params.enrg_kwh_consumed_per_hour:
+        if states.available_dc_kwh < params.dc_kwh_consumed_per_hour:
             return
 
-        states.unfiltered_h2o -= min(states.unfiltered_h2o, params.h2o_tret_consumed_per_hour)
-        states.enrg_kwh -= min(states.available_dc_kwh, params.enrg_kwh_consumed_per_hour)
+        states.unfiltered_water -= min(states.unfiltered_water, params.h2o_tret_consumed_per_hour)
+        states.available_dc_kwh -= min(states.available_dc_kwh, params.dc_kwh_consumed_per_hour)
 
-        states.potable_water += params.h2o_potb_output_per_hour
+        states.potable_water += params.potable_water_output_per_hour
 
 
 class HydrolysisSystem:
@@ -121,7 +122,7 @@ class HydrolysisSystem:
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
-            key="enrg_kwh_consumed_per_hour",
+            key="dc_kwh_consumed_per_hour",
             units="kwh",
             value=0.959,
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
@@ -169,11 +170,11 @@ class HydrolysisSystem:
         if states.potable_water < params.potable_water_consumed_per_hour:
             return
 
-        if states.enrg_kwh < params.enrg_kwh_consumed_per_hour:
+        if states.available_dc_kwh < params.dc_kwh_consumed_per_hour:
             return
 
         states.potable_water -= min(states.potable_water, params.potable_water_consumed_per_hour)
-        states.enrg_kwh -= min(states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
+        states.available_dc_kwh -= min(states.available_dc_kwh, params.dc_kwh_consumed_per_hour)
 
         states.atmo_h2 += params.atmo_h2_output_per_hour
         states.atmo_o2 += params.atmo_o2_output_per_hour
@@ -195,7 +196,7 @@ class SabatierReactor:
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
-            key="enrg_kwh_consumed_per_hour",
+            key="dc_kwh_consumed_per_hour",
             units="kwh",
             value=0.291,
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
@@ -254,12 +255,12 @@ class SabatierReactor:
         if states.atmo_co2 < params.atmo_co2_consumed_per_hour:
             return
 
-        if states.enrg_kwh < params.enrg_kwh_consumed_per_hour:
+        if states.available_dc_kwh < params.dc_kwh_consumed_per_hour:
             return
 
-        states.atmo_h2 -= min(states.atmo_h2, params.h2o_potb_consumed_per_hour)
+        states.atmo_h2 -= min(states.atmo_h2, params.potable_water_consumed_per_hour)
         states.atmo_co2 -= min(states.atmo_co2, params.atmo_co2_consumed_per_hour)
-        states.enrg_kwh -= min(states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
+        states.available_dc_kwh -= min(states.available_dc_kwh, params.dc_kwh_consumed_per_hour)
 
         states.atmo_ch4 += params.atmo_ch4_output_per_hour
         states.solid_waste += params.solid_waste_output_per_hour
@@ -278,7 +279,7 @@ class CO2Scubbers:
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
-            key="enrg_kwh_consumed_per_hour",
+            key="dc_kwh_consumed_per_hour",
             units="kwh",
             value=0.65,
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
@@ -316,11 +317,11 @@ class CO2Scubbers:
         if states.atmo_co2 < params.atmo_co2_consumed_per_hour:
             return
 
-        if states.enrg_kwh < params.enrg_kwh_consumed_per_hour:
+        if states.available_dc_kwh < params.dc_kwh_consumed_per_hour:
             return
 
         states.atmo_co2 -= min(states.atmo_co2, params.atmo_co2_consumed_per_hour)
-        states.enrg_kwh -= min(states.enrg_kwh, params.enrg_kwh_consumed_per_hour)
+        states.available_dc_kwh -= min(states.available_dc_kwh, params.dc_kwh_consumed_per_hour)
 
         # TODO: Where does the output go
 

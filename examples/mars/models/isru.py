@@ -34,8 +34,8 @@ class WaterIceMiningMachine:
             key="max_production_kg_h2o_per_hr",
             units="kg H2O/hr",
             value=31.25,
-            notes="This is the minimum to make fuel in required time. Should definitely be higher"
-            source="habnet",
+            notes="This is the minimum to make fuel in required time. Should definitely be higher",
+            source="habnet"
         ),
         dict(
             key="mass_per_kg",

@@ -3,7 +3,7 @@ class StarshipPotableWaterStorage:
     name = "Potable Water Storage",
     params = [
         dict(
-            key="max_h2o_potb",
+            key="max_potable_water",
             units="kg",
             value=4000,
         ),
@@ -15,7 +15,7 @@ class StarshipPotableWaterStorage:
     ]
     states = [
         dict(
-            key="h2o_potb",
+            key="potable_water",
             units="kg",
             value=1341,
             min=0,
@@ -36,17 +36,17 @@ class StarshipPotableWaterStorage:
     @staticmethod
     def run_step(states, params, utils):
 
-        states.mass = states.h2o_potb
+        states.mass = states.potable_water
         states.volume = states.mass * params.m3_per_kg
 
-        if states.h2o_potb > params.max_h2o_potb:
-            states.h2o_potb = params.max_h2o_potb
+        if states.potable_water > params.max_potable_water:
+            states.potable_water = params.max_potable_water
             utils.log("Maximum food storage exceeded so discarded")
 
-        # Note: h2o_potb consumers are responsible for checking h2o_potb
+        # Note: potable_water consumers are responsible for checking potable_water
         # and not consuming more than is stored
-        if states.h2o_potb < 0:
-            utils.terminate_sim_with_error("h2o_potb < 0")
+        if states.potable_water < 0:
+            utils.terminate_sim_with_error("potable_water < 0")
 
 
 class StarshipSolidWasteStorage:
@@ -69,39 +69,40 @@ class StarshipSolidWasteStorage:
 
     @staticmethod
     def run_step(states, params, utils):
-
         if states.solid_waste < 0:
             utils.terminate_sim_with_error("solid_waste < 0")
 
 
-class StarshipLiquidWasteStorage:
-    definition = {
-        "name": "waste_storage",
-        "states": [
-            dict(
-                key="urin",
-                units="kg",
-                value=0
-            ),
-            dict(
-                key="other_liquid_waste",
-                units="kg",
-                value=0
-            ),
-        ]
-    }
+class StarshipUrineStorage:
+    name = "urine_storage",
+    states = [
+        dict(
+            key="urine",
+            units="kg",
+            value=0
+        )
+    ]
 
     @staticmethod
     def run_step(states, params, utils):
+        if states.urine < 0:
+            utils.terminate_sim_with_error("urine < 0")
 
-        if states.h2o_urin < 0:
-            raise Exception("h2o_urin < 0")
 
-        if states.h2o_waste < 0:
-            raise Exception("h2o_waste < 0")
+class StarshipUnfilteredWaterStorage:
+    name = "unfiltered_water_storage",
+    states = [
+        dict(
+            key="unfiltered_water",
+            units="kg",
+            value=0
+        )
+    ]
 
-        if states.solid_waste < 0:
-            utils.terminate_sim_with_error("solid_waste < 0")
+    @staticmethod
+    def run_step(states, params, utils):
+        if states.unfiltered_water < 0:
+            utils.terminate_sim_with_error("unfiltered_water < 0")
 
 
 class FoodStorage:

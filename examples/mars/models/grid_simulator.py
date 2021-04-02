@@ -21,5 +21,4 @@ class GridSimulator:
 
     @staticmethod
     def run_step(states, params, utils):
-
         states.available_dc_kwh = 0

@@ -20,5 +20,5 @@ class StarshipRadiators:
     ]
 
     @staticmethod
-    def run_step(io, params, states, data, utils):
-        states.pv_kw_output = params.rated_pv_kw_output
+    def run_step(states, params, utils):
+        states.heat_diff_kwh += params.deep_space_max_heat_rejection_kw
