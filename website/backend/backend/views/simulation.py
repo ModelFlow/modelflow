@@ -61,6 +61,15 @@ def run_sim_route():
                     flat_dict[final_key] = dict(data=arr, label=final_key)
 
     outputs["output_states"] = flat_dict
+    outputs.pop('states', None)
+
+    outputs["tree_changes"] = []
+    prev_tree = None
+    for i, tree in enumerate(outputs['trees']):
+        if tree != prev_tree:
+            outputs["tree_changes"].append(dict(index=i, tree=tree))
+        prev_tree = tree
+    outputs.pop('trees')
 
     # TODO: Handle better
     an_output = list(outputs["output_states"].values())[0]['data']
