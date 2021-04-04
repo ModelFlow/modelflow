@@ -5,6 +5,8 @@ import time
 import argparse
 import pathlib
 import pandas as pd
+import numpy as np
+
 sys.path.insert(0, "../..")
 from modelflow.modelflow import run_scenario # NOQA  # TODO: make work run_minimization  
 # from modelflow.graph_viz_from_outputs import generate_graph  # NOQA
@@ -25,15 +27,25 @@ def main(args):
     scenario = None
     with open(abs_path, 'r') as f:
         scenario = json.load(f)
-
+    t0 = time.time()
     outputs = run_scenario(scenario)
     if 'error' in outputs:
-        raise Exception(f"Sim Error: {outputs['error']}")
+        print(f"Sim Error: {outputs['error']}")
+    print(f'{time.time() - t0:.2f}')
+    print("Finished Simulation!")
 
+    print("Creating outputs...")
+
+    min_len = 1000000000
+    for instance_key, dicts in outputs['states'].items():
+        for field_key, data in dicts.items():
+            if len(data) < min_len:
+                min_len = len(data)
+    print(min_len)
     df = pd.DataFrame()
     for instance_key, dicts in outputs['states'].items():
         for field_key, data in dicts.items():
-            df[f'{instance_key}_{field_key}'] = data
+            df[f'{instance_key}_{field_key}'] = np.array(data)[:min_len]
     df.to_csv(args.output, index=False)
 
     # models = list_models()

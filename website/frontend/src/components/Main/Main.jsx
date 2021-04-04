@@ -34,11 +34,14 @@ class Main extends Component {
         </div>
       );
     } else {
-      mainView = (
-        <div className="grid-container">
+      // TODO: Re-enable parameter inputs once ready
+      /*
           <div className="paramsCabinet">
             <ParamInputs />
           </div>
+      */
+      mainView = (
+        <div className="grid-container">
           <div className="resultsDisplay">
             <ResultsView />
           </div>

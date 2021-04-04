@@ -5,7 +5,7 @@
   "model_instances": {
     "time": {
         "model_class": "models/time.py::Time",
-        "label": "Simulation Space & Time"
+        "label": "Simulation Time"
     },
     "interplanetary_space": {
       "model_class": "models/interplanetary_space.py::InterplanetarySpace",
@@ -72,7 +72,7 @@
       "label": "Human",
       "parent_instance_key": "starship"
     },
-    "indoor_air": {
+    "indoor_air1": {
       "model_class": "models/indoor_air.py::IndoorAir",
       "label": "IndoorAir",
       "parent_instance_key": "starship"

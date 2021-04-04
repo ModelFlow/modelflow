@@ -58,7 +58,6 @@ class TestStarship():
         }
     }
 
-
     def test_statuses(self):
         outputs = run_scenario(self.scenario)
         # print(outputs)

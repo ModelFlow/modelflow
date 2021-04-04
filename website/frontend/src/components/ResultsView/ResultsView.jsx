@@ -6,12 +6,14 @@ import {
   Intent,
   Tab,
   Tabs,
+  Callout,
 } from '@blueprintjs/core';
 
 import React, { Component } from 'react';
 import ResultsGrid from './../ResultsGrid/ResultsGrid';
 import { connect } from 'react-redux';
 import actions from '../../state/actions';
+import './ResultsView.css';
 
 class ResultsView extends Component {
   state = {
@@ -48,12 +50,51 @@ class ResultsView extends Component {
 
   render() {
     const { isOpen } = this.state;
-    const { selectedTabId, tabs, simError } = this.props;
-    if (simError) {
-      return <div>Error: {simError}</div>;
+    const { selectedTabId, tabs, results, status } = this.props;
+
+    let callout = null;
+    if (status === 'waiting') {
+      callout = (
+        <Callout
+          icon={'info-sign'}
+          intent={''}
+          title={'Waiting'}
+          className="simStatusCallout"
+        ></Callout>
+      );
+    } else if (status === 'running') {
+      callout = (
+        <Callout
+          icon={'walk'}
+          intent={'warning'}
+          title={'Running'}
+          className="simStatusCallout"
+        ></Callout>
+      );
+    } else if (status === 'success') {
+      callout = (
+        <Callout
+          icon={'tick-circle'}
+          intent={'success'}
+          title={'Success'}
+          className="simStatusCallout"
+        ></Callout>
+      );
+    } else if (status === 'error') {
+      callout = (
+        <Callout
+          icon={'error'}
+          intent={'danger'}
+          title={'Error'}
+          className="simStatusCallout"
+        >
+          {results.error}
+        </Callout>
+      );
     }
     return (
       <>
+        {callout}
         <div className="tabHeader">
           <Button
             text="Edit Tabs"
@@ -142,7 +183,8 @@ const mapDispatchToProps = {
 const mapStateToProps = (state) => ({
   selectedTabId: state.resultViews.selectedTabId,
   tabs: state.resultViews.tabs,
-  simError: state.resultViews.simError,
+  results: state.sim.results,
+  status: state.sim.status,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ResultsView);

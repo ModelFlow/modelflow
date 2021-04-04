@@ -7,6 +7,12 @@ export const runSim = () => async (dispatch, getState) => {
       keysNeeded.push(tab.cards[item.i].outputKey);
     });
   });
+
+  dispatch({
+    type: 'SET_SIM_STATUS',
+    status: 'running',
+  });
+
   const { data } = await axios.post(
     `${process.env.REACT_APP_API_URL}/run_sim`,
     {

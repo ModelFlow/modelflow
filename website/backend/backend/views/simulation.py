@@ -9,7 +9,9 @@ from flask import request
 root_dir = str(pathlib.Path(__file__).absolute().parents[4])
 sys.path.insert(0, root_dir)
 
+
 # TODO: DO NOT HARDCODE
+HARD_CODED_SCENARIO_TO_USE = "baseline"
 sys.path.insert(0, os.path.join(root_dir, "examples", "mars"))
 
 from modelflow.modelflow import get_params, run_scenario  # NOQA
@@ -17,12 +19,11 @@ from modelflow.modelflow import get_params, run_scenario  # NOQA
 # from examples.mars.models import list_models
 # from modelflow.graph_viz_from_outputs import generate_react_flow_chart
 
-
 @app.route("/api/get_params")
 def get_params_route():
     # TODO: Allow for loading different scenarios
     # DEBUG
-    scenario_name = request.args.get("scenario", "test")
+    scenario_name = request.args.get("scenario", HARD_CODED_SCENARIO_TO_USE)
     scenario = get_scenario(scenario_name)
 
     return dict(params=get_params(scenario))
@@ -33,7 +34,7 @@ def run_sim_route():
     body = json.loads(request.data)
 
     # DEBUG
-    scenario_name = body.get("scenario", "test")
+    scenario_name = body.get("scenario", HARD_CODED_SCENARIO_TO_USE)
     # should_generate_graph = int(body.get("should_generate_graph", 0)) == 1
     output_keys = body.get("output_keys", None)
     scenario = get_scenario(scenario_name)

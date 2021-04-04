@@ -7,7 +7,7 @@ class Starship:
             description="The UTC time that starship heads from LEO to Mars",
             notes="This is one hour past the simulation start time as the time increment will happen before this model",
             units="UTC Timestamp",
-            value=1794733200,
+            value=1794916800,
             source="Spreadsheet of launch windows",
         ),
         dict(
@@ -67,7 +67,7 @@ class Starship:
             key="max_payload_from_leo_to_mars",
             description="The maximum payload mass that can be taken from low earth orbit to Mars surface",
             units="kg",
-            value=10000,
+            value=100000,
             confidence=9,
             source="SpaceX website",
         ),
@@ -76,7 +76,7 @@ class Starship:
             key="max_payload_from_mars_to_earth",
             description="The maximum payload mass that can be taken from Mars surface to Earth surface",
             units="kg",
-            value=10000,
+            value=100000,
             confidence=0,
             source="none",
         ),
@@ -116,31 +116,47 @@ class Starship:
             label="Status",
             value="No Status",
             private=True
+        ),
+        dict(
+            key="payload_mass",
+            label="Payload Mass",
+            value=0,
+            private=True
+        ),
+        dict(
+            key="payload_used_volume",
+            label="Payload Used Volume",
+            value=0,
+            private=True
         )
     ]
 
     @staticmethod
     def run_step(states, params, utils):
+
+        # DEBUG: This is expensive, we shouldn't need to calculate every time
+        # states.payload_mass = utils.sum_children_attribute('mass')
+        # print(states.payload_mass)
+
         seconds_since_launch = states.current_utc - params.launch_utc
         days_since_mission_start = seconds_since_launch / 60 / 60 / 24
 
         if days_since_mission_start < 0:
             states.status = 'Pre-launch'
-
         elif days_since_mission_start == 0:
 
             utils.log_event("LEO Trans Mars Injection Burn")
 
-            total_mass = utils.sum_children_attribute('mass')
-            if total_mass > params.max_payload_from_leo_to_mars:
-                utils.terminate_sim_with_error("Exceeded payload initial mass capacity")
+            states.payload_mass = utils.sum_children_attribute('mass')
+            if states.payload_mass > params.max_payload_from_leo_to_mars:
+                utils.terminate_sim_with_error(f"Exceeded payload initial mass capacity {states.payload_mass}kg vs {params.max_payload_from_leo_to_mars}kg")
                 return
 
-            if total_mass < params.max_payload_from_leo_to_mars * params.mass_utilization_warning_threshold:
+            if states.payload_mass < params.max_payload_from_leo_to_mars * params.mass_utilization_warning_threshold:
                 utils.log_warning("Initial payload mass underutilized")
 
             # TODO: associate logs with models?
-            utils.log_metric(name="Initial Payload Used Mass", value=total_mass, units="kg")
+            utils.log_metric(name="Initial Payload Used Mass", value=states.payload_mass, units="kg")
 
             total_volume = utils.sum_children_attribute('volume')
             if total_volume > params.pressurized_cargo_volume:
@@ -150,7 +166,7 @@ class Starship:
             if total_volume < params.unpressurized_cargo_volume * params.volume_utilization_warning_threshold:
                 utils.log_warning("Initial payload volume underutilized")
 
-            utils.log_metric(name="Initial Payload Used Volume", value=total_mass, units="kg")
+            utils.log_metric(name="Initial Payload Used Volume", value=states.payload_mass, units="kg")
 
             states.status = 'Launching from LEO'
 
@@ -173,10 +189,12 @@ class Starship:
             states.status = 'On Mars Surface'
 
         elif days_since_mission_start == params.travel_days_to_mars + params.mars_stay_days:
-            # Pre launch checks
-            total_mass = utils.sum_children_attribute('mass')
-            if total_mass > params.max_payload_from_mars_to_earth:
-                utils.terminate_sim_with_error("Exceeded payload return mass capacity")
+            # Pre launch checks on Mars
+            states.payload_mass = utils.sum_children_attribute('mass')
+            print("PRELALIUDSHFLDIF")
+            print(states.payload_mass, params.max_payload_from_mars_to_earth)
+            if states.payload_mass > params.max_payload_from_mars_to_earth:
+                utils.terminate_sim_with_error(f"Exceeded payload return mass capacity {states.payload_mass}kg vs {params.max_payload_from_mars_to_earth}kg")
                 return
 
             utils.log_event("Mars Ascent")

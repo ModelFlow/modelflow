@@ -13,6 +13,7 @@ const initialState = {
   flowEngine: null,
   flowModel: null,
   forceUpdateCounter: 0,
+  status: 'waiting',
 };
 
 // TODO: Remove all of these flow things from sim.js and into their own file
@@ -80,14 +81,26 @@ export default function reduce(state = initialState, action = {}) {
 
         flowEngine.setModel(flowModel);
       }
-
+      let status = 'success';
+      if (action.results.error) {
+        status = 'error';
+      }
       return {
         ...state,
         results: action.results,
+        status: status,
         flowEngine: flowEngine,
         flowModel: flowModel,
       };
     }
+
+    case 'SET_SIM_STATUS': {
+      return {
+        ...state,
+        status: action.status,
+      };
+    }
+
     case 'INCREMENT_FORCE_UPDATE_COUNTER': {
       return {
         ...state,

@@ -1,6 +1,16 @@
+/* 
+// TODO: Change back once param cabinet re-enabled
 .grid-container {
   display: grid;
   grid-template-columns: 300px auto;
+  background-color: white;
+  height: 100vh;
+} 
+*/
+
+.grid-container {
+  display: grid;
+  grid-template-columns: auto;
   background-color: white;
   height: 100vh;
 }

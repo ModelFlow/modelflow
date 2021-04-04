@@ -24,12 +24,12 @@ const initialState = {
 
 export default function reduce(state = initialState, action = {}) {
   switch (action.type) {
-    case 'SET_SIM_ERROR': {
-      return {
-        ...state,
-        simError: action.simError,
-      };
-    }
+    // case 'SET_SIM_ERROR': {
+    //   return {
+    //     ...state,
+    //     simError: action.simError,
+    //   };
+    // }
     case 'UPDATE_TABS': {
       return {
         ...state,

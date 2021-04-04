@@ -53,13 +53,14 @@ export const loadScenarioView = (id) => async (dispatch) => {
   const { data } = await axios.get(
     `${process.env.REACT_APP_API_URL}/scenario_view?id=${id}`,
   );
-  if (data.error) {
-    dispatch({
-      type: 'SET_SIM_ERROR',
-      simError: data.error,
-    });
-    return;
-  }
+
+  // if (data.error) {
+  //   dispatch({
+  //     type: 'SET_SIM_ERROR',
+  //     simError: data.error,
+  //   });
+  //   return;
+  // }
 
   const { paramValues, tabs, tabsContent, selectedTabId } = data.data;
   dispatch({
