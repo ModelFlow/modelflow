@@ -153,45 +153,48 @@ class Human:
 
         if states.hours_without_water > params.max_hrs_survivable_with_no_water:
             states.is_alive = 0
-            utils.log_event('died due to lack of water')
+            # Note: Currently any human death is a fatal sim error
+            # utils.log_event('died due to lack of water')
+            utils.terminate_sim_with_error('died due to lack of water')
+
             return
 
         if states.hours_without_food > params.max_hrs_survivable_with_no_food:
             states.is_alive = 0
-            utils.log_event('died due to lack of food')
+            utils.terminate_sim_with_error('died due to lack of food')
             return
 
         atmosphere_total = states.atmo_o2 + states.atmo_co2 + states.atmo_n2
         o2_concentration = states.atmo_o2 / atmosphere_total
         if states.atmo_o2 == 0:
             states.is_alive = 0
-            utils.log_event('died due to no o2')
+            utils.terminate_sim_with_error('died due to no o2')
             return
 
         if o2_concentration < params.min_survivable_percent_atmo_o2:
             states.is_alive = 0
-            print('died due to min_survivable_percent_atmo_o2')
+            utils.terminate_sim_with_error('died due to min o2')
             return
 
         # NOTE: You won't actually die from 100% O2 but makes eventual fire almost certain
         if o2_concentration > params.max_survivable_percent_atmo_o2:
             states.is_alive = 0
-            utils.log_event('died due to likely fire from max_survivable_percent_atmo_o2')
+            utils.terminate_sim_with_error('died due to likely fire from max_survivable_percent_atmo_o2')
             return
         co2_concentration = states.atmo_co2 / atmosphere_total
         if co2_concentration > params.max_survivable_percent_atmo_co2:
             states.is_alive = 0
-            utils.log_event('died due to too much co2')
+            utils.terminate_sim_with_error('died due to too much co2')
             return
 
         if states.atmo_temp > params.max_survivable_temperature:
             states.is_alive = 0
-            utils.log_event('died due to too high temp')
+            utils.terminate_sim_with_error('died due to too high temp')
             return
 
         if states.atmo_temp < params.min_survivable_temperature:
             states.is_alive = 0
-            utils.log_event('died due to too low temp')
+            utils.terminate_sim_with_error('died due to too low temp')
             return
 
         if states.food == 0:

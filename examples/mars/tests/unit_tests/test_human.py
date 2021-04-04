@@ -1,5 +1,7 @@
+import pytest
 from models.human import Human
 from modelflow.testing import ModelUnitTest
+from modelflow.modelflow import SimulationError
 
 
 class TestHuman(ModelUnitTest):
@@ -29,43 +31,42 @@ class TestHuman(ModelUnitTest):
     def test_human_no_air(self):
         assert self.states.is_alive == 1
         self.states.atmo_o2 = 0
-        self.run_step()
-        assert self.states.is_alive == 0
+        with pytest.raises(SimulationError):
+            self.run_step()
 
     def test_human_o2_below_limit(self):
         self.states.atmo_o2 = 5
         self.states.atmo_n2 = 95
         self.states.atmo_co2 = 0.001
         self.params.min_survivable_percent_atmo_o2 = 0.08
-        self.run_step()
-        assert self.states.is_alive == 0
+        with pytest.raises(SimulationError):
+            self.run_step()
 
     def test_human_o2_above_limit(self):
         self.states.atmo_o2 = 50
         self.states.atmo_n2 = 50
         self.states.atmo_co2 = 0.001
         self.params.max_survivable_percent_atmo_o2 = 0.25
-        assert self.states.is_alive == 1
-        self.run_step()
-        assert self.states.is_alive == 0
+        with pytest.raises(SimulationError):
+            self.run_step()
 
     def test_human_co2_above_limit(self):
         self.states.atmo_o2 = 20
         self.states.atmo_n2 = 80
         self.states.atmo_co2 = 10
         self.params.max_survivable_percent_atmo_co2 = 0.01
-        self.run_step()
-        assert self.states.is_alive == 0
+        with pytest.raises(SimulationError):
+            self.run_step()
 
     def test_human_above_temp(self):
         self.states.atmo_temp = 1000
-        self.run_step()
-        assert self.states.is_alive == 0
+        with pytest.raises(SimulationError):
+            self.run_step()
 
     def test_human_below_temp(self):
         self.states.atmo_temp = -1000
-        self.run_step()
-        assert self.states.is_alive == 0
+        with pytest.raises(SimulationError):
+            self.run_step()
 
     def test_human_no_water(self):
         self.states.potable_water = 0
@@ -74,11 +75,13 @@ class TestHuman(ModelUnitTest):
         # hour 1 = no water
         # hour 2 = no water
         # hour 3 = dead
-        for i in range(0, self.params.max_hrs_survivable_with_no_water+2):
+        for i in range(0, self.params.max_hrs_survivable_with_no_water+1):
             assert self.states.is_alive == 1
             assert self.states.hours_without_water == i
             self.run_step()
-        assert self.states.is_alive == 0
+
+        with pytest.raises(SimulationError):
+            self.run_step()
 
     def test_human_no_food(self):
         self.states.food = 0
@@ -87,12 +90,13 @@ class TestHuman(ModelUnitTest):
         # hour 1 = no food
         # hour 2 = no food
         # hour 3 = dead
-        for i in range(0, self.params.max_hrs_survivable_with_no_food+2):
+        for i in range(0, self.params.max_hrs_survivable_with_no_food+1):
             assert self.states.is_alive == 1
             assert self.states.hours_without_food == i
             self.run_step()
-
-        assert self.states.is_alive == 0
+        
+        with pytest.raises(SimulationError):
+            self.run_step()
 
     def test_human_dead(self):
         self.states.is_alive = 0

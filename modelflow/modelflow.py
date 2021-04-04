@@ -28,12 +28,12 @@ class Utils:
 
     def log_event(self, msg):
         # TODO: Implement log event properly
-        # print(msg)
+        print(msg)
         pass
 
     def log_warning(self, msg):
         # TODO: Implement log warning properly
-        # print(msg)
+        print(msg)
         pass
 
     def terminate_sim_with_error(self, msg):

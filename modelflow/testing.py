@@ -1,7 +1,6 @@
 from types import SimpleNamespace
+from modelflow.modelflow import SimulationError
 
-class SimulationError(Exception):
-    pass
 
 class MockUtils:
     

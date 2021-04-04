@@ -76,16 +76,16 @@ class TestStarship():
     def test_invalid_schema_change(self):
         bad_scenario = copy.deepcopy(self.scenario)
         bad_scenario['model_instances'].pop("mars_surface", None)
-        outputs = run_scenario(bad_scenario)
-        assert outputs['error'] == "Cannot move 'starship' since destination key 'mars_surface' does not exist"
+        output = run_scenario(bad_scenario)
+        assert "Cannot move 'starship' since destination key 'mars_surface' does not exist" in output['error']
 
     def test_valid_schema_change(self):
-        outputs = run_scenario(self.scenario)
-        assert outputs['trees'][0] == {'time': {'children': [{'interplanetary_space': {'children': [{'starship': {'children': ['mass_simulator']}}]}}, 'mars_surface']}}
-        assert outputs['trees'][47] == {'time': {'children': ['interplanetary_space', {'mars_surface': {'children': [{'starship': {'children': ['mass_simulator']}}]}}]}}
+        output = run_scenario(self.scenario)
+        assert output['trees'][0] == {'time': {'children': [{'interplanetary_space': {'children': [{'starship': {'children': ['mass_simulator']}}]}}, 'mars_surface']}}
+        assert output['trees'][47] == {'time': {'children': ['interplanetary_space', {'mars_surface': {'children': [{'starship': {'children': ['mass_simulator']}}]}}]}}
 
     def test_pre_launch_checks(self):
         bad_scenario = copy.deepcopy(self.scenario)
         bad_scenario['model_instances']["mass_simulator"]["overrides"]["mass"] = 100000000000
-        outputs = run_scenario(bad_scenario)
-        assert outputs['error'] == "Exceeded payload initial mass capacity"
+        output = run_scenario(bad_scenario)
+        assert "Exceeded payload initial mass capacity" in output['error']
