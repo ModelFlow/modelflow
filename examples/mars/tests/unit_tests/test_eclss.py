@@ -11,7 +11,6 @@
 #         self.io.atmo_o2 = 10
 #         self.io.atmo_n2 = 90
 #         self.io.atmo_co2 = 0
-#         self.io.atmo_h2 = 0
 
 #     def test_converter_works(self):
 #         self.params.run_below_atmo_o2_ratio = 0.2

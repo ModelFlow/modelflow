@@ -64,21 +64,16 @@ class WaterProcessorAssembly:
     description = "Second stage multifiltration beds" 
     params = [
         dict(
-            key="h2o_tret_consumed_per_hour",
+            key="max_h2o_tret_processed_per_hour",
             units="kg/hr",
-            value=5.8,
+            value=5.8967,
+            notes="Comes from 13 lb/hr in source. I'm not sure if this is correct.",
             source="https://ntrs.nasa.gov/api/citations/20050207388/downloads/20050207388.pdf",
         ),
         dict(
             key="dc_kwh_consumed_per_hour",
             units="kwh",
             value=1.501,
-            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-        ),
-        dict(
-            key="potable_water_output_per_hour",
-            units="kg/hr",
-            value=4.75,
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
@@ -98,15 +93,15 @@ class WaterProcessorAssembly:
     @staticmethod
     def run_step(states, params, utils):
 
-        if states.unfiltered_water < params.h2o_tret_consumed_per_hour:
+        if states.unfiltered_water < params.max_h2o_tret_processed_per_hour:
             return
         if states.available_dc_kwh < params.dc_kwh_consumed_per_hour:
             return
 
-        states.unfiltered_water -= min(states.unfiltered_water, params.h2o_tret_consumed_per_hour)
+        processed = min(states.unfiltered_water, params.max_h2o_tret_processed_per_hour)
+        states.unfiltered_water -= processed
         states.available_dc_kwh -= min(states.available_dc_kwh, params.dc_kwh_consumed_per_hour)
-
-        states.potable_water += params.potable_water_output_per_hour
+        states.potable_water += processed
 
 
 class HydrolysisSystem:
@@ -176,10 +171,8 @@ class HydrolysisSystem:
         states.potable_water -= min(states.potable_water, params.potable_water_consumed_per_hour)
         states.available_dc_kwh -= min(states.available_dc_kwh, params.dc_kwh_consumed_per_hour)
 
-        states.atmo_h2 += params.atmo_h2_output_per_hour
+        # states.atmo_h2 += params.atmo_h2_output_per_hour
         states.atmo_o2 += params.atmo_o2_output_per_hour
-
-
 
 
 class SabatierReactor:
@@ -220,11 +213,10 @@ class SabatierReactor:
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
-            # TODO: Implement buffering logic
-            key="run_above_atmo_co2_ratio",
-            units="decimal percent",
-            value=0.001,
-            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+            key="run_above_co2_ppm",
+            units="ppm",
+            value=1000,
+            source="https://www.epa.gov/sites/production/files/2014-08/documents/appena.pdf"
         ),
         dict(
             key="mass",
@@ -246,8 +238,8 @@ class SabatierReactor:
 
         total_atmosphere = states.atmo_o2 + states.atmo_n2 + states.atmo_co2
         co2_ratio = states.atmo_co2 / float(total_atmosphere)
-        if co2_ratio <= params.run_above_atmo_co2_ratio:
-            return False
+        if co2_ratio <= params.run_above_co2_ppm:
+            return
 
         if states.atmo_h2 < params.atmo_h2_consumed_per_hour:
             return
@@ -267,7 +259,7 @@ class SabatierReactor:
 
 
 class CO2Scubbers:
-    name = "co2_removal"
+    name = "co2_scrubbers"
     description = "Zeolite beds that capture CO2 from the atmosphere"
     params = [
         dict(
@@ -275,8 +267,8 @@ class CO2Scubbers:
             # but then it is h2o waste that is output from human
             key="atmo_co2_consumed_per_hour",
             units="kg/hr",
-            value=0.085,
-            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+            value=1,
+            source="FAKE"
         ),
         dict(
             key="dc_kwh_consumed_per_hour",
@@ -285,12 +277,10 @@ class CO2Scubbers:
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
-            # TODO: Implement buffering logic
-            # buffer 8 ?
-            key="run_above_atmo_co2_ratio",
-            units="decimal percent",
-            value=0.001,
-            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+            key="run_above_co2_ppm",
+            units="ppm",
+            value=1000,
+            source="https://www.epa.gov/sites/production/files/2014-08/documents/appena.pdf"
         ),
         dict(
             key="mass",
@@ -308,10 +298,12 @@ class CO2Scubbers:
 
     @staticmethod
     def run_step(states, params, utils):
+        # states.atmo_co2 = 0
 
         total_atmosphere = states.atmo_o2 + states.atmo_n2 + states.atmo_co2
-        co2_ratio = states.atmo_co2 / float(total_atmosphere)
-        if co2_ratio <= params.run_above_atmo_co2_ratio:
+        
+        co2_ppm = (states.atmo_co2 / float(total_atmosphere)) * 1e6
+        if co2_ppm < params.run_above_co2_ppm:
             return
 
         if states.atmo_co2 < params.atmo_co2_consumed_per_hour:
@@ -322,8 +314,8 @@ class CO2Scubbers:
 
         states.atmo_co2 -= min(states.atmo_co2, params.atmo_co2_consumed_per_hour)
         states.available_dc_kwh -= min(states.available_dc_kwh, params.dc_kwh_consumed_per_hour)
-
         # TODO: Where does the output go
+
 
 class Heater:
     name = "heater"
@@ -382,3 +374,51 @@ class Heater:
         if states.atmo_temp < params.target_temp - params.temp_dead_band:
             # TODO: Replace with a smart heating strategy
             states.heat_diff_kwh += params.min_kw_output
+
+
+class Dehumidifier:
+    name = "dehumidifier"
+    description = "Recovers H2O in atmosphere into unfiltered water"
+    params = [
+        dict(
+            key="target_relative_humidity",
+            units="decimal_percent",
+            value=0.6,
+            source="https://letstalkscience.ca/educational-resources/backgrounders/humidity-on-earth-and-on-space-station",
+        ),
+        dict(
+            key="deadband",
+            units="decimal_percent",
+            value=0.02,
+            source="https://letstalkscience.ca/educational-resources/backgrounders/humidity-on-earth-and-on-space-station",
+        ),
+        dict(
+            key="mass",
+            units="kg",
+            value=5,
+            source="FAKE",
+        ),
+        dict(
+            key="volume",
+            units="m3",
+            value=1,
+            source="NONE",
+        )
+    ]
+
+    @staticmethod
+    def run_step(states, params, utils):
+        # http://hyperphysics.phy-astr.gsu.edu/hbase/Kinetic/relhum.html
+        actual_vapor_density = states.atmo_h2o / states.atmo_volume  # kg/m3
+        saturation_vapor_density = 17.3 / 1000 # kg/m3
+        relative_humidity = actual_vapor_density / saturation_vapor_density
+
+        # If the humidity is below target plus deadband, ignore
+        if relative_humidity <= params.target_relative_humidity + params.deadband:
+            return
+
+        target_actual_vapor_density = params.target_relative_humidity * saturation_vapor_density
+        density_diff = actual_vapor_density - target_actual_vapor_density
+        h2o_kg_to_remove = density_diff * states.atmo_volume
+        states.unfiltered_water += h2o_kg_to_remove
+        states.atmo_h2o -= h2o_kg_to_remove

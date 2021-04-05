@@ -7,36 +7,33 @@ class IndoorAir:
             value=1.05
         )
     ]
+    # Assume that volume is 1000 m3
     states = [
         dict(
-            key="atmo_co2",
+            key="atmo_n2",
             units="kg",
-            value=0.7698085
+            value=1008.84528
         ),
         dict(
             key="atmo_o2",
             units="kg",
-            value=390.11925
+            value=270.62232
         ),
         dict(
-            key="atmo_n2",
+            key="atmo_co2",
             units="kg",
-            value=1454.3145
+            value=0.5168
         ),
         dict(
             key="atmo_h2o",  # water vapor
             units="kg",
-            value=18.625
+            notes=".6 (Relative Humidity) * 17.3 (saturation vapor density g/m3) / 1000 3/kg * 1000 m3 vol",
+            value=10.38
         ),
         dict(
             key="atmo_ch4",
             units="kg",
-            value=0.003482875
-        ),
-        dict(
-            key="atmo_h2",  
-            units="kg",
-            value=0.001024375
+            value=0
         ),
         dict(
             key="heat_diff_kwh", 
@@ -56,13 +53,14 @@ class IndoorAir:
             value=0.0001,
             source="FAKE. But could look at https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/20110012997.pdf",
         ),
-        dict(
-            key="heat_loss_per_hour",
-            notes="Improvements could be made to different heat fluxes during different times of day. Note this depends on if in space or Mars",
-            units="kwh",
-            value=0,
-            source="FAKE",
-        ),
+        # This should be from the structure
+        # dict(
+        #     key="heat_loss_per_hour",
+        #     notes="Improvements could be made to different heat fluxes during different times of day. Note this depends on if in space or Mars",
+        #     units="kwh",
+        #     value=0,
+        #     source="FAKE",
+        # ),
         dict(
             key="mass",
             description="Sum of all atmosphere components",
@@ -78,7 +76,14 @@ class IndoorAir:
             value=0,
             source="NONE",
             private=True,
+        ),
+        dict(
+            key="atmo_volume",
+            units="m3",
+            value=1000,
+            source="fake derating of the 1,100 from starship",
         )
+
     ]
 
     @staticmethod
@@ -103,8 +108,6 @@ class IndoorAir:
             states.atmo_h2o = max_val        
         if states.atmo_ch4 > max_val:
             states.atmo_ch4 = max_val
-        if states.atmo_h2 > max_val:
-            states.atmo_h2 = max_val
 
         if states.atmo_o2 < 0:
             states.atmo_o2 = 0
@@ -116,7 +119,5 @@ class IndoorAir:
             states.atmo_h2o = 0        
         if states.atmo_ch4 < 0:
             states.atmo_ch4 = 0
-        if states.atmo_h2 < 0:
-            states.atmo_h2 = 0
 
-        states.mass = states.atmo_n2 + states.atmo_o2 + states.atmo_co2 + states.atmo_ch4 + states.atmo_h2
+        states.mass = states.atmo_n2 + states.atmo_o2 + states.atmo_co2 + states.atmo_ch4

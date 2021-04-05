@@ -54,7 +54,7 @@ class TestHuman(ModelUnitTest):
         self.states.atmo_o2 = 20
         self.states.atmo_n2 = 80
         self.states.atmo_co2 = 10
-        self.params.max_survivable_percent_atmo_co2 = 0.01
+        self.params.max_survivable_co2_ppm = 40000
         with pytest.raises(SimulationError):
             self.run_step()
 

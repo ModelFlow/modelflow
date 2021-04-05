@@ -31,17 +31,14 @@ def main(args):
     outputs = run_scenario(scenario)
     if 'error' in outputs:
         print(f"Sim Error: {outputs['error']}")
-    print(f'{time.time() - t0:.2f}')
-    print("Finished Simulation!")
-
-    print("Creating outputs...")
+    print(f"Finished Simulation in {time.time() - t0:.2f} seconds")
 
     min_len = 1000000000
     for instance_key, dicts in outputs['states'].items():
         for field_key, data in dicts.items():
             if len(data) < min_len:
                 min_len = len(data)
-    print(min_len)
+
     df = pd.DataFrame()
     for instance_key, dicts in outputs['states'].items():
         for field_key, data in dicts.items():

@@ -10,7 +10,6 @@
 #         self.io.atmo_co2 = 0
 #         self.io.atmo_n2 = 0
 #         self.io.atmo_ch4 = 0
-#         self.io.atmo_h2 = 0
 #         self.io.heat_diff_kwh = 0
 
 #     def test_leaks_air(self):

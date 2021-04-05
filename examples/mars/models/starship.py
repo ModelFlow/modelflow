@@ -14,15 +14,15 @@ class Starship:
             key="pressurized_cargo_volume",
             description="The volume of pressurized cargo that is able to be transported",
             units="m3",
-            value=100000,
-            source="FAKE",
+            value=1100,
+            source="https://www.spacex.com/vehicles/starship/",
         ),
         dict(
             key="unpressurized_cargo_volume",
             description="The volume of unpressurized cargo that is able to be transported",
             units="m3",
             value=0,
-            source="FAKE",
+            source="https://en.wikipedia.org/wiki/SpaceX_Starship",
         ),
         dict(
             key="mass_utilization_warning_threshold",
@@ -69,7 +69,7 @@ class Starship:
             units="kg",
             value=100000,
             confidence=9,
-            source="SpaceX website",
+            source="https://www.spacex.com/vehicles/starship/",
         ),
         dict(
             # Ideally the maximum mass would be calculated from specific impulse, fuel available etc

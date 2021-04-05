@@ -24,6 +24,5 @@ class HabitatStructure:
         states.atmo_o2 -= states.atmo_o2 * params.leak_rate
         states.atmo_n2 -= states.atmo_n2 * params.leak_rate
         states.atmo_ch4 -= states.atmo_ch4 * params.leak_rate
-        states.atmo_h2 -= states.atmo_h2 * params.leak_rate
 
         states.heat_diff_kwh -= params.heat_loss_per_hour

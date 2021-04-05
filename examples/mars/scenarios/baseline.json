@@ -127,14 +127,14 @@
       "label": "Hydrolysis System",
       "parent_instance_key": "starship"
     },
-    "eclss_sabatier": {
-      "model_class": "models/eclss.py::SabatierReactor",
-      "label": "ECLSS Sabatier Reactor",
-      "parent_instance_key": "starship"
-    },
     "co2_scrubbers": {
       "model_class": "models/eclss.py::CO2Scubbers",
       "label": "CO2 Scrubbers",
+      "parent_instance_key": "starship"
+    },
+    "dehumidifier": {
+      "model_class": "models/eclss.py::Dehumidifier",
+      "label": "Dehumidifier",
       "parent_instance_key": "starship"
     }
   }

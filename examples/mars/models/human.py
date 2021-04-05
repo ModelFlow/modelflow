@@ -12,6 +12,7 @@ class Human:
             key="potable_water_consumption",
             units="kg/hr",
             value=0.165833,
+            notes="from SIMOC: 0.083333 kg/hr h2o_potb* 2.0 kg / day drink, plus (was 2.5 with food hydration) + 0.0825 kg/hr h2o_potb 1.98 kg / day hygiene + urine flush from Human Integration and Design handbook (2017)",
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
@@ -41,8 +42,8 @@ class Human:
         dict(
             key="food_consumption",
             units="kg/hr",
-            value=0.062917,
-            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
+            value=0.07629166667,
+            source="https://ntrs.nasa.gov/api/citations/20150003005/downloads/20150003005.pdf",
         ),
         dict(
             key="max_hrs_survivable_with_no_water",
@@ -69,9 +70,9 @@ class Human:
             source="https://www.nasa.gov/pdf/188963main_Extravehicular_Mobility_Unit.pdf",
         ),
         dict(
-            key="max_survivable_percent_atmo_co2",
-            units="decimal_percent",
-            value=0.01,
+            key="max_survivable_co2_ppm",
+            units="ppm",
+            value=40000,
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
@@ -181,8 +182,8 @@ class Human:
             states.is_alive = 0
             utils.terminate_sim_with_error('died due to likely fire from max_survivable_percent_atmo_o2')
             return
-        co2_concentration = states.atmo_co2 / atmosphere_total
-        if co2_concentration > params.max_survivable_percent_atmo_co2:
+        co2_ppm = states.atmo_co2 / atmosphere_total * 1e6
+        if co2_ppm > params.max_survivable_co2_ppm:
             states.is_alive = 0
             utils.terminate_sim_with_error('died due to too much co2')
             return
@@ -199,6 +200,7 @@ class Human:
 
         if states.food == 0:
             states.hours_without_food += 1
+
         states.food -= min(params.food_consumption, states.food)
 
         if states.potable_water == 0:

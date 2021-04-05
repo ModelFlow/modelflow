@@ -5,7 +5,7 @@ class StarshipPotableWaterStorage:
         dict(
             key="max_potable_water",
             units="kg",
-            value=4000,
+            value=10000,
         ),
         dict(
             key="m3_per_kg",
@@ -17,9 +17,9 @@ class StarshipPotableWaterStorage:
         dict(
             key="potable_water",
             units="kg",
-            value=1341,
-            min=0,
-            max=10000
+            value=10000,
+            # min=0,
+            # max=10000
         ),
         dict(
             key="mass",
@@ -85,6 +85,7 @@ class StarshipUrineStorage:
 
     @staticmethod
     def run_step(states, params, utils):
+        # TODO: Add max capacity
         if states.urine < 0:
             utils.terminate_sim_with_error("urine < 0")
 
@@ -118,7 +119,7 @@ class FoodStorage:
         dict(
             key="m3_per_kg",
             units="kg",
-            value=1,
+            value=0.0006,
             source='fake'
         )
      ]
@@ -127,12 +128,12 @@ class FoodStorage:
             key="food",
             # alias="mass",  # TODO: Support aliasing
             units="kg",
-            value=1000
+            value=10000
         ),
         dict(
             key="mass",
             units="kg",
-            value=1000,  # will be calculated
+            value=10000,  # will be calculated
             private=True,  # This is so there is no naming conflict. Note this can still be accessible by utility functions
         ),
         dict(

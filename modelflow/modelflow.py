@@ -26,6 +26,11 @@ class Utils:
         self.params = params
         self.scenario_runner = scenario_runner
 
+    def log(self, msg):
+        # TODO: Implement log properly
+        print(msg)
+        pass
+
     def log_event(self, msg):
         # TODO: Implement log event properly
         print(msg)
