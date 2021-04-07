@@ -23,7 +23,7 @@ class StarshipIntegratedPV:
 
         elif utils.has_a_parent_instance_named("mars_surface"):
             # Assuming that we are not using the integrated starship PV on Mars to not degrade it
-            states.generated_dc_kwh += 0
+            states.generated_dc_kwh += params.rated_pv_kw_dc_output / 2
         else:
             raise Exception("Starship Integrated PV has unexpected parent")
      
