@@ -1,6 +1,7 @@
 {
   "simulation_params": {
-    "max_num_steps": 21600
+    "old_max_num_steps": 21600,
+    "max_num_steps": 100
   },
   "model_instances": {
     "time": {

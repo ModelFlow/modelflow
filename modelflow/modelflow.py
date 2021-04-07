@@ -1,3 +1,4 @@
+import copy
 import time
 from pprint import pprint
 from types import SimpleNamespace
@@ -177,6 +178,7 @@ class ScenarioRunner():
         # Using the try/catch instead of a return to break loop
         # TODO: Differentiate between simulation errors and other errors
         ith_iter = 0
+        delta_outputs = {}
         try:        
             for ith_iter in range(max_steps):
                 # t1 = time.time()
@@ -188,6 +190,8 @@ class ScenarioRunner():
                     key = instance_info["key"]
                     # TODO: as a performance optimization we probably don't need to instantiate this every time
                     state_fetcher = StateFetcher(key, tree, shared_states_map, private_states_map[key], self)
+                    
+                    state_map_copy = copy.deepcopy(shared_states_map)
                     try:
                         util_instance = utils_map[key]
                         util_instance.step_num = ith_iter
@@ -198,6 +202,22 @@ class ScenarioRunner():
                         print(f"Model: '{instance_info['model_class'].__name__}' encountered an error!")
                         raise SimStoppingError(e)
 
+                    
+                    # goal: human1___indoor1___atmo_o2_delta
+                    for instance_key in shared_states_map:
+                        for field_key in shared_states_map[instance_key]:
+                            new = shared_states_map[instance_key][field_key]
+                            old = state_map_copy[instance_key][field_key]
+                            if new != old:
+                                # print(key, instance_key, field_key, new, old, new-old)
+                                # TODO: Handle case that this may not change every timestamp or start at t0
+                                delta_key = f'{key}___{instance_key}__{field_key}_deltas'
+                                if delta_key not in delta_outputs:
+                                    delta_outputs[delta_key] = []
+                                delta_outputs[delta_key].append(new - old)
+                    
+                    # NOTE: This works because the shared state is only incremented once per timestamp
+                    # because there is only one unique instance where the state can live.
                     for field_key in private_states_map[key]:
                         states_output[key][field_key].append(private_states_map[key][field_key])
 
@@ -210,7 +230,7 @@ class ScenarioRunner():
         except SimStoppingError as e:
             sim_error = e
 
-        final_output = dict(states=states_output, trees=tree_outputs)
+        final_output = dict(states=states_output, trees=tree_outputs, delta_outputs=delta_outputs)
         if sim_error is not None:
             print("GOT ERROR:")
             print(sim_error)

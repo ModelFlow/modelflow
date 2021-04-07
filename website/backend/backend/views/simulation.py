@@ -61,8 +61,14 @@ def run_sim_route():
                 if final_key in output_keys:
                     flat_dict[final_key] = dict(data=arr, label=final_key)
 
+    for key, value in outputs['delta_outputs'].items():
+        outputs["all_output_states_keys"].append(key)
+        if key in output_keys:
+            flat_dict[key] = dict(data=value, label=key)
+
     outputs["output_states"] = flat_dict
     outputs.pop('states', None)
+    outputs.pop('delta_outputs', None)
 
     outputs["tree_changes"] = []
     prev_tree = None

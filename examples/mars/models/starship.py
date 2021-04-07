@@ -191,8 +191,6 @@ class Starship:
         elif days_since_mission_start == params.travel_days_to_mars + params.mars_stay_days:
             # Pre launch checks on Mars
             states.payload_mass = utils.sum_children_attribute('mass')
-            print("PRELALIUDSHFLDIF")
-            print(states.payload_mass, params.max_payload_from_mars_to_earth)
             if states.payload_mass > params.max_payload_from_mars_to_earth:
                 utils.terminate_sim_with_error(f"Exceeded payload return mass capacity {states.payload_mass}kg vs {params.max_payload_from_mars_to_earth}kg")
                 return
