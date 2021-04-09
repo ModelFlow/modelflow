@@ -95,14 +95,14 @@ class Utils:
 
 
 class StateFetcher:
-    def __init__(self, key, tree, shared_states_map, private_state_map, scenario_runner):
+    def __init__(self, key, tree, shared_states_map, private_state_map, scenario_runner, old_map):
         # Set the instance dictionary directly to avoid calls to __setattr__ during initialization
         self.__dict__["_key"] = key
         self.__dict__["_tree"] = tree
         self.__dict__["_shared_states_map"] = shared_states_map
         self.__dict__["_private_state_map"] = private_state_map
         self.__dict__["_scenario_runner"] = scenario_runner
-
+        self.__dict__["_old_map"] = old_map
 
     def __getattr__(self, name):
         # Check to see if it might be a private state
@@ -126,6 +126,8 @@ class StateFetcher:
             return
 
         instance_key = self.get_closest_instance_key(name)
+        if (instance_key, name) not in self._old_map:
+            self._old_map[(instance_key, name)] = copy.deepcopy(self._shared_states_map[instance_key][name])
         self._shared_states_map[instance_key][name] = value
 
     def get_closest_instance_key(self, name):
@@ -155,7 +157,7 @@ class ScenarioRunner():
     def __init__(self):
         self.key_lookup_cache = {}
 
-    def setup_and_run_sim(self, scenario):
+    def setup_and_run_sim(self, scenario, outputs_filter=[]):
 
         validate_scenario(scenario)
         setup_scenario_classes(scenario)
@@ -189,9 +191,11 @@ class ScenarioRunner():
 
                     key = instance_info["key"]
                     # TODO: as a performance optimization we probably don't need to instantiate this every time
-                    state_fetcher = StateFetcher(key, tree, shared_states_map, private_states_map[key], self)
+                    old_map = {}
+                    state_fetcher = StateFetcher(key, tree, shared_states_map, private_states_map[key], self, old_map)
                     
-                    state_map_copy = copy.deepcopy(shared_states_map)
+                    # if outputs_filter is not None:
+                    # state_map_copy = copy.deepcopy(shared_states_map)
                     try:
                         util_instance = utils_map[key]
                         util_instance.step_num = ith_iter
@@ -201,14 +205,17 @@ class ScenarioRunner():
                     except Exception as e:
                         print(f"Model: '{instance_info['model_class'].__name__}' encountered an error!")
                         raise SimStoppingError(e)
-
                     
                     # goal: human1___indoor1___atmo_o2_delta
+                    # if ith_iter > 0:
                     for instance_key in shared_states_map:
                         for field_key in shared_states_map[instance_key]:
                             new = shared_states_map[instance_key][field_key]
-                            old = state_map_copy[instance_key][field_key]
-                            if new != old:
+                            # old = states_output[instance_key][field_key][-1]
+                            if (instance_key, field_key) in old_map:
+                                old = old_map[(instance_key, field_key)]
+                                #old = old_map[]
+                                # if new != old:
                                 # print(key, instance_key, field_key, new, old, new-old)
                                 # TODO: Handle case that this may not change every timestamp or start at t0
                                 delta_key = f'{key}___{instance_key}__{field_key}_deltas'
