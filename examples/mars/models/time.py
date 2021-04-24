@@ -49,11 +49,13 @@ class Time:
     def run_step(states, params, utils):
         if states.current_utc == -1:
             states.current_utc = states.utc_start
+
         # TODO: Handle Mars Coordinated Time vs. earth UTC stuff
         states.current_utc += states.seconds_per_sim_step
 
         # TODO: Integrate with actual landing site location
         states.hours_since_mars_midnight += states.seconds_per_sim_step / 3600
+
         # TODO: Handle fact that mars sol is not 24 hours and this is completely wrong
         if states.hours_since_mars_midnight >= 24:
             states.hours_since_mars_midnight = 0
