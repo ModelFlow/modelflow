@@ -16,6 +16,7 @@ class Card extends Component {
     // this.setState({ selectedItem });
     const { uuid, updateCardOutputKey, runSim } = this.props;
     updateCardOutputKey(uuid, newOutputKey);
+    console.log("fixes y axis")
     runSim();
   };
 
