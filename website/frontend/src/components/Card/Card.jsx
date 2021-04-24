@@ -11,6 +11,65 @@ const Plot = createPlotlyComponent(Plotly);
 
 class Card extends Component {
   size = { width: 0, height: 0 };
+  // xScale = [];
+
+  scrolledIn = () => {
+    const { setSelectedUUID, uuid, selectedUUID } = this.props;
+    setSelectedUUID(uuid);
+  };
+
+  scrolledOut = (e) => {
+    const target = e.relatedTarget || e.toElement;
+    // Make sure that when you click and drag inside plotly it doesn't
+    // falsely say that your mouse is leaving.
+    if (target && target.getAttribute('class') === 'dragcover') {
+      return;
+    }
+    const { setSelectedUUID, selectedUUID } = this.props;
+    setSelectedUUID('');
+  };
+
+  setScrollListeners = (element) => {
+    element.addEventListener('mouseenter', this.scrolledIn);
+    element.addEventListener('mouseleave', this.scrolledOut);
+  };
+
+  removeScrollListeners = (element) => {
+    element.removeEventListener('mouseenter');
+    element.removeEventListener('mouseleave');
+  };
+
+  // componentWillUnmount() {
+  //   this.removeScrollListeners();
+  // }
+
+  shouldComponentUpdate = (newProps) => {
+    const newXrange = newProps.xrange || [];
+    const newResults = newProps.results || {};
+    const newTabsContent = newProps.tabsContent || {};
+    const { xrange, results, tabsContent, uuid, selectedUUID } = this.props;
+    // Update the card if the data is different
+    let shouldUpdate = false;
+    if (results != newResults) {
+      shouldUpdate = true;
+    }
+
+    // Update the card if the selected key is different
+    if (tabsContent != newTabsContent) {
+      shouldUpdate = true;
+    }
+
+    if (
+      newXrange.length &&
+      (newXrange[0] != xrange[0] || newXrange[1] != xrange[1])
+    ) {
+      shouldUpdate = true;
+      if (uuid === selectedUUID) {
+        shouldUpdate = false;
+      }
+    }
+    return shouldUpdate;
+  };
 
   handleValueChange = (newOutputKey) => {
     // this.setState({ selectedItem });
@@ -41,8 +100,23 @@ class Card extends Component {
     removeCard(uuid);
   };
 
+  onPlotUpdate = (figure) => {
+    const { setXrange, xrange, uuid, selectedUUID } = this.props;
+    if (
+      uuid === selectedUUID &&
+      figure.layout.xaxis.range &&
+      figure.layout.xaxis.range != xrange
+    ) {
+      setXrange(figure.layout.xaxis.range);
+    }
+
+    // if (figure.layout.xaxis.range) {
+    //   setXrange(figure.layout.xaxis.range);
+    // }
+  };
+
   render() {
-    const { results, tabsContent, uuid, tabId } = this.props;
+    const { results, tabsContent, uuid, tabId, xrange } = this.props;
     const { cards } = tabsContent[tabId];
     const selectedOutputKey = cards[uuid].outputKey;
     const { output_states, all_output_states_keys } = results;
@@ -77,8 +151,18 @@ class Card extends Component {
         <Button small icon="delete" onClick={this.deleteClicked} />
       );
       if (output_states.hasOwnProperty(selectedOutputKey)) {
+        let actualXscale = [
+          results.time[0],
+          results.time[results.time.length - 1],
+        ];
+        if (xrange.length) {
+          actualXscale = [xrange[0], xrange[1]];
+        }
         plot = (
           <Plot
+            onInitialized={(figure, graphDiv) => {
+              this.setScrollListeners(graphDiv);
+            }}
             data={[
               {
                 x: results.time,
@@ -88,7 +172,11 @@ class Card extends Component {
                 marker: { color: '#137cbd' },
               },
             ]}
+            onUpdate={this.onPlotUpdate}
             layout={{
+              xaxis: {
+                range: actualXscale,
+              },
               width: this.size.width,
               height: this.size.height,
               margin: {
@@ -152,11 +240,15 @@ const mapDispatchToProps = {
   removeCard: actions.resultViews.removeCard,
   updateCardOutputKey: actions.resultViews.updateCardOutputKey,
   runSim: actions.sim.runSim,
+  setXrange: actions.resultViews.setXrange,
+  setSelectedUUID: actions.resultViews.setSelectedUUID,
 };
 
 const mapStateToProps = (state) => ({
   tabsContent: state.resultViews.tabsContent,
+  selectedUUID: state.resultViews.selectedUUID,
   results: state.sim.results,
+  xrange: state.resultViews.xrange,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Card);
