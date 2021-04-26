@@ -21,8 +21,8 @@ class Header extends Component {
   };
 
   componentDidMount() {
-    const { getScenarioViewsList } = this.props;
-    getScenarioViewsList();
+    const { getTemplatesForCurrentProject } = this.props;
+    getTemplatesForCurrentProject();
   }
 
   clickedAddCard = () => {
@@ -44,11 +44,11 @@ class Header extends Component {
 
   clickedSwitchFlowOrResults = () => {
     const { switchMainViewType } = this.props;
-    console.log("switch main view type")
+    console.log('switch main view type');
     switchMainViewType();
   };
 
-  clickedLoadScenarioView = () => {};
+  clickedLoadScenarioView = () => { };
 
   handleOpen = () => {
     this.setState({ isOpen: true });
@@ -86,7 +86,7 @@ class Header extends Component {
   };
 
   filterItem = (query, item) =>
-    item.title.toLowerCase().indexOf(query.toLowerCase()) >= 0;
+    item.name.toLowerCase().indexOf(query.toLowerCase()) >= 0;
 
   renderItem = (item, { handleClick, modifiers }) => {
     if (!modifiers.matchesPredicate) {
@@ -97,14 +97,18 @@ class Header extends Component {
         active={modifiers.active}
         key={item.id}
         onClick={handleClick}
-        text={item.title}
+        text={item.name}
       />
     );
   };
 
   render() {
-    const { scenarioViews, scenarioViewMeta, mainViewType } = this.props;
-    const { title } = scenarioViewMeta;
+    const {
+      templates,
+      currentTemplateMetadata,
+      mainViewType,
+      currentScenarioMetadata,
+    } = this.props;
     const { isOpen, newName } = this.state;
     return (
       <>
@@ -112,12 +116,16 @@ class Header extends Component {
           <img
             className="logo"
             alt="logo"
-            src="model_flow_horizontal.png"
+            src="/model_flow_horizontal.png"
             height="30"
           />
-          <div className="titleSection">
-            <span className="bp3-heading scenario">Mars Baseline Scenario</span>
-            <span className="bp3-text-muted scenarioViewTitle">{title}</span>
+          <div className="nameSection">
+            <span className="bp3-heading scenario">
+              {currentScenarioMetadata.name}
+            </span>
+            <span className="bp3-text-muted scenarioViewTitle">
+              {currentTemplateMetadata.name}
+            </span>
           </div>
           <Button
             className="heading-button"
@@ -131,12 +139,12 @@ class Header extends Component {
           <Button
             className="save-button"
             icon="floppy-disk"
-            text="Save"
-            onClick={this.clickedSaveScenarioView}
+            text="Save Template"
+            onClick={this.clickedSaveTemplate}
           />
           <Select
             className="load-button"
-            items={scenarioViews}
+            items={templates}
             activeItem={''}
             noResults={<MenuItem disabled text="No results." />}
             onItemSelect={this.handleValueChange}
@@ -146,7 +154,7 @@ class Header extends Component {
             <Button
               icon="folder-open"
               text="Load"
-              onClick={this.clickedLoadScenarioView}
+              onClick={this.clickedLoadTemplate}
             />
           </Select>
 
@@ -163,7 +171,7 @@ class Header extends Component {
         <Dialog
           icon="info-sign"
           onClose={this.handleClose}
-          title="Save New View"
+          name="Save New View"
           autoFocus={true}
           canEscapeKeyClose={true}
           canOutsideClickClose={true}
@@ -190,7 +198,7 @@ class Header extends Component {
               </Tooltip>
               <AnchorButton
                 intent={Intent.PRIMARY}
-                onClick={this.handleNewScenarioView}
+                onClick={this.handleNewTemplate}
                 target="_blank"
               >
                 Create
@@ -204,18 +212,20 @@ class Header extends Component {
 }
 
 const mapDispatchToProps = {
-  addCard: actions.resultViews.addCard,
-  newScenarioView: actions.scenarioViews.newScenarioView,
-  saveScenarioView: actions.scenarioViews.saveScenarioView,
-  loadScenarioView: actions.scenarioViews.loadScenarioView,
-  getScenarioViewsList: actions.scenarioViews.getScenarioViewsList,
+  addCard: actions.resultsView.addCard,
+  newBlankTemplate: actions.templates.newBlankTemplate,
+  saveCurrentTemplate: actions.templates.saveCurrentTemplate,
+  loadTemplate: actions.templates.loadTemplate,
+  getTemplatesForCurrentProject:
+    actions.templates.getTemplatesForCurrentProject,
   switchMainViewType: actions.common.switchMainViewType,
   runSim: actions.sim.runSim,
 };
 
 const mapStateToProps = (state) => ({
-  scenarioViews: state.scenarioViews.scenarioViews,
-  scenarioViewMeta: state.scenarioViews.scenarioViewMeta,
+  templates: state.templates.templates,
+  currentTemplateMetadata: state.templates.currentTemplateMetadata,
+  currentScenarioMetadata: state.scenarios.currentScenarioMetadata,
   mainViewType: state.common.mainViewType,
 });
 

@@ -76,12 +76,6 @@ class Human:
             source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
         ),
         dict(
-            key="max_hrs_survivable_with_no_food",
-            units="hr",
-            value=480,
-            source="https://simoc.space/wp-content/uploads/2020/06/simoc_agent_currencies-20200601.pdf",
-        ),
-        dict(
             key="max_survivable_temperature",
             units="C",
             value=48,

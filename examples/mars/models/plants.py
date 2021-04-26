@@ -25,7 +25,8 @@ class Plants:
             min=0,
             max=1.5
         )
-    ],
+    ]
+
     states = [
         dict(
             key="mass",

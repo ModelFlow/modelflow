@@ -1,8 +1,16 @@
 import axios from 'axios';
 
+export const setSimError = (error) => async (dispatch, getState) => {
+  dispatch({
+    type: 'SET_SIM_ERROR',
+    error,
+  });
+};
+
 export const runSim = () => async (dispatch, getState) => {
+  console.log(getState());
   const keysNeeded = [];
-  Object.values(getState().resultViews.tabsContent).forEach((tab) => {
+  Object.values(getState().resultsView.tabsContent).forEach((tab) => {
     tab.layout.lg.forEach((item) => {
       keysNeeded.push(tab.cards[item.i].outputKey);
     });
@@ -14,9 +22,9 @@ export const runSim = () => async (dispatch, getState) => {
   });
 
   const { data } = await axios.post(
-    `${process.env.REACT_APP_API_URL}/run_sim`,
+    `${process.env.REACT_APP_API_URL}/api/run_sim`,
     {
-      params: getState().params.params,
+      scenario: getState().scenarios.currentScenario,
       output_keys: keysNeeded,
     },
   );
@@ -26,6 +34,7 @@ export const runSim = () => async (dispatch, getState) => {
   });
 };
 
+// NOTE: No idea what this does anymore
 export const requestForceUpdate = () => async (dispatch) => {
   dispatch({
     type: 'INCREMENT_FORCE_UPDATE_COUNTER',

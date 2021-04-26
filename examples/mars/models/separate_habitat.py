@@ -14,7 +14,7 @@ class HabitatStructure:
             value=0.25,
             source="FAKE"
         )
-    ],
+    ]
     # TODO: Every EVA you can have air loss
 
     @staticmethod

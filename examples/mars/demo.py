@@ -16,7 +16,7 @@ base_scenario = {
         "mass_simulator": {
             "model_class": MassSimulator,
             "label": "Mass Simulator",
-            "parent_instance_key": "starship",
+            "initial_parent_key": "starship",
             "overrides": {
                 "mass": 1,
                 "volume": 1
@@ -25,7 +25,7 @@ base_scenario = {
         "mass_simulator2": {
             "model_class": MassSimulator,
             "label": "Mass Simulator 2",
-            "parent_instance_key": "starship",
+            "initial_parent_key": "starship",
             "overrides": {
                 "mass": 2,
                 "volume": 2
@@ -34,7 +34,7 @@ base_scenario = {
         "time": {
             "model_class": Time,
             "label": "Simulation Space & Time",
-            "parent_instance_key": None,
+            "initial_parent_key": None,
             "overrides": {  # Overrides either params or initial states
                 "utc_start": 0,
                 "seconds_per_sim_step": 3600
@@ -43,7 +43,7 @@ base_scenario = {
         "starship": {
             "model_class": Starship,
             "label": "Starship",
-            "parent_instance_key": "time",
+            "initial_parent_key": "time",
             "overrides": {
                 "launch_utc": 3600 * 24,
                 "travel_days_to_mars": 1,
@@ -54,7 +54,7 @@ base_scenario = {
         "mars_surface": {
             "model_class": MarsSurface,
             "label": "Mars Surface",
-            "parent_instance_key": "time"
+            "initial_parent_key": "time"
         }
     }
 }

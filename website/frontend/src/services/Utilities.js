@@ -32,7 +32,7 @@ export function appendItem(array, item) {
   return newArray;
 }
 
-export function removeItem(array, idx) {
+export function removeIdx(array, idx) {
   const newArray = array.slice();
   newArray.splice(idx, 1);
   return newArray;

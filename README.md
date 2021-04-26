@@ -86,30 +86,30 @@ class AProducer:
             },
             "group1": {
                 "model_class": AGroup,
-                "parent_instance_key": "root"
+                "initial_parent_key": "root"
             },
             "group1_producer": {
                 "model_class": AProducer,
-                "parent_instance_key": "group1"
+                "initial_parent_key": "group1"
             },
             "group1_consumer": {
                 "model_class": AConsumer,
-                "parent_instance_key": "group1"
+                "initial_parent_key": "group1"
             },
             "group2": {
                 "model_class": AGroup,
-                "parent_instance_key": "root"
+                "initial_parent_key": "root"
             },
             "group2_producer": {
                 "model_class": AProducer,
-                "parent_instance_key": "group2",
+                "initial_parent_key": "group2",
                 "overrides": {
                     "shared_state": 100
                 }
             },
             "group2_consumer": {
                 "model_class": AConsumer,
-                "parent_instance_key": "group2"
+                "initial_parent_key": "group2"
             }
         }
     }

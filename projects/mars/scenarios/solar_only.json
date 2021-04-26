@@ -1,0 +1,361 @@
+{
+    "id": 2,
+    "name": "solar_only",
+    "user": null,
+    "created_at": "2021-05-08T02:13:29.686002Z",
+    "project": 1,
+    "default_template": null,
+    "model_instances": [
+        {
+            "id": 7,
+            "key": "time",
+            "label": "Simulation Time",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 2,
+                "key": "Time",
+                "label": "Time"
+            },
+            "initial_parent_key": "root",
+            "attribute_overrides": []
+        },
+        {
+            "id": 8,
+            "key": "interplanetary_space",
+            "label": "Interplanetary Space",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 21,
+                "key": "InterplanetarySpace",
+                "label": "Interplanetary Space"
+            },
+            "initial_parent_key": "time",
+            "attribute_overrides": []
+        },
+        {
+            "id": 9,
+            "key": "starship",
+            "label": "Starship",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 9,
+                "key": "Starship",
+                "label": "starship"
+            },
+            "initial_parent_key": "interplanetary_space",
+            "attribute_overrides": []
+        },
+        {
+            "id": 10,
+            "key": "mars_surface",
+            "label": "Mars Surface",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 18,
+                "key": "MarsSurface",
+                "label": "Mars Surface"
+            },
+            "initial_parent_key": "time",
+            "attribute_overrides": []
+        },
+        {
+            "id": 11,
+            "key": "battery_and_inverter",
+            "label": "Battery and Inverter",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 31,
+                "key": "BatteryAndInverter",
+                "label": "battery"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 12,
+            "key": "starship_integrated_pv",
+            "label": "Starship Integrated PV",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 1,
+                "key": "StarshipIntegratedPV",
+                "label": "Starship Solar Panels"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 13,
+            "key": "surface_pv",
+            "label": "Surface PV",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 25,
+                "key": "SurfacePV",
+                "label": "Surface PV"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 14,
+            "key": "lighting",
+            "label": "Lighting",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 19,
+                "key": "Lighting",
+                "label": "lighting"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 15,
+            "key": "human1",
+            "label": "Human",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 20,
+                "key": "Human",
+                "label": "human"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 16,
+            "key": "human2",
+            "label": "Human",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 20,
+                "key": "Human",
+                "label": "human"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 17,
+            "key": "human3",
+            "label": "Human",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 20,
+                "key": "Human",
+                "label": "human"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 18,
+            "key": "human4",
+            "label": "Human",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 20,
+                "key": "Human",
+                "label": "human"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 19,
+            "key": "human5",
+            "label": "Human",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 20,
+                "key": "Human",
+                "label": "human"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 20,
+            "key": "human6",
+            "label": "Human",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 20,
+                "key": "Human",
+                "label": "human"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 21,
+            "key": "indoor_air1",
+            "label": "IndoorAir",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 27,
+                "key": "IndoorAir",
+                "label": "('indoor_air',)"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 22,
+            "key": "potable_water_storage",
+            "label": "StarshipPotableWaterStorage",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 4,
+                "key": "StarshipPotableWaterStorage",
+                "label": "('Potable Water Storage',)"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 23,
+            "key": "solid_waste_storage",
+            "label": "StarshipSolidWasteStorage",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 5,
+                "key": "StarshipSolidWasteStorage",
+                "label": "Solid Waste Storage"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 24,
+            "key": "urine_storage",
+            "label": "StarshipUrineStorage",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 7,
+                "key": "StarshipUrineStorage",
+                "label": "('urine_storage',)"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 25,
+            "key": "unfiltered_water",
+            "label": "StarshipUnfilteredWaterStorage",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 6,
+                "key": "StarshipUnfilteredWaterStorage",
+                "label": "('unfiltered_water_storage',)"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 26,
+            "key": "food_storage",
+            "label": "FoodStorage",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 3,
+                "key": "FoodStorage",
+                "label": "food_storage"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 27,
+            "key": "heater",
+            "label": "Heater",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 13,
+                "key": "Heater",
+                "label": "heater"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 28,
+            "key": "radiators",
+            "label": "Radiators",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 28,
+                "key": "StarshipRadiators",
+                "label": "Starship Integrated Radiators"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 29,
+            "key": "urine_recovery",
+            "label": "Urine Recovery",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 16,
+                "key": "UrineProcessorAssembly",
+                "label": "Urine Processor Assembly"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 30,
+            "key": "water_recovery",
+            "label": "Water Recovery",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 17,
+                "key": "WaterProcessorAssembly",
+                "label": "Water Processor Assembly"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 31,
+            "key": "hydrolysis_system",
+            "label": "Hydrolysis System",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 14,
+                "key": "HydrolysisSystem",
+                "label": "Hydrolysis System"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 32,
+            "key": "co2_scrubbers",
+            "label": "CO2 Scrubbers",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 11,
+                "key": "CO2Scubbers",
+                "label": "co2_scrubbers"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        },
+        {
+            "id": 33,
+            "key": "dehumidifier",
+            "label": "Dehumidifier",
+            "scenario": 2,
+            "model_class_meta": {
+                "id": 12,
+                "key": "Dehumidifier",
+                "label": "dehumidifier"
+            },
+            "initial_parent_key": "starship",
+            "attribute_overrides": []
+        }
+    ]
+}

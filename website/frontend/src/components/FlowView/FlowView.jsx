@@ -77,13 +77,10 @@ class FlowView extends Component {
 }
 
 const mapDispatchToProps = {
-  removeCard: actions.resultViews.removeCard,
-  updateCardOutputKey: actions.resultViews.updateCardOutputKey,
   requestForceUpdate: actions.sim.requestForceUpdate,
 };
 
 const mapStateToProps = (state) => ({
-  tabsContent: state.resultViews.tabsContent,
   results: state.sim.results,
   flowEngine: state.sim.flowEngine,
   flowModel: state.sim.flowModel,

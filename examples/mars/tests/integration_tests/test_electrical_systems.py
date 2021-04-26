@@ -24,7 +24,7 @@ class TestElectricalSystems():
             "time": {
                 "model_class": Time,
                 "label": "Simulation Space & Time",
-                "parent_instance_key": None,
+                "initial_parent_key": None,
                 "overrides": {  # Overrides either params or initial states
                     "utc_start": 0,
                     "current_utc": 0,
@@ -34,7 +34,7 @@ class TestElectricalSystems():
             "starship": {
                 "model_class": Starship,
                 "label": "Starship",
-                "parent_instance_key": "interplanetary_space",
+                "initial_parent_key": "interplanetary_space",
                 "overrides": {
                     "launch_utc": 0,
                     "travel_days_to_mars": 1,
@@ -45,17 +45,17 @@ class TestElectricalSystems():
             "interplanetary_space": {
                 "model_class": InterplanetarySpace,
                 "label": "Interplanetary Space",
-                "parent_instance_key": "time",
+                "initial_parent_key": "time",
             },
             "mars_surface": {
                 "model_class": MarsSurface,
                 "label": "Mars Surface",
-                "parent_instance_key": "time",
+                "initial_parent_key": "time",
             },
             "starship_pv": {
                 "model_class": StarshipIntegratedPV,
                 "label": "Starship Integrated PV",
-                "parent_instance_key": "starship",
+                "initial_parent_key": "starship",
                 # "connections": {
                 #     "generated_dc_kwh": "battery_and_inverter"
                 # }
@@ -63,17 +63,17 @@ class TestElectricalSystems():
             "surface_pv": {
                 "model_class": SurfacePV,
                 "label": "Starship Integrated PV",
-                "parent_instance_key": "starship",
+                "initial_parent_key": "starship",
             },
             "battery_and_inverter": {
                 "model_class": BatteryAndInverter,
                 "label": "Battery and Inverter",
-                "parent_instance_key": "starship",
+                "initial_parent_key": "starship",
             },
             "grid_simulator": {
                 "model_class": GridSimulator,
                 "label": "Grid Simulator",
-                "parent_instance_key": "starship",
+                "initial_parent_key": "starship",
             }
         }
     }

@@ -127,7 +127,7 @@ class Card extends Component {
           }}
         >
           <div className="card_header">
-            <span className="chart_title">
+            <span className="chart_name">
               {selectedOutputKey.replace('state_', '')}
             </span>
             <span
@@ -149,13 +149,13 @@ class Card extends Component {
 }
 
 const mapDispatchToProps = {
-  removeCard: actions.resultViews.removeCard,
-  updateCardOutputKey: actions.resultViews.updateCardOutputKey,
   runSim: actions.sim.runSim,
+  updateCardOutputKey: actions.resultsView.updateCardOutputKey,
+  removeCard: actions.resultsView.removeCard,
 };
 
 const mapStateToProps = (state) => ({
-  tabsContent: state.resultViews.tabsContent,
+  tabsContent: state.resultsView.tabsContent,
   results: state.sim.results,
 });
 

@@ -6,7 +6,7 @@
       "mass_simulator": {
           "model_class": "models/mass_simulator.py::MassSimulator",
           "label": "Mass Simulator",
-          "parent_instance_key": "starship",
+          "initial_parent_key": "starship",
           "overrides": {
             "mass": 1,
             "volume": 1
@@ -15,12 +15,12 @@
       "interplanetary_space": {
         "model_class": "models/interplanetary_space.py::InterplanetarySpace",
         "label": "Interplanetary Space",
-        "parent_instance_key": "time"
+        "initial_parent_key": "time"
       },
       "mass_simulator2": {
           "model_class": "models/mass_simulator.py::MassSimulator",
           "label": "Mass Simulator 2",
-          "parent_instance_key": "starship",
+          "initial_parent_key": "starship",
           "overrides": {
             "mass": 2,
             "volume": 2
@@ -37,7 +37,7 @@
       "starship": {
           "model_class": "models/starship.py::Starship",
           "label": "Starship",
-          "parent_instance_key": "time",
+          "initial_parent_key": "time",
           "overrides": {
             "launch_utc": 0,
             "travel_days_to_mars": 1,
@@ -48,7 +48,7 @@
       "mars_surface": {
         "model_class": "models/mars_surface.py::MarsSurface",
         "label": "Mars Surface",
-        "parent_instance_key": "time"
+        "initial_parent_key": "time"
       }
   }
 }

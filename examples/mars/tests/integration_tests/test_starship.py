@@ -18,7 +18,7 @@ class TestStarship():
             "time": {
                 "model_class": Time,
                 "label": "Simulation Space & Time",
-                "parent_instance_key": None,
+                "initial_parent_key": None,
                 "overrides": {  # Overrides either params or initial states
                     "utc_start": 0,
                     "current_utc": 0,
@@ -28,7 +28,7 @@ class TestStarship():
             "starship": {
                 "model_class": Starship,
                 "label": "Starship",
-                "parent_instance_key": "interplanetary_space",
+                "initial_parent_key": "interplanetary_space",
                 "overrides": {
                     "launch_utc": 3600 * 24,
                     "travel_days_to_mars": 1,
@@ -39,17 +39,17 @@ class TestStarship():
             "interplanetary_space": {
                 "model_class": InterplanetarySpace,
                 "label": "Interplanetary Space",
-                "parent_instance_key": "time",
+                "initial_parent_key": "time",
             },
             "mars_surface": {
                 "model_class": MarsSurface,
                 "label": "Mars Surface",
-                "parent_instance_key": "time",
+                "initial_parent_key": "time",
             },
             "mass_simulator": {
                 "model_class": MassSimulator,
                 "label": "Mass Simulator",
-                "parent_instance_key": "starship",
+                "initial_parent_key": "starship",
                 "overrides": {
                     "mass": 1,
                     "volume": 1
