@@ -34,7 +34,8 @@ class Card extends Component {
   // For delta plot toggle
   state = {
     isDeltaPlotVisible: false,
-    deltaPlotVisibility: 'none'
+    deltaPlotVisibility: 'none',
+    plot_width: 0,
   }
   changeDeltaPlotVis = () => {
     // If plot not visible, make visible
@@ -98,9 +99,9 @@ class Card extends Component {
       this.forceUpdate();
     }
     let plot = null;
-    let plot_componentDeltas = null;
-    let plot_width = this.size.width * 0.47;
+    let plot_componentDeltas = null;;
     let plot_height = this.size.height * 0.9;
+    this.state.plot_width = this.size.width * 0.97;
     let plot_margins = {
       t: 60,
       b: 40,
@@ -111,17 +112,16 @@ class Card extends Component {
       title: {
         text: 'Time (hrs)',
         font: {
-          family: 'Courier New, monospace',
-          size: 18,
+          size: 14,
           color: '#7f7f7f'
         }
       },
       zerolinecolor: 'black',
-      zerolinewidth: 1,
+      zerolinewidth: 1.5,
     };
     let plot_yaxis = {
       zerolinecolor: 'black',
-      zerolinewidth: 1,
+      zerolinewidth: 1.5,
     };
 
     let selector = null;
@@ -173,7 +173,7 @@ class Card extends Component {
           type: 'line',
           mode: 'lines',
           line: {
-            color: 'black',
+            color: 'gray',
             width: 3
           },
           hoverinfo:"all",
@@ -198,13 +198,12 @@ class Card extends Component {
           <Plot
             data={plot_data}
             layout={{
-              width: plot_width,
+              width: this.state.plot_width,
               height: plot_height,
               margin: plot_margins,
               title: {
                 text:'Quantity over mission run',
                 font: {
-                  family: 'Courier New, monospace',
                   size: 24
                 }
               },
@@ -216,10 +215,32 @@ class Card extends Component {
         );
 
         // Plot for component deltas
-        if(this.state.isDeltaPlotVisible == true){
-          if(Object.keys(output_states[selectedOutputKey].componentDeltas).length > 0) {
+        if(this.state.isDeltaPlotVisible == true){ // Check if user wants to see delta plots
+          if(Object.keys(output_states[selectedOutputKey].componentDeltas).length > 0) { // Check if component has delta plot
             console.log("👀 " + selectedOutputKey + " has " + Object.keys(output_states[selectedOutputKey].componentDeltas).length + " component deltas");
             
+            // Update plot widths
+            this.state.plot_width = this.size.width * 0.48
+            plot = ( // Need more efficient way to update!
+              <Plot
+                data={plot_data}
+                layout={{
+                  width: this.state.plot_width,
+                  height: plot_height,
+                  margin: plot_margins,
+                  title: {
+                    text:'Quantity over mission run',
+                    font: {
+                      size: 24
+                    }
+                  },
+                  xaxis: plot_xaxis,
+                  yaxis: plot_yaxis,
+                  showlegend: false,
+                }}
+              />
+            );
+
             // Turn component deltas into more JS-friendly form
             let componentDeltas_data = []
 
@@ -265,7 +286,7 @@ class Card extends Component {
               type: 'line',
               mode: 'lines',
               line: {
-                color: 'black',
+                color: 'gray',
                 width: 3
               },
               hoverinfo:"all",
@@ -282,14 +303,13 @@ class Card extends Component {
               <Plot
                 data={componentDeltas_data}
                 layout={{
-                  width: plot_width,
+                  width: this.state.plot_width,
                   height: plot_height,
                   margin: plot_margins,
                   title: {
                     text:'Quantity deltas breakdown',
                     font: {
-                      family: 'Courier New, monospace',
-                      size: 24
+                      size: 18
                     }
                   },
                   showlegend: false, // For now
@@ -303,14 +323,13 @@ class Card extends Component {
             plot_componentDeltas = (
               <Plot
                 layout={{
-                  width: plot_width,
+                  width: this.state.plot_width,
                   height: plot_height,
                   margin: plot_margins,
                   title: {
                     text: selectedOutputKey + ' has no component deltas',
                     font: {
-                      family: 'Courier New, monospace',
-                      size: 24
+                      size: 18
                     }
                   }
                 }}
@@ -362,13 +381,13 @@ class Card extends Component {
             <span
               style={{ float: 'right', marginTop: '5px', marginLeft: '20px', display: 'inline' }}
             >
-              Current delta plot display: {deltaPlotButton}
+              Delta breakdown: {deltaPlotButton}
             </span>
           </div>
           <div style={{ display: 'table-row' }}>
             {plot}
             <div style={{ display: this.state.deltaPlotVisibility }}>
-            {plot_componentDeltas}
+              {plot_componentDeltas}
             </div>
           </div>
         </div>
