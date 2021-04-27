@@ -100,7 +100,7 @@ class Card extends Component {
     }
     let plot = null;
     let plot_componentDeltas = null;;
-    let plot_height = this.size.height * 0.9;
+    let plot_height = this.size.height * 0.87;
     this.state.plot_width = this.size.width * 0.97;
     let plot_margins = {
       t: 60,
@@ -149,15 +149,10 @@ class Card extends Component {
       if (output_states.hasOwnProperty(selectedOutputKey)) {
         // HH: Some printing for dev purposes
         console.log("📈 CURRENTLY VIZ-ING: " + output_states[selectedOutputKey].label)
-        console.log("COMPONENT DELTAS: ")
-        Object.entries(output_states[selectedOutputKey].componentDeltas).forEach(([key,value]) => {
-          console.log(key,value)
-        })
 
-        // Create overall delta line on graph, helpful for viz purposes (prolly temporary)
+        // Create OVERALL delta line on graph, helpful for viz purposes (prolly temp, NOT made from delta components)
         let overall_delta_y = new Array(results.time.length - 2)
         for(var i = 0; i < overall_delta_y.length; i++) overall_delta_y[i] = 0 // Fill w 0s
-
         for(var i = 1; i <= results.time.length - 1; i++) {
           let x1 = i - 1
           let x2 = i + 1
@@ -204,7 +199,7 @@ class Card extends Component {
               title: {
                 text:'Quantity over mission run',
                 font: {
-                  size: 24
+                  size: 15
                 }
               },
               xaxis: plot_xaxis,
@@ -216,35 +211,41 @@ class Card extends Component {
 
         // Plot for component deltas
         if(this.state.isDeltaPlotVisible == true){ // Check if user wants to see delta plots
-          if(Object.keys(output_states[selectedOutputKey].componentDeltas).length > 0) { // Check if component has delta plot
+          // Update plot widths
+          this.state.plot_width = this.size.width * 0.48
+          plot = ( // Need more efficient way to update!
+            <Plot
+              data={plot_data}
+              layout={{
+                width: this.state.plot_width,
+                height: plot_height,
+                margin: plot_margins,
+                title: {
+                  text:'Quantity over mission run',
+                  font: {
+                    size: 15
+                  }
+                },
+                xaxis: plot_xaxis,
+                yaxis: plot_yaxis,
+                showlegend: false,
+              }}
+            />
+          );
+
+          // Now check if component has delta plot
+          if((output_states[selectedOutputKey].componentDeltas != null) && (Object.keys(output_states[selectedOutputKey].componentDeltas).length > 0)) { 
+            // Printing for dev purposes
             console.log("👀 " + selectedOutputKey + " has " + Object.keys(output_states[selectedOutputKey].componentDeltas).length + " component deltas");
-            
-            // Update plot widths
-            this.state.plot_width = this.size.width * 0.48
-            plot = ( // Need more efficient way to update!
-              <Plot
-                data={plot_data}
-                layout={{
-                  width: this.state.plot_width,
-                  height: plot_height,
-                  margin: plot_margins,
-                  title: {
-                    text:'Quantity over mission run',
-                    font: {
-                      size: 24
-                    }
-                  },
-                  xaxis: plot_xaxis,
-                  yaxis: plot_yaxis,
-                  showlegend: false,
-                }}
-              />
-            );
+            console.log("AVAILABLE COMPONENT DELTAS: ")
+            Object.entries(output_states[selectedOutputKey].componentDeltas).forEach(([key,value]) => {
+              console.log(key,value)
+            })
 
             // Turn component deltas into more JS-friendly form
             let componentDeltas_data = []
 
-            i = 0 // Just for tracking purposes
+            i = 0 // Variable just for tracking purposes
             Object.entries(output_states[selectedOutputKey].componentDeltas).forEach(([key,value]) => {
               let temp_trace = {
                 x: results.time,
@@ -309,7 +310,7 @@ class Card extends Component {
                   title: {
                     text:'Quantity deltas breakdown',
                     font: {
-                      size: 18
+                      size: 15
                     }
                   },
                   showlegend: false, // For now
@@ -321,19 +322,7 @@ class Card extends Component {
           } else {
             console.log(selectedOutputKey + ' has no delta values');
             plot_componentDeltas = (
-              <Plot
-                layout={{
-                  width: this.state.plot_width,
-                  height: plot_height,
-                  margin: plot_margins,
-                  title: {
-                    text: selectedOutputKey + ' has no component deltas',
-                    font: {
-                      size: 18
-                    }
-                  }
-                }}
-              />
+              <span>{selectedOutputKey} has no component deltas</span>
             );
           }
         }
