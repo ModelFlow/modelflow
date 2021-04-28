@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, Component } from 'react';
 import { connect } from 'react-redux';
 import Plotly from 'plotly.js-basic-dist';
 import './Card.css';
@@ -8,6 +8,25 @@ import createPlotlyComponent from 'react-plotly.js/factory';
 import actions from '../../state/actions';
 
 const Plot = createPlotlyComponent(Plotly);
+
+const Colors = [
+  '#7e86c9',
+  '#6eb47c',
+  '#4652b2',
+  '#705649',
+  '#d47116',
+  '#8eb24b',
+  '#5e85f1',
+  '#7c2ca7',
+  '#d55a24',
+  '#c2c943',
+  '#589ae2',
+  '#926bad',
+  '#cf8074',
+  '#dbc44d',
+  '#539488',
+  '#ae9ed9',
+];
 
 class Card extends Component {
   size = { width: 0, height: 0 };
@@ -71,6 +90,31 @@ class Card extends Component {
     return shouldUpdate;
   };
 
+  // For delta plot toggle
+  state = {
+    isDeltaPlotVisible: false,
+    deltaPlotVisibility: 'none',
+    plot_width: 0,
+  };
+  changeDeltaPlotVis = () => {
+    // If plot not visible, make visible
+    if (this.state.isDeltaPlotVisible == false) {
+      this.setState((state) => ({
+        isDeltaPlotVisible: true,
+        deltaPlotVisibility: 'inline',
+      }));
+    } else {
+      // If plot visible, make not visible
+      this.setState((state) => ({
+        isDeltaPlotVisible: false,
+        deltaPlotVisibility: 'none',
+      }));
+    }
+    console.log(
+      'Delta plot visibility is now: ' + this.state.deltaPlotVisibility,
+    );
+  };
+
   handleValueChange = (newOutputKey) => {
     // this.setState({ selectedItem });
     const { uuid, updateCardOutputKey, runSim } = this.props;
@@ -132,8 +176,34 @@ class Card extends Component {
       this.forceUpdate();
     }
     let plot = null;
+    let plot_componentDeltas = null;
+    let plot_height = this.size.height * 0.87;
+    this.state.plot_width = this.size.width * 0.97;
+    let plot_margins = {
+      t: 60,
+      b: 40,
+      l: 45,
+      r: 20,
+    };
+    let plot_xaxis = {
+      title: {
+        text: 'Time (hrs)',
+        font: {
+          size: 14,
+          color: '#7f7f7f',
+        },
+      },
+      zerolinecolor: 'black',
+      zerolinewidth: 1.5,
+    };
+    let plot_yaxis = {
+      zerolinecolor: 'black',
+      zerolinewidth: 1.5,
+    };
+
     let selector = null;
     let deleteButton = null;
+    let deltaPlotButton = null;
     if (this.size.width && results && output_states) {
       selector = (
         <Select
@@ -150,6 +220,13 @@ class Card extends Component {
       deleteButton = (
         <Button small icon="delete" onClick={this.deleteClicked} />
       );
+      deltaPlotButton = (
+        <Button
+          small
+          text={this.state.deltaPlotVisibility}
+          onClick={this.changeDeltaPlotVis}
+        />
+      );
       if (output_states.hasOwnProperty(selectedOutputKey)) {
         let actualXscale = [
           results.time[0],
@@ -158,36 +235,209 @@ class Card extends Component {
         if (xrange.length) {
           actualXscale = [xrange[0], xrange[1]];
         }
+
+        // HH: Some printing for dev purposes
+        console.log(
+          '📈 CURRENTLY VIZ-ING: ' + output_states[selectedOutputKey].label,
+        );
+
+        // Create OVERALL delta line on graph, helpful for viz purposes (prolly temp, NOT made from delta components)
+        let overall_delta_y = new Array(results.time.length - 2);
+        for (var i = 0; i < overall_delta_y.length; i++) overall_delta_y[i] = 0; // Fill w 0s
+        for (var i = 1; i <= results.time.length - 1; i++) {
+          let x1 = i - 1;
+          let x2 = i + 1;
+          let y1 = output_states[selectedOutputKey].data[x1];
+          let y2 = output_states[selectedOutputKey].data[x2];
+          let delta = (y2 - y1) / (x2 - x1);
+          overall_delta_y[i - 1] = delta;
+        }
+        let overall_delta_trace = {
+          x: results.time,
+          y: overall_delta_y,
+          name: 'CALCD DELTA',
+          type: 'line',
+          mode: 'lines',
+          line: {
+            color: 'gray',
+            width: 3,
+          },
+          hoverinfo: 'all',
+        };
+
+        // Finalize data for quantity plot
+        let plot_data = [];
+        let quantity_trace = {
+          x: results.time,
+          y: output_states[selectedOutputKey].data,
+          name: 'quantity',
+          type: 'line',
+          mode: 'lines',
+          marker: { color: '#137cbd', width: 3 },
+        };
+
+        plot_data.push(quantity_trace);
+        plot_data.push(overall_delta_trace);
+
+        // Plot for quantity
+        plot_xaxis['range'] = actualXscale;
         plot = (
           <Plot
             onInitialized={(figure, graphDiv) => {
               this.setScrollListeners(graphDiv);
             }}
-            data={[
-              {
-                x: results.time,
-                y: output_states[selectedOutputKey].data,
-                type: 'line',
-                mode: 'lines',
-                marker: { color: '#137cbd' },
-              },
-            ]}
+            data={plot_data}
             onUpdate={this.onPlotUpdate}
             layout={{
-              xaxis: {
-                range: actualXscale,
+              width: this.state.plot_width,
+              height: plot_height,
+              margin: plot_margins,
+              title: {
+                text: 'Quantity over mission run',
+                font: {
+                  size: 15,
+                },
               },
-              width: this.size.width,
-              height: this.size.height,
-              margin: {
-                t: 20,
-                b: 55,
-                l: 40,
-                r: 15,
-              },
+              xaxis: plot_xaxis,
+              yaxis: plot_yaxis,
+              showlegend: false,
             }}
           />
         );
+
+        // Plot for component deltas
+        if (this.state.isDeltaPlotVisible == true) {
+          // Check if user wants to see delta plots
+          // Update plot widths
+          this.state.plot_width = this.size.width * 0.48;
+          plot = ( // Need more efficient way to update!
+            <Plot
+              data={plot_data}
+              layout={{
+                width: this.state.plot_width,
+                height: plot_height,
+                margin: plot_margins,
+                title: {
+                  text: 'Quantity over mission run',
+                  font: {
+                    size: 15,
+                  },
+                },
+                xaxis: plot_xaxis,
+                yaxis: plot_yaxis,
+                showlegend: false,
+              }}
+            />
+          );
+
+          // Now check if component has delta plot
+          if (
+            output_states[selectedOutputKey].componentDeltas != null &&
+            Object.keys(output_states[selectedOutputKey].componentDeltas)
+              .length > 0
+          ) {
+            // Printing for dev purposes
+            console.log(
+              '👀 ' +
+              selectedOutputKey +
+              ' has ' +
+              Object.keys(output_states[selectedOutputKey].componentDeltas)
+                .length +
+              ' component deltas',
+            );
+            console.log('AVAILABLE COMPONENT DELTAS: ');
+            Object.entries(
+              output_states[selectedOutputKey].componentDeltas,
+            ).forEach(([key, value]) => {
+              console.log(key, value);
+            });
+
+            // Turn component deltas into more JS-friendly form
+            let componentDeltas_data = [];
+
+            i = 0; // Variable just for tracking purposes
+            Object.entries(
+              output_states[selectedOutputKey].componentDeltas,
+            ).forEach(([key, value]) => {
+              let temp_trace = {
+                x: results.time,
+                y: value.delta_data,
+                name: value.delta_label,
+                type: 'line',
+                mode: 'lines',
+                line: {
+                  width: 0,
+                },
+                marker: { color: Colors[i] },
+                hoverinfo: 'all',
+                stackgroup: 'one',
+              };
+              componentDeltas_data.push(temp_trace); // Add to array
+              i++;
+            });
+
+            // Create aggregate line on graph too, helpful for viz purposes
+            let aggregate_trace = {};
+            let aggregate_y = new Array(results.time.length);
+            for (var i = 0; i < aggregate_y.length; i++) aggregate_y[i] = 0; // Fill w 0s
+
+            for (var i = 0; i < aggregate_y.length; i++) {
+              let sum = 0;
+              for (var o = 0; o < componentDeltas_data.length; o++) {
+                let value = componentDeltas_data[o].y[i];
+                if (value != undefined) {
+                  sum += value;
+                }
+              }
+              console.log('Sum at ' + i + ' is ' + sum);
+              aggregate_y[i] = sum;
+            }
+            aggregate_trace = {
+              x: results.time,
+              y: aggregate_y,
+              name: 'AGGREGATE SUM',
+              type: 'line',
+              mode: 'lines',
+              line: {
+                color: 'gray',
+                width: 3,
+              },
+              hoverinfo: 'all',
+              hoverlabel: {
+                bgcolor: 'black',
+                font: { color: 'white', size: 23 },
+              },
+              opacity: 1,
+            };
+            componentDeltas_data.push(aggregate_trace);
+
+            // Now create actual delta plot
+            plot_componentDeltas = (
+              <Plot
+                data={componentDeltas_data}
+                layout={{
+                  width: this.state.plot_width,
+                  height: plot_height,
+                  margin: plot_margins,
+                  title: {
+                    text: 'Quantity deltas breakdown',
+                    font: {
+                      size: 15,
+                    },
+                  },
+                  showlegend: false, // For now
+                  xaxis: plot_xaxis,
+                  yaxis: plot_yaxis,
+                }}
+              />
+            );
+          } else {
+            console.log(selectedOutputKey + ' has no delta values');
+            plot_componentDeltas = (
+              <span>{selectedOutputKey} has no component deltas</span>
+            );
+          }
+        }
       }
       if (selectedOutputKey === 'none') {
         plot = (
@@ -219,17 +469,32 @@ class Card extends Component {
               {selectedOutputKey.replace('state_', '')}
             </span>
             <span
-              style={{ float: 'right', marginTop: '5px', marginRight: '5px' }}
+              style={{ float: 'right', marginTop: '5px', marginLeft: '20px' }}
             >
               {deleteButton}
             </span>
             <span
-              style={{ float: 'right', marginTop: '5px', marginRight: '3px' }}
+              style={{ float: 'right', marginTop: '5px', marginLeft: '20px' }}
             >
               {selector}
             </span>
+            <span
+              style={{
+                float: 'right',
+                marginTop: '5px',
+                marginLeft: '20px',
+                display: 'inline',
+              }}
+            >
+              Delta breakdown: {deltaPlotButton}
+            </span>
           </div>
-          {plot}
+          <div style={{ display: 'table-row' }}>
+            {plot}
+            <div style={{ display: this.state.deltaPlotVisibility }}>
+              {plot_componentDeltas}
+            </div>
+          </div>
         </div>
       </>
     );
