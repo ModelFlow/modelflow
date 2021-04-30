@@ -13,6 +13,18 @@ class SurfacePV:
             source="FAKE",
         ),
         dict(
+            key = "solar_panel_efficiency",
+            units = "decimal percent",
+            value = 0.17,
+            source = "http://miasole.com/products/",
+        ),
+        dict(
+            key = "conversion_transmission_losses",
+            units = "decimal percent",
+            value = 0.05,
+            source = "FAKE",
+        ),
+        dict(
             key="degredation_per_hour",
             notes="TODO: Create an actual degredation model",
             units="decimal percent",
@@ -31,17 +43,34 @@ class SurfacePV:
 
     states = [
         dict(
-            key="mass",
+            key = "mean_solar_irradiance",
+            units = "w/m2",
+            value = 110,
+            source = "",
+            private = True # Change to false because weather might need to access?
+        ),
+        dict(
+            key = "area",
+            notes = "The calculation is done once the system is deployed",
+            units = "m2",
+            value = 0,
+            source = "calculated",
+            private = True
+        ),
+        dict(
+            key = "mass",
             units="kg",
-            value=100,
-            source="fake",
+            value= 0,
+            source="http://miasole.com/miasole2017/wp-content/uploads/2019/01/flex-03w_1m_datasheet_2.pdf",
+            notes = "Calculated while in flight to mars using an area density of 1.7 kg/m2",
             private=True
         ),
         dict(
             key="volume",
             units="m3",
-            value=100,
-            source="fake",
+            value = 0,
+            source="http://miasole.com/miasole2017/wp-content/uploads/2019/01/flex-03w_1m_datasheet_2.pdf",
+            notes = "Calculated while in flight to mars using a volume to area ration of 0.017 m3/m2)",
             private=True
         ),
         dict(
@@ -71,6 +100,8 @@ class SurfacePV:
         # TODO: Handle that an example where the parent location is outside
         # but there is a shared electrical connection
         if not utils.parent_is("mars_surface"):
+            states.mass = 1.7 * params.rated_pv_kw_dc_output * 1000 / states.mean_solar_irradiance / params.solar_panel_efficiency
+            states.volume = 0.017 * params.rated_pv_kw_dc_output * 1000 / states.mean_solar_irradiance / params.solar_panel_efficiency
             return
     
         if states.status == 'packed':
@@ -81,6 +112,7 @@ class SurfacePV:
             states.deploying_hours += 1
             if states.deploying_hours > params.hours_to_deploy:
                 states.status == 'deployed'
+                states.area = params.rated_pv_kw_dc_output * 1000 / states.mean_solar_irradiance / params.solar_panel_efficiency #include degradation
 
                 instance_key = utils.get_instance_key()
                 utils.log_event(f"Surface PV instance '{instance_key}' deployed")
