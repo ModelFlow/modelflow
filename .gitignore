@@ -12,6 +12,8 @@
 *.db
 *.env
 *.vscode*
+*.vscode/*
+.vscode
 *secrets.txt
 demo/
 

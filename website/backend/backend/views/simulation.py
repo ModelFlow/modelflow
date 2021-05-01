@@ -49,22 +49,44 @@ def run_sim_route():
     # outputs['flow'] = generate_react_flow_chart(outputs)
 
     # Only send back the data that is requested by the frontend
+    # First, check which componets wanted in UI
     flat_dict = {}
     outputs["all_output_states_keys"] = []
     for instance_key, inner_dict in outputs['states'].items():
         for field_key, arr in inner_dict.items():
             final_key = f'{instance_key}___{field_key}'
             outputs["all_output_states_keys"].append(final_key)
+        
             if output_keys is None:
                 flat_dict[final_key] = arr
             else:
                 if final_key in output_keys:
-                    flat_dict[final_key] = dict(data=arr, label=final_key)
+                    # HH: Create arr for component deltas
+                    componentDeltas_dict = {}
 
+                    # First, find quantity name in LABEL key (last word after underscore)
+                    # Ex: o2, co2, h2o...
+                    arr_final_key = final_key.rsplit('_', 3)
+                    measured_substance = arr_final_key[1] + '_' + arr_final_key[2] + '_' + arr_final_key[3] + '_'
+                    print("LABEL FOUND: " + measured_substance)
+
+                    # Next, find component delta values, if any (name will have NAME_deltas at end)
+                    # Ex: plants_o2_deltas, human1_co2_deltas...
+                    # TODO: Need more accurate way to identify components of a variable... hard code it somewhere?
+                    for delta_key, delta_value in outputs['delta_outputs'].items():
+                        if measured_substance in delta_key:
+                            print("DELTA FOUND: " + delta_key)
+                            # Add delta key & data to componentDeltas_dict
+                            componentDeltas_dict[delta_key] = dict(delta_label=delta_key, delta_data=delta_value)
+
+                    # Store final data
+                    flat_dict[final_key] = dict(data=arr, label=final_key, componentDeltas=componentDeltas_dict) # HH: I added components property here
+
+    # Second, check which delta values wanted in UI
     for key, value in outputs['delta_outputs'].items():
         outputs["all_output_states_keys"].append(key)
         if key in output_keys:
-            flat_dict[key] = dict(data=value, label=key)
+            flat_dict[key] = dict(data=value, label=key) 
 
     outputs["output_states"] = flat_dict
     outputs.pop('states', None)
@@ -81,6 +103,12 @@ def run_sim_route():
     # TODO: Handle better
     an_output = list(outputs["output_states"].values())[0]['data']
     outputs['time'] = list(range(len(an_output)))
+
+    # HH: For dev purposes, print output contents
+    # List curr var in UI
+    print("🧮 final output STATES: ") 
+    print(outputs['output_states'])
+
     return outputs
 
 
