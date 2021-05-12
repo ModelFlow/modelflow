@@ -33,7 +33,7 @@ class Card extends Component {
   // xScale = [];
 
   scrolledIn = () => {
-    const { setSelectedUUID, uuid, selectedUUID } = this.props;
+    const { setSelectedUUID, uuid } = this.props;
     setSelectedUUID(uuid);
   };
 
@@ -44,7 +44,7 @@ class Card extends Component {
     if (target && target.getAttribute('class') === 'dragcover') {
       return;
     }
-    const { setSelectedUUID, selectedUUID } = this.props;
+    const { setSelectedUUID } = this.props;
     setSelectedUUID('');
   };
 
@@ -337,14 +337,13 @@ class Card extends Component {
               .length > 0
           ) {
             // Printing for dev purposes
-            console.log(
-              '👀 ' +
-              selectedOutputKey +
-              ' has ' +
-              Object.keys(output_states[selectedOutputKey].componentDeltas)
-                .length +
-              ' component deltas',
-            );
+            // console.log(
+            //   selectedOutputKey +
+            //   ' has ' +
+            //   Object.keys(output_states[selectedOutputKey].componentDeltas)
+            //     .length +
+            //   ' component deltas',
+            // );
             console.log('AVAILABLE COMPONENT DELTAS: ');
             Object.entries(
               output_states[selectedOutputKey].componentDeltas,
@@ -505,8 +504,8 @@ const mapDispatchToProps = {
   runSim: actions.sim.runSim,
   updateCardOutputKey: actions.resultsView.updateCardOutputKey,
   removeCard: actions.resultsView.removeCard,
-  setXrange: actions.resultViews.setXrange,
-  setSelectedUUID: actions.resultViews.setSelectedUUID,
+  setXrange: actions.resultsView.setXrange,
+  setSelectedUUID: actions.resultsView.setSelectedUUID,
 };
 
 const mapStateToProps = (state) => ({

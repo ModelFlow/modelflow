@@ -25,13 +25,13 @@ class Main extends Component {
     // await getParams();
     // TODO: don't do await for load template
     // await loadTemplate(templateId);
-    console.log("after template")
+    console.log('after template');
     // This is just used for potential interactivity
     const error = await loadScenario(scenarioId);
     if (error) {
       await setSimError('Scenario Not Found');
     } else {
-      console.log("run sim")
+      console.log('run sim');
       // Runs sim based on the model instances, attributes stored on the frontend
       // TODO: Handle changes to classes
       await runSim();
