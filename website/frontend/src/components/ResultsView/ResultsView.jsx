@@ -162,7 +162,7 @@ class ResultsView extends Component {
               selectedTabId={selectedTabId}
             >
               {tabs.map((tab) => {
-                return <Tab key={tab.id} id={tab.id} name={tab.name} />;
+                return <Tab key={tab.id} id={tab.id} title={tab.name} />;
               })}
             </Tabs>
           </div>

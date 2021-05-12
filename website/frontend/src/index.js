@@ -14,8 +14,12 @@ import * as reducers from './state/reducers';
 import { createStore, applyMiddleware, combineReducers } from 'redux';
 // Link, NoMatch
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import { composeWithDevTools } from 'redux-devtools-extension';
 
-const store = createStore(combineReducers(reducers), applyMiddleware(thunk));
+const store = createStore(
+  combineReducers(reducers),
+  composeWithDevTools(applyMiddleware(thunk)),
+);
 
 // Note strictmode breaks flow chart
 ReactDOM.render(

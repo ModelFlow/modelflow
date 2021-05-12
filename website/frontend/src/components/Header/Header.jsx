@@ -13,6 +13,7 @@ import {
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import { AppToaster } from '../Toaster.jsx';
+import { newBlankTemplate } from '../../state/actions/templates';
 
 class Header extends Component {
   state = {
@@ -58,10 +59,10 @@ class Header extends Component {
     this.setState({ isOpen: false });
   };
 
-  handleNewScenarioView = () => {
+  handleNewTemplate = () => {
     const { newScenarioView } = this.props;
     const { newName } = this.state;
-    newScenarioView(newName);
+    newBlankTemplate(newName);
     this.setState({ newName: '', isOpen: false });
     AppToaster.show({
       message: 'Created new scenario',
@@ -180,7 +181,7 @@ class Header extends Component {
           usePortal={true}
         >
           <div className={Classes.DIALOG_BODY}>
-            <p>Name your scenario view:</p>
+            <p>Name your template:</p>
             <input
               className="bp3-input"
               type="text"

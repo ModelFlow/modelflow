@@ -509,10 +509,10 @@ const mapDispatchToProps = {
 };
 
 const mapStateToProps = (state) => ({
-  tabsContent: state.resultViews.tabsContent,
-  selectedUUID: state.resultViews.selectedUUID,
+  tabsContent: state.resultsView.tabsContent,
+  selectedUUID: state.resultsView.selectedUUID,
   results: state.sim.results,
-  xrange: state.resultViews.xrange,
+  xrange: state.resultsView.xrange,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Card);
