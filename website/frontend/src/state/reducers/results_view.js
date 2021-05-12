@@ -16,7 +16,9 @@ const initialState = {
       name: 'Unnamed Tab',
     },
   ],
+  xrange: [],
   selectedTabId: 'blank',
+  selectedUUID: '',
   tabsContent: {
     blank: defaultResultGrid,
   },
@@ -39,10 +41,24 @@ export default function reduce(state = initialState, action = {}) {
       };
     }
 
+    case 'SET_SELECTED_UUID': {
+      return {
+        ...state,
+        selectedUUID: action.selectedUUID,
+      };
+    }
+
     case 'UPDATE_TABS_CONTENT': {
       return {
         ...state,
         tabsContent: action.tabsContent,
+      };
+    }
+
+    case 'SET_XRANGE': {
+      return {
+        ...state,
+        xrange: [...action.xrange], // Cool way to make a copy
       };
     }
 

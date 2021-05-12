@@ -21,11 +21,11 @@ class ResultsGrid extends Component {
     return (
       <ResponsiveGridLayout
         layouts={layout}
-        rowHeight={30}
+        rowHeight={50} // Card height
         measureBeforeMount
         isResizable
         breakpoints={{ lg: 1200 }}
-        cols={{ lg: 12 }}
+        cols={{ lg: 6 }}
         draggableHandle=".card_header"
         onLayoutChange={this.onLayoutChange}
         compactType="vertical"

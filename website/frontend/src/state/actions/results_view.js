@@ -20,6 +20,20 @@ export const addCard = () => async (dispatch) => {
   });
 };
 
+export const setSelectedUUID = (selectedUUID) => async (dispatch) => {
+  dispatch({
+    type: 'SET_SELECTED_UUID',
+    selectedUUID,
+  });
+};
+
+export const setXrange = (xrange) => async (dispatch) => {
+  dispatch({
+    type: 'SET_XRANGE',
+    xrange,
+  });
+};
+
 export const removeCard = (uuid) => async (dispatch) => {
   dispatch({
     type: 'REMOVE_CARD',
