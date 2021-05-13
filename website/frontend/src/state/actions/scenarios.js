@@ -43,6 +43,7 @@ export const loadScenario = (scenarioId) => async (dispatch) => {
     return error;
   }
   const { data } = response;
+  const { metadata } = data;
   // Success 🎉
   console.log(data);
 
@@ -57,8 +58,16 @@ export const loadScenario = (scenarioId) => async (dispatch) => {
   console.log('sdfsdf');
   console.log(data);
   dispatch({
-    type: 'SET_CURRENT_SCENARIO',
+    type: 'SET_CURRENT_SCENARIO_AND_METADATA',
     currentScenario: data,
+  });
+
+  dispatch({
+    type: 'SET_CURRENT_PROJECT_METADATA',
+    currentProjectMetadata: {
+      name: data.project_meta.name,
+      id: data.project_meta.id,
+    },
   });
 };
 

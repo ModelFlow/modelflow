@@ -1,7 +1,7 @@
 const initialState = {
   projects: [],
   currentProjectMetadata: {
-    name: '',
+    name: 'No Project Set',
     id: 0,
   },
 };

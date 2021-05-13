@@ -105,7 +105,7 @@ class ResultsView extends Component {
           <Dialog
             icon="edit"
             onClose={this.handleClose}
-            name="Edit Tabs"
+            title="Edit Tabs"
             autoFocus={true}
             canEscapeKeyClose={true}
             canOutsideClickClose={true}

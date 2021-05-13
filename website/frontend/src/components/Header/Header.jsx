@@ -106,9 +106,10 @@ class Header extends Component {
   render() {
     const {
       templates,
+      currentProjectMetadata,
+      currentScenarioMetadata,
       currentTemplateMetadata,
       mainViewType,
-      currentScenarioMetadata,
     } = this.props;
     const { isOpen, newName } = this.state;
     return (
@@ -121,10 +122,13 @@ class Header extends Component {
             height="30"
           />
           <div className="nameSection">
-            <span className="bp3-heading scenario">
+            <span className="bp3-heading">{currentProjectMetadata.name}</span>
+            {' > '}
+            <span className="bp3-heading">
               {currentScenarioMetadata.name}
             </span>
-            <span className="bp3-text-muted scenarioViewTitle">
+            {' | '}
+            <span className="bp3-text-muted">
               {currentTemplateMetadata.name}
             </span>
           </div>
@@ -134,13 +138,16 @@ class Header extends Component {
             text="Add Card"
             onClick={this.clickedAddCard}
           />
-          <Button className="new-button" onClick={this.handleOpen}>
-            New
-          </Button>
           <Button
             className="save-button"
             icon="floppy-disk"
-            text="Save Template"
+            text="Save As"
+            onClick={this.clickedSaveTemplate}
+          />
+          <Button
+            className="save-button"
+            icon="floppy-disk"
+            text="Save"
             onClick={this.clickedSaveTemplate}
           />
           <Select
@@ -172,7 +179,7 @@ class Header extends Component {
         <Dialog
           icon="info-sign"
           onClose={this.handleClose}
-          name="Save New View"
+          title="Save New View"
           autoFocus={true}
           canEscapeKeyClose={true}
           canOutsideClickClose={true}
@@ -225,6 +232,7 @@ const mapDispatchToProps = {
 
 const mapStateToProps = (state) => ({
   templates: state.templates.templates,
+  currentProjectMetadata: state.projects.currentProjectMetadata,
   currentTemplateMetadata: state.templates.currentTemplateMetadata,
   currentScenarioMetadata: state.scenarios.currentScenarioMetadata,
   mainViewType: state.common.mainViewType,

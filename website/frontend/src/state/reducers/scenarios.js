@@ -1,7 +1,7 @@
 const initialState = {
   scenarios: [],
   currentScenarioMetadata: {
-    name: '',
+    name: 'No Scenario Set',
     id: 0,
   },
   currentScenario: {},
@@ -21,10 +21,14 @@ export default function reduce(state = initialState, action = {}) {
         currentScenarioMetadata: action.currentScenarioMetadata,
       };
     }
-    case 'SET_CURRENT_SCENARIO': {
+    case 'SET_CURRENT_SCENARIO_AND_METADATA': {
       return {
         ...state,
         currentScenario: action.currentScenario,
+        currentScenarioMetadata: {
+          id: action.currentScenario.id,
+          name: action.currentScenario.name,
+        },
       };
     }
 
