@@ -59,13 +59,16 @@ class Header extends Component {
     this.setState({ isOpen: false });
   };
 
-  handleNewTemplate = () => {
-    const { newScenarioView } = this.props;
+  handleSaveAsTemplate = () => {
+    const { saveAsCurrentTemplate } = this.props;
     const { newName } = this.state;
-    newBlankTemplate(newName);
+
+    // TODO: Check uniqueness of name of template
+    // TODO: Change to blocking after network call
+    saveAsCurrentTemplate(newName);
     this.setState({ newName: '', isOpen: false });
     AppToaster.show({
-      message: 'Created new scenario',
+      message: `Saved new template: ${newName}`,
       intent: Intent.SUCCESS,
       icon: 'tick',
     });
@@ -124,9 +127,7 @@ class Header extends Component {
           <div className="nameSection">
             <span className="bp3-heading">{currentProjectMetadata.name}</span>
             {' > '}
-            <span className="bp3-heading">
-              {currentScenarioMetadata.name}
-            </span>
+            <span className="bp3-heading">{currentScenarioMetadata.name}</span>
             {' | '}
             <span className="bp3-text-muted">
               {currentTemplateMetadata.name}
@@ -142,7 +143,7 @@ class Header extends Component {
             className="save-button"
             icon="floppy-disk"
             text="Save As"
-            onClick={this.clickedSaveTemplate}
+            onClick={this.handleOpen}
           />
           <Button
             className="save-button"
@@ -206,7 +207,7 @@ class Header extends Component {
               </Tooltip>
               <AnchorButton
                 intent={Intent.PRIMARY}
-                onClick={this.handleNewTemplate}
+                onClick={this.handleSaveAsTemplate}
                 target="_blank"
               >
                 Create
@@ -221,8 +222,8 @@ class Header extends Component {
 
 const mapDispatchToProps = {
   addCard: actions.resultsView.addCard,
-  newBlankTemplate: actions.templates.newBlankTemplate,
   saveCurrentTemplate: actions.templates.saveCurrentTemplate,
+  saveAsCurrentTemplate: actions.templates.saveAsCurrentTemplate,
   loadTemplate: actions.templates.loadTemplate,
   getTemplatesForCurrentProject:
     actions.templates.getTemplatesForCurrentProject,

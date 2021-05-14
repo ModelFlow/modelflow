@@ -2,39 +2,36 @@ import axios from 'axios';
 import { updateUrlWithId } from '../../services/Utilities';
 
 function collectTemplateData(state) {
-  const { params, resultsView } = state;
+  const { resultsView } = state;
   const { tabs, selectedTabId, tabsContent } = resultsView;
-  const paramValues = {};
-  params.params.forEach((param) => {
-    paramValues[param.key] = param.value;
-  });
   return {
-    paramValues,
     tabs,
     selectedTabId,
     tabsContent,
   };
 }
 
-export const newBlankTemplate = (name) => async (dispatch, getState) => {
+export const saveAsCurrentTemplate = (name) => async (dispatch, getState) => {
+  const state = getState();
   const { data } = await axios.post(
     `${process.env.REACT_APP_API_URL}/rest/templates/?format.json`,
     {
       name,
-      data: collectTemplateData(getState()),
+      json_data: JSON.stringify(collectTemplateData(state)),
+      project: state.projects.currentProjectMetadata.id,
     },
   );
-
+  console.log(data);
   const { id } = data;
   updateUrlWithId(id);
   dispatch({
-    type: 'TEMPLATE_SET_META',
+    type: 'SET_CURRENT_TEMPLATE_METADATA',
     id,
     name: name,
   });
 
   dispatch({
-    type: 'ADD_TO_SCENARIO_VIEW_METAS',
+    type: 'ADD_TEMPLATE',
     id,
     name: name,
   });
@@ -68,6 +65,8 @@ export const loadTemplate = (id) => async (dispatch) => {
     `${process.env.REACT_APP_API_URL}/rest/templates/${id}/?format=json`,
   );
 
+  console.log(data)
+
   const jsonData = JSON.parse(data.json_data);
   console.log(jsonData);
   // if (data.error) {
@@ -78,7 +77,7 @@ export const loadTemplate = (id) => async (dispatch) => {
   //   return;
   // }
 
-  const { tabs, tabsContent, selectedTabId } = data.data;
+  const { tabs, tabsContent, selectedTabId } = jsonData;
   dispatch({
     type: 'UPDATE_TABS',
     tabs,

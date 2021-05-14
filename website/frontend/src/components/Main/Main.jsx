@@ -24,7 +24,7 @@ class Main extends Component {
     // Perhaps get params will be included in the scenario view
     // await getParams();
     // TODO: don't do await for load template
-    // await loadTemplate(templateId);
+    await loadTemplate(templateId);
     console.log('after template');
     // This is just used for potential interactivity
     const error = await loadScenario(scenarioId);
