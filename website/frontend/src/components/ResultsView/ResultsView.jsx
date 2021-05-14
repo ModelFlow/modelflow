@@ -53,12 +53,13 @@ class ResultsView extends Component {
     const { selectedTabId, tabs, results, status } = this.props;
 
     let callout = null;
+    let statusText = ''
     if (status === 'waiting') {
       callout = (
         <Callout
           icon={'info-sign'}
           intent={''}
-          name={'Waiting'}
+          title={'Waiting'}
           className="simStatusCallout"
         ></Callout>
       );
@@ -67,7 +68,7 @@ class ResultsView extends Component {
         <Callout
           icon={'walk'}
           intent={'warning'}
-          name={'Running'}
+          title={'Running'}
           className="simStatusCallout"
         ></Callout>
       );
@@ -76,7 +77,7 @@ class ResultsView extends Component {
         <Callout
           icon={'tick-circle'}
           intent={'success'}
-          name={'Success'}
+          title={'Success'}
           className="simStatusCallout"
         ></Callout>
       );
@@ -85,10 +86,9 @@ class ResultsView extends Component {
         <Callout
           icon={'error'}
           intent={'danger'}
-          name={'Error'}
+          title={results.error}
           className="simStatusCallout"
         >
-          {results.error}
         </Callout>
       );
     }
