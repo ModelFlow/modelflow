@@ -106,16 +106,16 @@ class TestFindingOutsideSharedState():
             "max_num_steps": 3,
         },
         "model_instances": {
-            "root": {
+            "fakeroot": {
                 "model_class": Root,
             },
             "level1_group": {
                 "model_class": AGroup,
-                "initial_parent_key": "root",
+                "initial_parent_key": "fakeroot",
             },
             "level1_partA": {
                 "model_class": AProducer,
-                "initial_parent_key": "root",
+                "initial_parent_key": "fakeroot",
             },
             "level2_partA": {
                 "model_class": AConsumer,
@@ -142,12 +142,12 @@ class TestSimpleSameNamedSharedState():
             "max_num_steps": 2
         },
         "model_instances": {
-            "root": {
+            "fakeroot": {
                 "model_class": Root
             },
             "group1": {
                 "model_class": AGroup,
-                "initial_parent_key": "root"
+                "initial_parent_key": "fakeroot"
             },
             "group1_producer": {
                 "model_class": AProducer,
@@ -155,7 +155,7 @@ class TestSimpleSameNamedSharedState():
             },
             "group2": {
                 "model_class": AGroup,
-                "initial_parent_key": "root"
+                "initial_parent_key": "fakeroot"
             },
             "group2_producer": {
                 "model_class": AProducer,
@@ -186,12 +186,12 @@ class TestSameNamedSharedState():
             "max_num_steps": 2
         },
         "model_instances": {
-            "root": {
+            "fakeroot": {
                 "model_class": Root
             },
             "group1": {
                 "model_class": AGroup,
-                "initial_parent_key": "root"
+                "initial_parent_key": "fakeroot"
             },
             "group1_producer": {
                 "model_class": AProducer,
@@ -203,7 +203,7 @@ class TestSameNamedSharedState():
             },
             "group2": {
                 "model_class": AGroup,
-                "initial_parent_key": "root"
+                "initial_parent_key": "fakeroot"
             },
             "group2_producer": {
                 "model_class": AProducer,

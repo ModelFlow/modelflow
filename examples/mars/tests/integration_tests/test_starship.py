@@ -1,4 +1,3 @@
-import copy
 import pytest
 from models.time import Time
 from models.starship import Starship
@@ -10,53 +9,55 @@ from modelflow.modelflow import run_scenario
 
 class TestStarship():
 
-    scenario = {
-        "simulation_params": {
-            "max_num_steps": 1000,
-        },
-        "model_instances": {
-            "time": {
-                "model_class": Time,
-                "label": "Simulation Space & Time",
-                "initial_parent_key": None,
-                "overrides": {  # Overrides either params or initial states
-                    "utc_start": 0,
-                    "current_utc": 0,
-                    "seconds_per_sim_step": 3600
-                }
+    def setup(self):
+        print('inside setup')
+        self.scenario = {
+            "simulation_params": {
+                "max_num_steps": 1000,
             },
-            "starship": {
-                "model_class": Starship,
-                "label": "Starship",
-                "initial_parent_key": "interplanetary_space",
-                "overrides": {
-                    "launch_utc": 3600 * 24,
-                    "travel_days_to_mars": 1,
-                    "travel_days_from_mars": 1,
-                    "mars_stay_days": 1
-                }
-            },
-            "interplanetary_space": {
-                "model_class": InterplanetarySpace,
-                "label": "Interplanetary Space",
-                "initial_parent_key": "time",
-            },
-            "mars_surface": {
-                "model_class": MarsSurface,
-                "label": "Mars Surface",
-                "initial_parent_key": "time",
-            },
-            "mass_simulator": {
-                "model_class": MassSimulator,
-                "label": "Mass Simulator",
-                "initial_parent_key": "starship",
-                "overrides": {
-                    "mass": 1,
-                    "volume": 1
+            "model_instances": {
+                "time": {
+                    "model_class": Time,
+                    "label": "Simulation Space & Time",
+                    "initial_parent_key": None,
+                    "overrides": {  # Overrides either params or initial states
+                        "utc_start": 0,
+                        "current_utc": 0,
+                        "seconds_per_sim_step": 3600
+                    }
+                },
+                "starship": {
+                    "model_class": Starship,
+                    "label": "Starship",
+                    "initial_parent_key": "interplanetary_space",
+                    "overrides": {
+                        "launch_utc": 3600 * 24,
+                        "travel_days_to_mars": 1,
+                        "travel_days_from_mars": 1,
+                        "mars_stay_days": 1
+                    }
+                },
+                "interplanetary_space": {
+                    "model_class": InterplanetarySpace,
+                    "label": "Interplanetary Space",
+                    "initial_parent_key": "time",
+                },
+                "mars_surface": {
+                    "model_class": MarsSurface,
+                    "label": "Mars Surface",
+                    "initial_parent_key": "time",
+                },
+                "mass_simulator": {
+                    "model_class": MassSimulator,
+                    "label": "Mass Simulator",
+                    "initial_parent_key": "starship",
+                    "overrides": {
+                        "mass": 1,
+                        "volume": 1
+                    }
                 }
             }
         }
-    }
 
     def test_statuses(self):
         outputs = run_scenario(self.scenario)
@@ -74,9 +75,8 @@ class TestStarship():
         assert status_arr[96] == 'Landed on Earth'
 
     def test_invalid_schema_change(self):
-        bad_scenario = copy.deepcopy(self.scenario)
-        bad_scenario['model_instances'].pop("mars_surface", None)
-        output = run_scenario(bad_scenario)
+        self.scenario['model_instances'].pop("mars_surface", None)
+        output = run_scenario(self.scenario)
         assert "Cannot move 'starship' since destination key 'mars_surface' does not exist" in output['error']
 
     def test_valid_schema_change(self):
@@ -85,7 +85,6 @@ class TestStarship():
         assert output['trees'][47] == {'time': {'children': ['interplanetary_space', {'mars_surface': {'children': [{'starship': {'children': ['mass_simulator']}}]}}]}}
 
     def test_pre_launch_checks(self):
-        bad_scenario = copy.deepcopy(self.scenario)
-        bad_scenario['model_instances']["mass_simulator"]["overrides"]["mass"] = 100000000000
-        output = run_scenario(bad_scenario)
+        self.scenario['model_instances']["mass_simulator"]["overrides"]["mass"] = 100000000000
+        output = run_scenario(self.scenario)
         assert "Exceeded payload initial mass capacity" in output['error']

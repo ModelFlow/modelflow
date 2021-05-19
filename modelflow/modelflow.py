@@ -159,7 +159,7 @@ class ScenarioRunner():
     def __init__(self):
         self.key_lookup_cache = {}
 
-    def setup_and_run_sim(self, scenario, model_library_path, outputs_filter=[]):
+    def setup_and_run_sim(self, scenario, model_library_path='', outputs_filter=[]):
         print("inside run sim")
         # Add the unique from the model_instances map to the values
         # if the format is a dictionary. Note on the web the format is a list.
@@ -252,7 +252,7 @@ class ScenarioRunner():
         return final_output
     
 
-def run_scenario(scenario, model_library_path):
+def run_scenario(scenario, model_library_path=''):
     return ScenarioRunner().setup_and_run_sim(scenario, model_library_path)
 
 # I think this method is deprecated
@@ -279,17 +279,20 @@ def get_params(scenario, model_library_path):
 
 def setup_scenario_classes(scenario, model_library_path):
     print(model_library_path)
-    sys.path.insert(0, model_library_path)
+    if len(model_library_path) > 0:
+        sys.path.insert(0, model_library_path)
 
     for info in scenario["model_instances"]:
-        if 'model_class_meta' not in info:
-            raise Exception("model instance does not have a model_class_meta")
-        
-        if 'key' not in info['model_class_meta']:
-            raise Exception("model_class_meta does not have a key")
+        if 'model_class_meta' in info:
 
-        key = info['model_class_meta']['key']
-        info["model_class"] = getattr(importlib.import_module(key), key)
+            # if 'model_class_meta' not in info:
+            #     raise Exception("model instance does not have a model_class_meta")
+            
+            if 'key' not in info['model_class_meta']:
+                raise Exception("model_class_meta does not have a key")
+
+            key = info['model_class_meta']['key']
+            info["model_class"] = getattr(importlib.import_module(key), key)
 
 
 def setup_global_sim_params(scenario):
@@ -399,10 +402,15 @@ def create_tree(model_instance_map):
 
 def add_child_to_tree(key, model_instance_map, tree):
     for info in model_instance_map.values():
+        if "initial_parent_key" not in info or info['initial_parent_key'] is None:
+            info['initial_parent_key'] = 'root'
         if info["initial_parent_key"] == key:
+            print("inside")
+            print(key)
             # treelib needs the root to not have any parents
             parent = info["initial_parent_key"]
             if parent == 'root':
                 parent = None
+            print('parent')
             tree.create_node(tag=info["key"], identifier=info["key"], parent=parent)
             add_child_to_tree(info["key"], model_instance_map, tree)
