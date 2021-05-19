@@ -5,9 +5,9 @@ export function makeUUID() {
   );
 }
 
-export function updateUrlWithId(id) {
+export function updateUrlWithTemplate(id) {
   const url = new URL(window.location.href);
-  url.searchParams.set('id', id);
+  url.searchParams.set('template', id);
 
   const newurl =
     url.protocol +

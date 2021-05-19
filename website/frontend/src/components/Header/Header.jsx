@@ -31,13 +31,16 @@ class Header extends Component {
     addCard();
   };
 
-  clickedSaveScenarioView = () => {
-    const { saveScenarioView } = this.props;
-    // TODO: Add proper error handling for saving scenario
-    saveScenarioView();
+  clickedSaveTemplate = () => {
+
+    // TODO: If current template is blank then save as instead
+
+    const { saveCurrentTemplate } = this.props;
+    // TODO: Add proper error handling for saving template
+    saveCurrentTemplate();
 
     AppToaster.show({
-      message: 'Saved scenario',
+      message: 'Saved template',
       intent: Intent.SUCCESS,
       icon: 'tick',
     });
@@ -48,8 +51,6 @@ class Header extends Component {
     console.log('switch main view type');
     switchMainViewType();
   };
-
-  clickedLoadScenarioView = () => { };
 
   handleOpen = () => {
     this.setState({ isOpen: true });
@@ -83,9 +84,9 @@ class Header extends Component {
   };
 
   fetchData = async (newItem) => {
-    const { loadScenarioView, runSim } = this.props;
+    const { loadTemplate, runSim } = this.props;
     const { id } = newItem;
-    await loadScenarioView(id);
+    await loadTemplate(id);
     await runSim();
   };
 
@@ -180,7 +181,7 @@ class Header extends Component {
         <Dialog
           icon="info-sign"
           onClose={this.handleClose}
-          title="Save New View"
+          title="Save New Template"
           autoFocus={true}
           canEscapeKeyClose={true}
           canOutsideClickClose={true}
