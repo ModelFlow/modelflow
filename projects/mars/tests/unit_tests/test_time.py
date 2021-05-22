@@ -1,10 +1,10 @@
 import pytest
-from models.time import Time
+from model_classes.Time import Time
 from modelflow.testing import ModelUnitTest
 from modelflow.modelflow import SimulationError
 
 
-class TestHuman(ModelUnitTest):
+class TestTime(ModelUnitTest):
     def setup_method(self):
         # This will be called before every test
         self.setup_model(Time(), states=dict(

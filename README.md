@@ -19,11 +19,11 @@ pip install -r requirements.txt
 ## Running an example in terminal
 To run the Mars default baseline scenario example:
 ```
-cd examples/mars
+cd projects/mars
 python main.py
 ```
 
-## Running in website locally
+## Running the website locally
 (This currently is hard coded for the Mars example) In one terminal window after installing [npm](https://nodejs.org/en/) run:
 ```
 cd website/frontend
@@ -33,8 +33,8 @@ npm start
 In a second terminal window after following steps under installation, run:
 ```
 source venv/bin/activate
-cd modelflow/website/backend
-python run_server.py
+cd modelflow/website/backend/webserver
+python python manage.py runserver
 ```
 In a browser open http://localhost:3000
 

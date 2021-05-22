@@ -1,5 +1,5 @@
 import pytest
-from models.human import Human
+from model_classes.Human import Human
 from modelflow.testing import ModelUnitTest
 from modelflow.modelflow import SimulationError
 

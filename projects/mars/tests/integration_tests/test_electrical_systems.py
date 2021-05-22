@@ -1,15 +1,14 @@
 import copy
 import pytest
 import pandas as pd
-from models.battery_and_inverter import BatteryAndInverter
-from models.time import Time
-from models.starship import Starship
-from models.mars_surface import MarsSurface
-from models.mass_simulator import MassSimulator
-from models.interplanetary_space import InterplanetarySpace
-from models.starship_integrated_pv import StarshipIntegratedPV
-from models.surface_pv import SurfacePV
-from models.grid_simulator import GridSimulator
+from model_classes.BatteryAndInverter import BatteryAndInverter
+from model_classes.Time import Time
+from model_classes.Starship import Starship
+from model_classes.MarsSurface import MarsSurface
+from model_classes.InterplanetarySpace import InterplanetarySpace
+from model_classes.StarshipIntegratedPV import StarshipIntegratedPV
+from model_classes.SurfacePV import SurfacePV
+from model_classes.GridSimulator import GridSimulator
 
 from modelflow.modelflow import run_scenario
 

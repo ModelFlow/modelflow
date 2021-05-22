@@ -1,9 +1,9 @@
 import pytest
-from models.time import Time
-from models.starship import Starship
-from models.mars_surface import MarsSurface
-from models.mass_simulator import MassSimulator
-from models.interplanetary_space import InterplanetarySpace
+from model_classes.Time import Time
+from model_classes.Starship import Starship
+from model_classes.MarsSurface import MarsSurface
+from model_classes.MassSimulator import MassSimulator
+from model_classes.InterplanetarySpace import InterplanetarySpace
 from modelflow.modelflow import run_scenario
 
 

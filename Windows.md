@@ -10,7 +10,7 @@ pip install -r requirements.txt
 cd .\venv\Scripts\
 .\activate
 cd ..\..
-cd .\examples\mars
+cd .\projects\mars
 python .\main.py
 python -m pytest
 
@@ -19,8 +19,8 @@ python -m pytest
 cd .\venv\Scripts\
 .\activate
 cd ..\..
-cd .\website\backend\
-python .\run_server.py
+cd .\website\backend\webserver
+python .\manage.py runserver
 
 # To run frontend
 # In a separate window (I was using VS Code)
