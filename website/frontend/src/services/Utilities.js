@@ -5,9 +5,9 @@ export function makeUUID() {
   );
 }
 
-export function updateUrlWithId(id) {
+export function updateUrlWithTemplate(id) {
   const url = new URL(window.location.href);
-  url.searchParams.set('id', id);
+  url.searchParams.set('template', id);
 
   const newurl =
     url.protocol +
@@ -32,7 +32,7 @@ export function appendItem(array, item) {
   return newArray;
 }
 
-export function removeItem(array, idx) {
+export function removeIdx(array, idx) {
   const newArray = array.slice();
   newArray.splice(idx, 1);
   return newArray;

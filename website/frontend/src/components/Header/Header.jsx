@@ -13,6 +13,7 @@ import {
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import { AppToaster } from '../Toaster.jsx';
+import { newBlankTemplate } from '../../state/actions/templates';
 
 class Header extends Component {
   state = {
@@ -21,8 +22,8 @@ class Header extends Component {
   };
 
   componentDidMount() {
-    const { getScenarioViewsList } = this.props;
-    getScenarioViewsList();
+    const { getTemplatesForCurrentProject } = this.props;
+    getTemplatesForCurrentProject();
   }
 
   clickedAddCard = () => {
@@ -30,13 +31,16 @@ class Header extends Component {
     addCard();
   };
 
-  clickedSaveScenarioView = () => {
-    const { saveScenarioView } = this.props;
-    // TODO: Add proper error handling for saving scenario
-    saveScenarioView();
+  clickedSaveTemplate = () => {
+
+    // TODO: If current template is blank then save as instead
+
+    const { saveCurrentTemplate } = this.props;
+    // TODO: Add proper error handling for saving template
+    saveCurrentTemplate();
 
     AppToaster.show({
-      message: 'Saved scenario',
+      message: 'Saved template',
       intent: Intent.SUCCESS,
       icon: 'tick',
     });
@@ -44,11 +48,9 @@ class Header extends Component {
 
   clickedSwitchFlowOrResults = () => {
     const { switchMainViewType } = this.props;
-    console.log("switch main view type")
+    console.log('switch main view type');
     switchMainViewType();
   };
-
-  clickedLoadScenarioView = () => {};
 
   handleOpen = () => {
     this.setState({ isOpen: true });
@@ -58,13 +60,16 @@ class Header extends Component {
     this.setState({ isOpen: false });
   };
 
-  handleNewScenarioView = () => {
-    const { newScenarioView } = this.props;
+  handleSaveAsTemplate = () => {
+    const { saveAsCurrentTemplate } = this.props;
     const { newName } = this.state;
-    newScenarioView(newName);
+
+    // TODO: Check uniqueness of name of template
+    // TODO: Change to blocking after network call
+    saveAsCurrentTemplate(newName);
     this.setState({ newName: '', isOpen: false });
     AppToaster.show({
-      message: 'Created new scenario',
+      message: `Saved new template: ${newName}`,
       intent: Intent.SUCCESS,
       icon: 'tick',
     });
@@ -79,14 +84,14 @@ class Header extends Component {
   };
 
   fetchData = async (newItem) => {
-    const { loadScenarioView, runSim } = this.props;
+    const { loadTemplate, runSim } = this.props;
     const { id } = newItem;
-    await loadScenarioView(id);
+    await loadTemplate(id);
     await runSim();
   };
 
   filterItem = (query, item) =>
-    item.title.toLowerCase().indexOf(query.toLowerCase()) >= 0;
+    item.name.toLowerCase().indexOf(query.toLowerCase()) >= 0;
 
   renderItem = (item, { handleClick, modifiers }) => {
     if (!modifiers.matchesPredicate) {
@@ -97,14 +102,19 @@ class Header extends Component {
         active={modifiers.active}
         key={item.id}
         onClick={handleClick}
-        text={item.title}
+        text={item.name}
       />
     );
   };
 
   render() {
-    const { scenarioViews, scenarioViewMeta, mainViewType } = this.props;
-    const { title } = scenarioViewMeta;
+    const {
+      templates,
+      currentProjectMetadata,
+      currentScenarioMetadata,
+      currentTemplateMetadata,
+      mainViewType,
+    } = this.props;
     const { isOpen, newName } = this.state;
     return (
       <>
@@ -112,12 +122,17 @@ class Header extends Component {
           <img
             className="logo"
             alt="logo"
-            src="model_flow_horizontal.png"
+            src="/model_flow_horizontal.png"
             height="30"
           />
-          <div className="titleSection">
-            <span className="bp3-heading scenario">Mars Baseline Scenario</span>
-            <span className="bp3-text-muted scenarioViewTitle">{title}</span>
+          <div className="nameSection">
+            <span className="bp3-heading">{currentProjectMetadata.name}</span>
+            {' > '}
+            <span className="bp3-heading">{currentScenarioMetadata.name}</span>
+            {' | '}
+            <span className="bp3-text-muted">
+              {currentTemplateMetadata.name}
+            </span>
           </div>
           <Button
             className="heading-button"
@@ -125,18 +140,21 @@ class Header extends Component {
             text="Add Card"
             onClick={this.clickedAddCard}
           />
-          <Button className="new-button" onClick={this.handleOpen}>
-            New
-          </Button>
+          <Button
+            className="save-button"
+            icon="floppy-disk"
+            text="Save As"
+            onClick={this.handleOpen}
+          />
           <Button
             className="save-button"
             icon="floppy-disk"
             text="Save"
-            onClick={this.clickedSaveScenarioView}
+            onClick={this.clickedSaveTemplate}
           />
           <Select
             className="load-button"
-            items={scenarioViews}
+            items={templates}
             activeItem={''}
             noResults={<MenuItem disabled text="No results." />}
             onItemSelect={this.handleValueChange}
@@ -146,7 +164,7 @@ class Header extends Component {
             <Button
               icon="folder-open"
               text="Load"
-              onClick={this.clickedLoadScenarioView}
+              onClick={this.clickedLoadTemplate}
             />
           </Select>
 
@@ -163,7 +181,7 @@ class Header extends Component {
         <Dialog
           icon="info-sign"
           onClose={this.handleClose}
-          title="Save New View"
+          title="Save New Template"
           autoFocus={true}
           canEscapeKeyClose={true}
           canOutsideClickClose={true}
@@ -172,7 +190,7 @@ class Header extends Component {
           usePortal={true}
         >
           <div className={Classes.DIALOG_BODY}>
-            <p>Name your scenario view:</p>
+            <p>Name your template:</p>
             <input
               className="bp3-input"
               type="text"
@@ -190,7 +208,7 @@ class Header extends Component {
               </Tooltip>
               <AnchorButton
                 intent={Intent.PRIMARY}
-                onClick={this.handleNewScenarioView}
+                onClick={this.handleSaveAsTemplate}
                 target="_blank"
               >
                 Create
@@ -204,18 +222,21 @@ class Header extends Component {
 }
 
 const mapDispatchToProps = {
-  addCard: actions.resultViews.addCard,
-  newScenarioView: actions.scenarioViews.newScenarioView,
-  saveScenarioView: actions.scenarioViews.saveScenarioView,
-  loadScenarioView: actions.scenarioViews.loadScenarioView,
-  getScenarioViewsList: actions.scenarioViews.getScenarioViewsList,
+  addCard: actions.resultsView.addCard,
+  saveCurrentTemplate: actions.templates.saveCurrentTemplate,
+  saveAsCurrentTemplate: actions.templates.saveAsCurrentTemplate,
+  loadTemplate: actions.templates.loadTemplate,
+  getTemplatesForCurrentProject:
+    actions.templates.getTemplatesForCurrentProject,
   switchMainViewType: actions.common.switchMainViewType,
   runSim: actions.sim.runSim,
 };
 
 const mapStateToProps = (state) => ({
-  scenarioViews: state.scenarioViews.scenarioViews,
-  scenarioViewMeta: state.scenarioViews.scenarioViewMeta,
+  templates: state.templates.templates,
+  currentProjectMetadata: state.projects.currentProjectMetadata,
+  currentTemplateMetadata: state.templates.currentTemplateMetadata,
+  currentScenarioMetadata: state.scenarios.currentScenarioMetadata,
   mainViewType: state.common.mainViewType,
 });
 

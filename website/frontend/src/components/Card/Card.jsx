@@ -33,7 +33,7 @@ class Card extends Component {
   // xScale = [];
 
   scrolledIn = () => {
-    const { setSelectedUUID, uuid, selectedUUID } = this.props;
+    const { setSelectedUUID, uuid } = this.props;
     setSelectedUUID(uuid);
   };
 
@@ -44,7 +44,7 @@ class Card extends Component {
     if (target && target.getAttribute('class') === 'dragcover') {
       return;
     }
-    const { setSelectedUUID, selectedUUID } = this.props;
+    const { setSelectedUUID } = this.props;
     setSelectedUUID('');
   };
 
@@ -337,14 +337,13 @@ class Card extends Component {
               .length > 0
           ) {
             // Printing for dev purposes
-            console.log(
-              '👀 ' +
-              selectedOutputKey +
-              ' has ' +
-              Object.keys(output_states[selectedOutputKey].componentDeltas)
-                .length +
-              ' component deltas',
-            );
+            // console.log(
+            //   selectedOutputKey +
+            //   ' has ' +
+            //   Object.keys(output_states[selectedOutputKey].componentDeltas)
+            //     .length +
+            //   ' component deltas',
+            // );
             console.log('AVAILABLE COMPONENT DELTAS: ');
             Object.entries(
               output_states[selectedOutputKey].componentDeltas,
@@ -465,7 +464,7 @@ class Card extends Component {
           }}
         >
           <div className="card_header">
-            <span className="chart_title">
+            <span className="chart_name">
               {selectedOutputKey.replace('state_', '')}
             </span>
             <span
@@ -502,18 +501,18 @@ class Card extends Component {
 }
 
 const mapDispatchToProps = {
-  removeCard: actions.resultViews.removeCard,
-  updateCardOutputKey: actions.resultViews.updateCardOutputKey,
   runSim: actions.sim.runSim,
-  setXrange: actions.resultViews.setXrange,
-  setSelectedUUID: actions.resultViews.setSelectedUUID,
+  updateCardOutputKey: actions.resultsView.updateCardOutputKey,
+  removeCard: actions.resultsView.removeCard,
+  setXrange: actions.resultsView.setXrange,
+  setSelectedUUID: actions.resultsView.setSelectedUUID,
 };
 
 const mapStateToProps = (state) => ({
-  tabsContent: state.resultViews.tabsContent,
-  selectedUUID: state.resultViews.selectedUUID,
+  tabsContent: state.resultsView.tabsContent,
+  selectedUUID: state.resultsView.selectedUUID,
   results: state.sim.results,
-  xrange: state.resultViews.xrange,
+  xrange: state.resultsView.xrange,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Card);

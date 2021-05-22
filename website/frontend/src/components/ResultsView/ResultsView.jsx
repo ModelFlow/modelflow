@@ -10,7 +10,7 @@ import {
 } from '@blueprintjs/core';
 
 import React, { Component } from 'react';
-import ResultsGrid from './../ResultsGrid/ResultsGrid';
+import ResultsGrid from '../ResultsGrid/ResultsGrid';
 import { connect } from 'react-redux';
 import actions from '../../state/actions';
 import './ResultsView.css';
@@ -53,6 +53,7 @@ class ResultsView extends Component {
     const { selectedTabId, tabs, results, status } = this.props;
 
     let callout = null;
+    let statusText = ''
     if (status === 'waiting') {
       callout = (
         <Callout
@@ -85,10 +86,9 @@ class ResultsView extends Component {
         <Callout
           icon={'error'}
           intent={'danger'}
-          title={'Error'}
+          title={results.error}
           className="simStatusCallout"
         >
-          {results.error}
         </Callout>
       );
     }
@@ -125,7 +125,7 @@ class ResultsView extends Component {
                       dir="auto"
                       style={{ width: '425px', marginBottom: '10px' }}
                       onChange={(e) => this.handleTabTitleChange(tab.id, e)}
-                      value={tab.title}
+                      value={tab.name}
                     />
                     <Button
                       disabled={tabs.length === 1}
@@ -162,7 +162,7 @@ class ResultsView extends Component {
               selectedTabId={selectedTabId}
             >
               {tabs.map((tab) => {
-                return <Tab key={tab.id} id={tab.id} title={tab.title} />;
+                return <Tab key={tab.id} id={tab.id} title={tab.name} />;
               })}
             </Tabs>
           </div>
@@ -174,15 +174,15 @@ class ResultsView extends Component {
 }
 
 const mapDispatchToProps = {
-  switchTab: actions.resultViews.switchTab,
-  addTab: actions.resultViews.addTab,
-  removeTab: actions.resultViews.removeTab,
-  editTabTitle: actions.resultViews.editTabTitle,
+  switchTab: actions.resultsView.switchTab,
+  addTab: actions.resultsView.addTab,
+  removeTab: actions.resultsView.removeTab,
+  editTabTitle: actions.resultsView.editTabTitle,
 };
 
 const mapStateToProps = (state) => ({
-  selectedTabId: state.resultViews.selectedTabId,
-  tabs: state.resultViews.tabs,
+  selectedTabId: state.resultsView.selectedTabId,
+  tabs: state.resultsView.tabs,
   results: state.sim.results,
   status: state.sim.status,
 });
