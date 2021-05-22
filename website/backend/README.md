@@ -6,7 +6,7 @@ python manage.py migrate
 python manage.py runserver
 
 To seed database: 
-python manage.py import_project --path=/Users/adamraudonis/Desktop/Projects/ModelFlow/modelflow/examples/mars
+python manage.py load_mars_project
 
 To delete database:
 webserver/db.sqlite3

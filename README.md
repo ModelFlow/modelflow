@@ -7,7 +7,7 @@ Python framework and web interface for creating and sharing agent based models.
 *Simple Mars Base Example Results Visualized in the Modelflow Interface https://modelflow.io*
 
 ## Installation
-Requires python 3.6 or later. See Windows instructions at bottom.
+Requires python 3.6 or later. See [Windows.md](Windows.md) for windows specific instructions.
 ```
 cd ..
 python3 -m venv venv
@@ -34,7 +34,9 @@ In a second terminal window after following steps under installation, run:
 ```
 source venv/bin/activate
 cd modelflow/website/backend/webserver
-python python manage.py runserver
+python manage.py migrate
+python manage.py load_mars_project
+python manage.py runserver
 ```
 In a browser open http://localhost:3000
 
@@ -123,5 +125,5 @@ Defines the location hierarchy and connections between models with optional over
 - SIMOC (Mars Habitat Simulation): https://ngs.simoc.space/entry
 
 ## Notes
-See [NOTES.md](NOTES.md) for TODOs and ideas
-See [Windows.md](Windows.md) for windows specific instructions
+
+See [NOTES.md](NOTES.md) for TODOs and ideas 
