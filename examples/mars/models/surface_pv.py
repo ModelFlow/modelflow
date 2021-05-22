@@ -102,6 +102,7 @@ class SurfacePV:
         if not utils.parent_is("mars_surface"):
             states.mass = 1.7 * params.rated_pv_kw_dc_output * 1000 / states.mean_solar_irradiance / params.solar_panel_efficiency
             states.volume = 0.017 * params.rated_pv_kw_dc_output * 1000 / states.mean_solar_irradiance / params.solar_panel_efficiency
+            states.area = params.rated_pv_kw_dc_output * 1000 / states.mean_solar_irradiance / params.solar_panel_efficiency #include degradation
             return
     
         if states.status == 'packed':
@@ -112,7 +113,6 @@ class SurfacePV:
             states.deploying_hours += 1
             if states.deploying_hours > params.hours_to_deploy:
                 states.status == 'deployed'
-                states.area = params.rated_pv_kw_dc_output * 1000 / states.mean_solar_irradiance / params.solar_panel_efficiency #include degradation
 
                 instance_key = utils.get_instance_key()
                 utils.log_event(f"Surface PV instance '{instance_key}' deployed")
