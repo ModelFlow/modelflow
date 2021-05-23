@@ -4,6 +4,7 @@ const initialState = {
     name: 'No Scenario Set',
     id: 0,
   },
+  currentScenarioDefaultTemplateId: 0,
   currentScenario: {},
 };
 
@@ -19,6 +20,13 @@ export default function reduce(state = initialState, action = {}) {
       return {
         ...state,
         currentScenarioMetadata: action.currentScenarioMetadata,
+      };
+    }
+    case 'SET_CURRENT_SCENARIO_DEFAULT_TEMPLATE_ID': {
+      return {
+        ...state,
+        currentScenarioDefaultTemplateId:
+          action.currentScenarioDefaultTemplateId,
       };
     }
     case 'SET_CURRENT_SCENARIO_AND_METADATA': {

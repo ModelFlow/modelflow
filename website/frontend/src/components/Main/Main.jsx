@@ -2,17 +2,15 @@ import React, { Component } from 'react';
 import './Main.css';
 import { connect } from 'react-redux';
 import actions from '../../state/actions';
-// import AttributeInputs from '../AttributeInputs/AttributeInputs';
-// import ResultsGrid from '../ResultsGrid/ResultsGrid';
 import ResultsView from '../ResultsView/ResultsView';
 import FlowView from '../FlowView/FlowView';
 import Header from '../Header/Header';
-import { setSimStatus } from '../../state/actions/sim';
+import { updateUrlWithTemplate } from '../../services/Utilities';
 
 class Main extends Component {
   componentDidMount() {
     const url = new URL(window.location.href);
-    // TODO: If scenarioId is blank then raise exception
+    // TODO: If scenario is blank then show an exception page
     let scenarioId = url.searchParams.get('scenario') || '1';
     let templateId = url.searchParams.get('template') || '';
     this.fetchData(scenarioId, templateId);
@@ -24,14 +22,25 @@ class Main extends Component {
     // Perhaps get params will be included in the scenario view
     // await getParams();
     // TODO: don't do await for load template
-    await loadTemplate(templateId);
-    console.log('after template');
+    // TODO: Add error for invalid templates
+
     // This is just used for potential interactivity
-    const error = await loadScenario(scenarioId);
-    if (error) {
+    const info = await loadScenario(scenarioId);
+    if (info.error) {
       await setSimError('Scenario Not Found');
     } else {
-      console.log('run sim');
+      const url = new URL(window.location.href);
+      let templateId = url.searchParams.get('template') || '';
+      if (!templateId) {
+        templateId = info.default_template;
+        console.log('updating default template id');
+        updateUrlWithTemplate(templateId);
+      }
+      console.log('Loading template...');
+
+      await loadTemplate(templateId);
+
+      console.log('Running sim...');
       // Runs sim based on the model instances, attributes stored on the frontend
       // TODO: Handle changes to classes
       await runSim();
@@ -81,6 +90,8 @@ const mapDispatchToProps = {
 
 const mapStateToProps = (state) => ({
   mainViewType: state.common.mainViewType,
+  currentScenarioDefaultTemplateId:
+    state.scenarios.currentScenarioDefaultTemplateId,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Main);

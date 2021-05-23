@@ -41,7 +41,7 @@ export const saveCurrentTemplate = () => async (dispatch, getState) => {
   // const { data } =
   const templateId = getState().templates.currentTemplateMetadata.id;
   const templateName = getState().templates.currentTemplateMetadata.name;
-  const projectId = getState().templates.currentProjectMetadata.id;
+  const projectId = getState().projects.currentProjectMetadata.id;
 
   await axios.put(
     `${process.env.REACT_APP_API_URL}/rest/templates/${templateId}/?format=json`,

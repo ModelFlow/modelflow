@@ -15,17 +15,16 @@ class Project extends Component {
   render() {
     const { scenarios, currentProjectMetadata } = this.props;
     const scenarioItems = scenarios.map((scenario) => {
-      let defaultTemplateId = '';
+      let defaultTemplateParam = '';
       if (scenario.defaultTemplateId) {
-        defaultTemplateId = '&template=' + scenario.defaultTemplateId;
+        defaultTemplateParam = '&template=' + scenario.defaultTemplateId;
       }
       return (
         <li key={scenario.id}>
           {scenario.id} {/* The id is only for debugging */}
-          <a href={`/sim?scenario=${scenario.id}${defaultTemplateId}`}>
+          <a href={`/sim?scenario=${scenario.id}${defaultTemplateParam}`}>
             {scenario.name}
-          </a>{' | '}
-          <a href={`/TODO_copy/${scenario.id}`}>Duplicate</a>
+          </a>
         </li>
       );
     });
