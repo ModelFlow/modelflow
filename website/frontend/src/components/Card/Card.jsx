@@ -180,7 +180,7 @@ class Card extends Component {
     let plot_height = this.size.height * 0.87;
     this.state.plot_width = this.size.width * 0.97;
     let plot_margins = {
-      t: 60,
+      t: 10,
       b: 40,
       l: 45,
       r: 20,
@@ -255,7 +255,7 @@ class Card extends Component {
         let overall_delta_trace = {
           x: results.time,
           y: overall_delta_y,
-          name: 'CALCD DELTA',
+          name: 'Delta',
           type: 'line',
           mode: 'lines',
           line: {
@@ -270,7 +270,7 @@ class Card extends Component {
         let quantity_trace = {
           x: results.time,
           y: output_states[selectedOutputKey].data,
-          name: 'quantity',
+          name: 'Quantity',
           type: 'line',
           mode: 'lines',
           marker: { color: '#137cbd', width: 3 },
@@ -292,12 +292,6 @@ class Card extends Component {
               width: this.state.plot_width,
               height: plot_height,
               margin: plot_margins,
-              title: {
-                text: 'Quantity over mission run',
-                font: {
-                  size: 15,
-                },
-              },
               xaxis: plot_xaxis,
               yaxis: plot_yaxis,
               showlegend: false,

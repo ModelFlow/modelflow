@@ -15,3 +15,6 @@ If you made changes to the model you can run:
 python manage.py makemigrations
 python manage.py makemigrations api
 
+# How to view the REST API viewer:
+
+http://localhost:8000/rest/

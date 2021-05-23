@@ -6,8 +6,8 @@ import inspect
 import importlib
 import pathlib
 from django.core.management.base import BaseCommand
-from api.models import Project, Scenario, ModelClass, DefaultAttribute, ModelInstance, AttributeOverride
-# python manage.py seed --mode=refresh
+from api.models import Project, Scenario, ModelClass, DefaultAttribute, ModelInstance, AttributeOverride, Template
+
 
 class Command(BaseCommand):
     help = "seed database for testing and development."
@@ -29,6 +29,7 @@ def flush_db():
     AttributeOverride.objects.all().delete()
     DefaultAttribute.objects.all().delete()
     ModelClass.objects.all().delete()
+    Template.objects.all().delete()
 
 def load_mars_project(self):
 
@@ -53,6 +54,16 @@ def load_mars_project(self):
     scenarios_dir = os.path.join(project_dir, 'scenarios')
     if not os.path.exists(scenarios_dir):
         os.mkdir(scenarios_dir)
+
+    templates_dir = os.path.join(project_dir, 'templates')
+    default_template_path = os.path.join(templates_dir, 'default_template.json')
+    template_obj = None
+    with open(default_template_path, 'r') as f:
+        template_obj = Template.objects.create(
+            name='Default', 
+            json_data=json.dumps(json.load(f)), 
+            project=project
+        )
 
     # Add to the python path so we can import the classes
     print(project_dir)
@@ -129,7 +140,11 @@ def load_mars_project(self):
         print(filename)
         scenario = Scenario.objects.filter(name=name, project=project).first()
         if scenario is None:
-            scenario = Scenario.objects.create(name=name, project=project)
+            scenario = Scenario.objects.create(
+                name=name, 
+                project=project,
+                default_template=template_obj
+            )
             print(scenario.id)
         for info in scenario_json['model_instances']:
             model_class = ModelClass.objects.get(

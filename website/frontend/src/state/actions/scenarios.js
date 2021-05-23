@@ -14,6 +14,7 @@ export const loadScenario = (scenarioId) => async (dispatch) => {
   console.log('before get');
 
   let response = null;
+  let info = {};
   try {
     response = await axios.get(
       `${process.env.REACT_APP_API_URL}/rest/scenarios/${scenarioId}?format=json`,
@@ -28,6 +29,7 @@ export const loadScenario = (scenarioId) => async (dispatch) => {
       console.log(error.response.data);
       console.log(error.response.status);
       console.log(error.response.headers);
+      info.error = `Encountered: ${error.response.status}`
     } else if (error.request) {
       /*
        * The request was made but no response was received, `error.request`
@@ -35,12 +37,14 @@ export const loadScenario = (scenarioId) => async (dispatch) => {
        * of http.ClientRequest in Node.js
        */
       console.log(error.request);
+      info.error = error.request;
     } else {
       // Something happened in setting up the request and triggered an Error
       console.log('Error', error.message);
+      info.error = error.message;
     }
     console.log(error);
-    return error;
+    return info;
   }
   const { data } = response;
   const { metadata } = data;
@@ -63,12 +67,20 @@ export const loadScenario = (scenarioId) => async (dispatch) => {
   });
 
   dispatch({
+    type: 'SET_CURRENT_SCENARIO_DEFAULT_TEMPLATE_ID',
+    currentScenarioDefaultTemplateId: data.default_template,
+  });
+
+  dispatch({
     type: 'SET_CURRENT_PROJECT_METADATA',
     currentProjectMetadata: {
       name: data.project_meta.name,
       id: data.project_meta.id,
     },
   });
+
+  info.default_template = data.default_template;
+  return info;
 };
 
 export const createScenario = (name, projectId) => async (dispatch) => {
