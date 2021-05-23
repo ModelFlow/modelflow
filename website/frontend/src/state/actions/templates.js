@@ -13,13 +13,15 @@ function collectTemplateData(state) {
 
 export const saveAsCurrentTemplate = (name) => async (dispatch, getState) => {
   const state = getState();
+  const dataRequest = {
+    name,
+    json_data: JSON.stringify(collectTemplateData(state)),
+    project: state.projects.currentProjectMetadata.id,
+  };
+  console.log(dataRequest);
   const { data } = await axios.post(
     `${process.env.REACT_APP_API_URL}/rest/templates/?format.json`,
-    {
-      name,
-      json_data: JSON.stringify(collectTemplateData(state)),
-      project: state.projects.currentProjectMetadata.id,
-    },
+    dataRequest,
   );
   console.log(data);
   const { id } = data;
@@ -43,7 +45,7 @@ export const saveCurrentTemplate = () => async (dispatch, getState) => {
   const templateName = getState().templates.currentTemplateMetadata.name;
   const projectId = getState().projects.currentProjectMetadata.id;
 
-  await axios.put(
+  await axios.patch(
     `${process.env.REACT_APP_API_URL}/rest/templates/${templateId}/?format=json`,
     {
       json_data: JSON.stringify(collectTemplateData(getState())),

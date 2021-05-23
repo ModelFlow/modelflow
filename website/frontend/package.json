@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@blueprintjs/core": "^3.31.0",
+    "@blueprintjs/popover2": "^0.9.0",
     "@blueprintjs/select": "^3.13.7",
     "@emotion/core": "10.0.35",
     "@emotion/styled": "10.0.27",

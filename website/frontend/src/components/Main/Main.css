@@ -34,5 +34,6 @@
   background-color: #F5F8FA;
   border-left: 1px solid lightgray;
   padding: 0px;
+  padding-bottom: 100px;
   overflow-y: scroll;
 }

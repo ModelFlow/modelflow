@@ -3,7 +3,7 @@ import { insertItem, removeIdx } from '../../services/Utilities';
 const initialState = {
   templates: [],
   currentTemplateMetadata: {
-    name: 'No Template Set',
+    name: '',
     id: 0,
   },
 };

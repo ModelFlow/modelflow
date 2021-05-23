@@ -99,7 +99,7 @@ export const createScenario = (name, projectId) => async (dispatch) => {
 };
 
 export const hideScenario = (scenarioId) => async (dispatch) => {
-  const { data } = await axios.put(
+  const { data } = await axios.patch(
     `${process.env.REACT_APP_API_URL}/rest/scenarios/${scenarioId}?format=json`,
     {
       is_hidden: true,
@@ -113,7 +113,7 @@ export const hideScenario = (scenarioId) => async (dispatch) => {
 };
 
 export const renameScenario = (scenarioId, name) => async (dispatch) => {
-  const { data } = await axios.put(
+  const { data } = await axios.patch(
     `${process.env.REACT_APP_API_URL}/rest/scenarios/${scenarioId}?format=json`,
     {
       name,
@@ -125,4 +125,45 @@ export const renameScenario = (scenarioId, name) => async (dispatch) => {
   //   type: 'RENAME_SCENARIO',
   //   projectId,
   // });
+};
+
+export const setCurrentTemplateAsDefaultForCurrentScenario = () => async (dispatch, getState) => {
+  const templateId = getState().templates.currentTemplateMetadata.id;
+  const scenarioId = getState().scenarios.currentScenarioMetadata.id;
+
+  console.log(`Template Id: ${templateId} Scenario Id: ${scenarioId}`);
+  // TODO: Make service that handles axios errors better
+  let response = null;
+  try {
+    response = await axios.patch(
+      `${process.env.REACT_APP_API_URL}/rest/scenarios/${scenarioId}/?format=json`,
+      {
+        default_template: templateId,
+      },
+    );
+  } catch (error) {
+    // Error 😨
+    if (error.response) {
+      /*
+       * The request was made and the server responded with a
+       * status code that falls out of the range of 2xx
+       */
+      console.log(error.response.data);
+      console.log(error.response.status);
+      console.log(error.response.headers);
+    } else if (error.request) {
+      /*
+       * The request was made but no response was received, `error.request`
+       * is an instance of XMLHttpRequest in the browser and an instance
+       * of http.ClientRequest in Node.js
+       */
+      console.log(error.request);
+    } else {
+      // Something happened in setting up the request and triggered an Error
+      console.log('Error', error.message);
+    }
+    console.log(error);
+  }
+
+  // TODO: use result from status here
 };

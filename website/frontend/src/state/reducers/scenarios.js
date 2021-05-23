@@ -1,7 +1,7 @@
 const initialState = {
   scenarios: [],
   currentScenarioMetadata: {
-    name: 'No Scenario Set',
+    name: '',
     id: 0,
   },
   currentScenarioDefaultTemplateId: 0,
