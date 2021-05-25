@@ -55,7 +55,7 @@ class ResultsView extends Component {
 
     return (
       <>
-        <div className="tabHeader">
+        <div style={{ marginTop: '5px' }}>
           <Button
             text="Edit Tabs"
             onClick={this.handleOpen}

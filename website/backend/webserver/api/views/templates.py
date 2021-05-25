@@ -1,6 +1,8 @@
 from django.http import JsonResponse
 from ..models import Template, Scenario
 
+# NOTE: I think this can be deleted and be replaced by django rest framework
+
 def get_templates_metadata(request):
     """
     Get the templates for a project from a lookup on the scenario id. This 

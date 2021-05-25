@@ -237,9 +237,9 @@ class Card extends Component {
         }
 
         // HH: Some printing for dev purposes
-        console.log(
-          '📈 CURRENTLY VIZ-ING: ' + output_states[selectedOutputKey].label,
-        );
+        // console.log(
+        //   '📈 CURRENTLY VIZ-ING: ' + output_states[selectedOutputKey].label,
+        // );
 
         // Create OVERALL delta line on graph, helpful for viz purposes (prolly temp, NOT made from delta components)
         let overall_delta_y = new Array(results.time.length - 2);
@@ -441,6 +441,22 @@ class Card extends Component {
         );
       }
     }
+
+    // TODO: Bring back delta button
+    const deltaBreakdownButton = null;
+    /*
+                <span
+              style={{
+                float: 'right',
+                marginTop: '5px',
+                marginLeft: '20px',
+                display: 'inline',
+              }}
+            >
+              Delta breakdown: {deltaPlotButton}
+            </span>
+    */
+
     return (
       <>
         <div
@@ -462,25 +478,16 @@ class Card extends Component {
               {selectedOutputKey.replace('state_', '')}
             </span>
             <span
-              style={{ float: 'right', marginTop: '5px', marginLeft: '20px' }}
+              style={{ float: 'right', marginTop: '5px', marginLeft: '5px', marginRight: '5px' }}
             >
               {deleteButton}
             </span>
             <span
-              style={{ float: 'right', marginTop: '5px', marginLeft: '20px' }}
+              style={{ float: 'right', marginTop: '5px', marginLeft: '0px' }}
             >
               {selector}
             </span>
-            <span
-              style={{
-                float: 'right',
-                marginTop: '5px',
-                marginLeft: '20px',
-                display: 'inline',
-              }}
-            >
-              Delta breakdown: {deltaPlotButton}
-            </span>
+            {deltaBreakdownButton}
           </div>
           <div style={{ display: 'table-row' }}>
             {plot}

@@ -160,7 +160,6 @@ class ScenarioRunner():
         self.key_lookup_cache = {}
 
     def setup_and_run_sim(self, scenario, model_library_path='', outputs_filter=[]):
-        print("inside run sim")
         # Add the unique from the model_instances map to the values
         # if the format is a dictionary. Note on the web the format is a list.
         if isinstance(scenario['model_instances'], dict):
@@ -172,9 +171,9 @@ class ScenarioRunner():
         setup_scenario_classes(scenario, model_library_path)
 
         max_steps = setup_global_sim_params(scenario)
+        print(f'using max steps: {max_steps}')
 
         model_instance_map = {x['key']: x for x in scenario['model_instances']}
-        print(model_instance_map)
 
         tree = create_tree(model_instance_map)
         print(tree)
@@ -278,7 +277,6 @@ def get_params(scenario, model_library_path):
 
 
 def setup_scenario_classes(scenario, model_library_path):
-    print(model_library_path)
     if len(model_library_path) > 0:
         sys.path.insert(0, model_library_path)
 
@@ -297,9 +295,15 @@ def setup_scenario_classes(scenario, model_library_path):
 
 def setup_global_sim_params(scenario):
     max_steps = DEFAULT_MAX_STEPS
-    if "simulation_params" in scenario:
-        if "max_num_steps" in scenario["simulation_params"]:
-            max_steps = scenario["simulation_params"]["max_num_steps"]
+    if "max_steps" in scenario:
+        try:
+            max_steps = int(scenario['max_steps'])
+        except:
+            pass
+
+        if max_steps < 2:
+            max_steps = DEFAULT_MAX_STEPS
+
     return max_steps
 
 
@@ -405,12 +409,10 @@ def add_child_to_tree(key, model_instance_map, tree):
         if "initial_parent_key" not in info or info['initial_parent_key'] is None:
             info['initial_parent_key'] = 'root'
         if info["initial_parent_key"] == key:
-            print("inside")
-            print(key)
             # treelib needs the root to not have any parents
             parent = info["initial_parent_key"]
             if parent == 'root':
                 parent = None
-            print('parent')
+
             tree.create_node(tag=info["key"], identifier=info["key"], parent=parent)
             add_child_to_tree(info["key"], model_instance_map, tree)

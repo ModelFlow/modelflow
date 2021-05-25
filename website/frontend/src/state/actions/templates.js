@@ -1,5 +1,9 @@
-import axios from 'axios';
-import { updateUrlWithTemplate } from '../../services/Utilities';
+import {
+  updateUrlParam,
+  apiGET,
+  apiPATCH,
+  apiPOST,
+} from '../../services/Utilities';
 
 function collectTemplateData(state) {
   const { resultsView } = state;
@@ -19,13 +23,12 @@ export const saveAsCurrentTemplate = (name) => async (dispatch, getState) => {
     project: state.projects.currentProjectMetadata.id,
   };
   console.log(dataRequest);
-  const { data } = await axios.post(
-    `${process.env.REACT_APP_API_URL}/rest/templates/?format.json`,
-    dataRequest,
-  );
+  const data = await apiPOST('/rest/templates/?format.json', dataRequest);
+
   console.log(data);
   const { id } = data;
-  updateUrlWithTemplate(id);
+  updateUrlParam('template', id);
+
   dispatch({
     type: 'SET_CURRENT_TEMPLATE_METADATA',
     id,
@@ -40,19 +43,11 @@ export const saveAsCurrentTemplate = (name) => async (dispatch, getState) => {
 };
 
 export const saveCurrentTemplate = () => async (dispatch, getState) => {
-  // const { data } =
   const templateId = getState().templates.currentTemplateMetadata.id;
-  const templateName = getState().templates.currentTemplateMetadata.name;
-  const projectId = getState().projects.currentProjectMetadata.id;
+  const data = await apiPATCH(`/rest/templates/${templateId}/?format=json`, {
+    json_data: JSON.stringify(collectTemplateData(getState())),
+  });
 
-  await axios.patch(
-    `${process.env.REACT_APP_API_URL}/rest/templates/${templateId}/?format=json`,
-    {
-      json_data: JSON.stringify(collectTemplateData(getState())),
-      project: projectId,
-      name: templateName,
-    },
-  );
   // TODO: use result from status here
 };
 
@@ -61,10 +56,7 @@ export const loadTemplate = (id) => async (dispatch) => {
     return;
   }
 
-  const { data } = await axios.get(
-    `${process.env.REACT_APP_API_URL}/rest/templates/${id}/?format=json`,
-  );
-
+  const data = await apiGET(`/rest/templates/${id}/?format=json`);
   console.log(data);
 
   const jsonData = JSON.parse(data.json_data);
@@ -96,15 +88,15 @@ export const loadTemplate = (id) => async (dispatch) => {
     name: data.name,
   });
 
-  updateUrlWithTemplate(id);
+  updateUrlParam('template', id);
 };
 
 export const getTemplatesForCurrentProject = () => async (dispatch) => {
   const url = new URL(window.location.href);
   let scenarioId = url.searchParams.get('scenario') || '1';
-  console.log('before get templates for current project');
-  const { data } = await axios.get(
-    `${process.env.REACT_APP_API_URL}/api/get_templates_metadata?scenario_id=${scenarioId}`,
+
+  const data = await apiGET(
+    `/api/get_templates_metadata?scenario_id=${scenarioId}`,
   );
   console.log('after get current templates');
   console.log(data);

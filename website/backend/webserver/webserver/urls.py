@@ -124,7 +124,7 @@ class ScenarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Scenario
-        fields = ['id', 'name', 'user', 'created_at', 'project_meta','default_template', 'model_instances']
+        fields = ['id', 'name', 'user', 'created_at', 'project_meta','default_template', 'model_instances', 'max_steps']
 
     def get_project_meta(self, obj):
         return ProjectSerializer(obj.project, context={'request': None}).data
