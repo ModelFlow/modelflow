@@ -4,27 +4,43 @@ import { connect } from 'react-redux';
 import actions from '../../state/actions';
 import {
   AnchorButton,
+  ButtonGroup,
   Button,
   Classes,
   Dialog,
   Intent,
   Tooltip,
   MenuItem,
+  Navbar,
+  NavbarDivider,
+  NavbarGroup,
+  NavbarHeading,
+  Alignment,
+  Menu,
+  MenuDivider,
 } from '@blueprintjs/core';
 import { Select } from '@blueprintjs/select';
 import { AppToaster } from '../Toaster.jsx';
-import { newBlankTemplate } from '../../state/actions/templates';
+
+import {
+  Popover2SharedProps,
+  Placement,
+  PlacementOptions,
+  Popover2,
+  Popover2InteractionKind,
+  StrictModifierNames,
+} from '@blueprintjs/popover2';
 
 class Header extends Component {
   state = {
-    isOpen: false,
-    newName: '',
+    newTemplateDialogIsOpen: false,
+    newScenarioDialogIsOpen: false,
+    newTemplateName: '',
+    newScenarioName: '',
   };
 
-  componentDidMount() {
-    const { getTemplatesForCurrentProject } = this.props;
-    getTemplatesForCurrentProject();
-  }
+  // componentDidMount() {
+  // }
 
   clickedAddCard = () => {
     const { addCard } = this.props;
@@ -32,7 +48,6 @@ class Header extends Component {
   };
 
   clickedSaveTemplate = () => {
-
     // TODO: If current template is blank then save as instead
 
     const { saveCurrentTemplate } = this.props;
@@ -46,40 +61,96 @@ class Header extends Component {
     });
   };
 
-  clickedSwitchFlowOrResults = () => {
-    const { switchMainViewType } = this.props;
-    console.log('switch main view type');
-    switchMainViewType();
-  };
-
-  handleOpen = () => {
-    this.setState({ isOpen: true });
-  };
-
-  handleClose = () => {
-    this.setState({ isOpen: false });
-  };
-
   handleSaveAsTemplate = () => {
     const { saveAsCurrentTemplate } = this.props;
-    const { newName } = this.state;
+    const { newTemplateName } = this.state;
 
     // TODO: Check uniqueness of name of template
     // TODO: Change to blocking after network call
-    saveAsCurrentTemplate(newName);
-    this.setState({ newName: '', isOpen: false });
+    saveAsCurrentTemplate(newTemplateName);
+
+    this.setState({ newTemplateName: '', newTemplateDialogIsOpen: false });
     AppToaster.show({
-      message: `Saved new template: ${newName}`,
+      message: `Saved new template: ${newTemplateName}`,
       intent: Intent.SUCCESS,
       icon: 'tick',
     });
   };
 
-  handleNewNameInput = (e) => {
-    this.setState({ newName: e.target.value });
+  clickedSaveScenario = () => {
+    // TODO: If current template is blank then save as instead
+
+    const { saveCurrentScenario } = this.props;
+    // TODO: Add proper error handling for saving template
+    saveCurrentScenario();
+
+    AppToaster.show({
+      message: 'Saved scenario',
+      intent: Intent.SUCCESS,
+      icon: 'tick',
+    });
   };
 
-  handleValueChange = (newItem) => {
+  handleSaveAsScenario = () => {
+    const { saveAsCurrentScenario } = this.props;
+    const { newScenarioName } = this.state;
+
+    saveAsCurrentScenario(newScenarioName);
+
+    this.setState({ newScenarioName: '', newScenarioDialogIsOpen: false });
+    AppToaster.show({
+      message: `Saved new scenario: ${newScenarioName}`,
+      intent: Intent.SUCCESS,
+      icon: 'tick',
+    });
+  };
+
+  clickedSetDefaultTemplate = () => {
+    // TODO: If current template is blank then save as instead
+
+    const { setCurrentTemplateAsDefaultForCurrentScenario } = this.props;
+    // TODO: Add proper error handling for saving template
+    setCurrentTemplateAsDefaultForCurrentScenario();
+
+    AppToaster.show({
+      message: 'Set New Default Template for Scenario',
+      intent: Intent.SUCCESS,
+      icon: 'tick',
+    });
+  };
+
+  clickedSwitchFlowOrResults = () => {
+    // TODO: Make working again
+    const { switchMainViewType } = this.props;
+    console.log('switch main view type');
+    switchMainViewType();
+  };
+
+  handleNewTemplateOpen = () => {
+    this.setState({ newTemplateDialogIsOpen: true });
+  };
+
+  handleNewTemplateClose = () => {
+    this.setState({ newTemplateDialogIsOpen: false });
+  };
+
+  handleNewTemplateNameInput = (e) => {
+    this.setState({ newTemplateName: e.target.value });
+  };
+
+  handleNewScenarioOpen = () => {
+    this.setState({ newScenarioDialogIsOpen: true });
+  };
+
+  handleNewScenarioClose = () => {
+    this.setState({ newScenarioDialogIsOpen: false });
+  };
+
+  handleNewScenarioNameInput = (e) => {
+    this.setState({ newScenarioName: e.target.value });
+  };
+
+  handleSelectTemplateMenuItem = (newItem) => {
     this.fetchData(newItem);
   };
 
@@ -90,10 +161,21 @@ class Header extends Component {
     await runSim();
   };
 
-  filterItem = (query, item) =>
+  handleSelectScenarioMenuItem = (newItem) => {
+    this.fetchScenario(newItem);
+  };
+
+  fetchScenario = async (newItem) => {
+    const { loadScenario, runSim } = this.props;
+    const { id } = newItem;
+    await loadScenario(id);
+    await runSim();
+  };
+
+  filterMenuItem = (query, item) =>
     item.name.toLowerCase().indexOf(query.toLowerCase()) >= 0;
 
-  renderItem = (item, { handleClick, modifiers }) => {
+  renderMenuItem = (item, { handleClick, modifiers }) => {
     if (!modifiers.matchesPredicate) {
       return null;
     }
@@ -110,134 +192,286 @@ class Header extends Component {
   render() {
     const {
       templates,
+      scenarios,
       currentProjectMetadata,
       currentScenarioMetadata,
       currentTemplateMetadata,
-      mainViewType,
+      // mainViewType,
+      sim,
     } = this.props;
-    const { isOpen, newName } = this.state;
-    return (
-      <>
-        <div className="global-header">
-          <img
-            className="logo"
-            alt="logo"
-            src="/model_flow_horizontal.png"
-            height="30"
-          />
-          <div className="nameSection">
-            <span className="bp3-heading">{currentProjectMetadata.name}</span>
-            {' > '}
-            <span className="bp3-heading">{currentScenarioMetadata.name}</span>
-            {' | '}
-            <span className="bp3-text-muted">
-              {currentTemplateMetadata.name}
-            </span>
-          </div>
-          <Button
-            className="heading-button"
-            icon="add"
-            text="Add Card"
-            onClick={this.clickedAddCard}
-          />
-          <Button
-            className="save-button"
-            icon="floppy-disk"
-            text="Save As"
-            onClick={this.handleOpen}
-          />
-          <Button
-            className="save-button"
-            icon="floppy-disk"
-            text="Save"
-            onClick={this.clickedSaveTemplate}
-          />
-          <Select
-            className="load-button"
-            items={templates}
-            activeItem={''}
-            noResults={<MenuItem disabled text="No results." />}
-            onItemSelect={this.handleValueChange}
-            itemRenderer={this.renderItem}
-            itemPredicate={this.filterItem}
-          >
-            <Button
-              icon="folder-open"
-              text="Load"
-              onClick={this.clickedLoadTemplate}
-            />
-          </Select>
+    const {
+      newTemplateDialogIsOpen,
+      newScenarioDialogIsOpen,
+      newTemplateName,
+      newScenarioName,
+    } = this.state;
 
-          <Button
-            className="flow-results-switch"
-            icon={
-              mainViewType === 'flow' ? 'timeline-line-chart' : 'data-lineage'
-            }
-            text={mainViewType === 'flow' ? 'Model' : 'Flow'}
-            onClick={this.clickedSwitchFlowOrResults}
+    console.log('the render function for header:');
+    console.log(scenarios);
+
+    const scenarioSaveMenu = (
+      <Menu>
+        <MenuItem
+          icon="floppy-disk"
+          text="Save (Overwrite)"
+          onClick={this.clickedSaveScenario}
+        />
+        <MenuItem
+          icon="floppy-disk"
+          text="Save As (Duplicate)"
+          onClick={this.handleNewScenarioOpen}
+        />
+      </Menu>
+    );
+
+    const templateSaveMenu = (
+      <Menu>
+        <MenuItem
+          icon="floppy-disk"
+          text="Save (Overwrite)"
+          onClick={this.clickedSaveTemplate}
+        />
+        <MenuItem
+          icon="floppy-disk"
+          text="Save As (Duplicate)"
+          onClick={this.handleNewTemplateOpen}
+        />
+        <MenuItem
+          text="Set as default"
+          onClick={this.clickedSetDefaultTemplate}
+        />
+      </Menu>
+    );
+
+    const templateSaveAsDialog = (
+      <Dialog
+        icon="info-sign"
+        onClose={this.handleNewTemplateClose}
+        title="Save New Template"
+        autoFocus={true}
+        canEscapeKeyClose={true}
+        canOutsideClickClose={true}
+        enforceFocus={false}
+        isOpen={newTemplateDialogIsOpen}
+        usePortal={true}
+      >
+        <div className={Classes.DIALOG_BODY}>
+          <p>Name your template:</p>
+          <input
+            className="bp3-input"
+            type="text"
+            placeholder="name"
+            dir="auto"
+            style={{ width: '100%' }}
+            onChange={this.handleNewTemplateNameInput}
+            value={newTemplateName}
           />
         </div>
+        <div className={Classes.DIALOG_FOOTER}>
+          <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+            <Tooltip content="This button is hooked up to close the dialog.">
+              <Button onClick={this.handleNewTemplateClose}>Cancel</Button>
+            </Tooltip>
+            <AnchorButton
+              intent={Intent.PRIMARY}
+              onClick={this.handleSaveAsTemplate}
+              target="_blank"
+            >
+              Create
+            </AnchorButton>
+          </div>
+        </div>
+      </Dialog>
+    );
 
-        <Dialog
-          icon="info-sign"
-          onClose={this.handleClose}
-          title="Save New Template"
-          autoFocus={true}
-          canEscapeKeyClose={true}
-          canOutsideClickClose={true}
-          enforceFocus={false}
-          isOpen={isOpen}
-          usePortal={true}
-        >
-          <div className={Classes.DIALOG_BODY}>
-            <p>Name your template:</p>
-            <input
-              className="bp3-input"
-              type="text"
-              placeholder="name"
-              dir="auto"
-              style={{ width: '100%' }}
-              onChange={this.handleNewNameInput}
-              value={newName}
-            />
+    const scenarioSaveAsDialog = (
+      <Dialog
+        icon="info-sign"
+        onClose={this.handleNewScenarioClose}
+        title="Save New Scenario"
+        autoFocus={true}
+        canEscapeKeyClose={true}
+        canOutsideClickClose={true}
+        enforceFocus={false}
+        isOpen={newScenarioDialogIsOpen}
+        usePortal={true}
+      >
+        <div className={Classes.DIALOG_BODY}>
+          <p>Name your scenario:</p>
+          <input
+            className="bp3-input"
+            type="text"
+            placeholder="name"
+            dir="auto"
+            style={{ width: '100%' }}
+            onChange={this.handleNewScenarioNameInput}
+            value={newScenarioName}
+          />
+        </div>
+        <div className={Classes.DIALOG_FOOTER}>
+          <div className={Classes.DIALOG_FOOTER_ACTIONS}>
+            <Tooltip content="This button is hooked up to close the dialog.">
+              <Button onClick={this.handleNewScenarioClose}>Cancel</Button>
+            </Tooltip>
+            <AnchorButton
+              intent={Intent.PRIMARY}
+              onClick={this.handleSaveAsScenario}
+              target="_blank"
+            >
+              Create
+            </AnchorButton>
           </div>
-          <div className={Classes.DIALOG_FOOTER}>
-            <div className={Classes.DIALOG_FOOTER_ACTIONS}>
-              <Tooltip content="This button is hooked up to close the dialog.">
-                <Button onClick={this.handleClose}>Cancel</Button>
-              </Tooltip>
-              <AnchorButton
-                intent={Intent.PRIMARY}
-                onClick={this.handleSaveAsTemplate}
-                target="_blank"
-              >
-                Create
-              </AnchorButton>
+        </div>
+      </Dialog>
+    );
+
+    return (
+      <>
+        <Navbar style={{ padding: '0px 10px' }}>
+          <Navbar.Group align={Alignment.LEFT}>
+            <a href="/">
+              <img alt="logo" src="/model_flow_horizontal.png" height="24" />
+            </a>
+            <div>
+              <span className="bp3-heading">
+                <a href={`/projects/${currentProjectMetadata.id}`}>
+                  {currentProjectMetadata.name}
+                </a>
+              </span>
+              {' > '}
+              <span className="bp3-heading">
+                {currentScenarioMetadata.name}
+              </span>
             </div>
-          </div>
-        </Dialog>
+            <Navbar.Divider />
+            <div>
+              <span className="bp3-text-muted">
+                {currentTemplateMetadata.name}
+              </span>
+            </div>
+            <Navbar.Divider />
+            <SimStatus sim={sim} />
+          </Navbar.Group>
+
+          <Navbar.Group align={Alignment.RIGHT}>
+            <ButtonGroup>
+              <Select
+                items={scenarios}
+                activeItem={''}
+                noResults={<MenuItem disabled text="No results." />}
+                onItemSelect={this.handleSelectScenarioMenuItem}
+                itemRenderer={this.renderMenuItem}
+                itemPredicate={this.filterMenuItem}
+              >
+                <Button icon="database" text="Scenarios" />
+              </Select>
+
+              <Popover2 content={scenarioSaveMenu} minimal={true}>
+                <AnchorButton icon="floppy-disk" rightIcon="caret-down" />
+              </Popover2>
+            </ButtonGroup>
+            <div style={{ width: 5 }}></div>
+            <ButtonGroup>
+              <Select
+                items={templates}
+                activeItem={''}
+                noResults={<MenuItem disabled text="No results." />}
+                onItemSelect={this.handleSelectTemplateMenuItem}
+                itemRenderer={this.renderMenuItem}
+                itemPredicate={this.filterMenuItem}
+              >
+                <Button icon="control" text="Templates" />
+              </Select>
+              <Popover2 content={templateSaveMenu} minimal={true}>
+                <AnchorButton icon="floppy-disk" rightIcon="caret-down" />
+              </Popover2>
+            </ButtonGroup>
+            <div style={{ width: 5 }}></div>
+            <Button icon="add" text="Add Card" onClick={this.clickedAddCard} />
+            <div style={{ width: 5 }}></div>
+            <Button icon="help" onClick={this.TODO_OPEN_HELP} />
+          </Navbar.Group>
+        </Navbar>
+
+        {templateSaveAsDialog}
+        {scenarioSaveAsDialog}
       </>
     );
+    //       <Button
+    //         className="flow-results-switch"
+    //         icon={
+    //           mainViewType === 'flow' ? 'timeline-line-chart' : 'data-lineage'
+    //         }
+    //         text={mainViewType === 'flow' ? 'Model' : 'Flow'}
+    //         onClick={this.clickedSwitchFlowOrResults}
+    //       />
   }
 }
+
+const SimStatus = (props) => {
+  const { sim } = props;
+  const { status } = sim;
+
+  if (status === 'waiting') {
+    return (
+      <Button
+        icon="info-sign"
+        minimal={true}
+        intent={Intent.NONE}
+        text="Waiting"
+      />
+    );
+  } else if (status === 'running') {
+    return (
+      <Button
+        icon="walk"
+        minimal={true}
+        intent={Intent.WARNING}
+        text="Running"
+      />
+    );
+  } else if (status === 'success') {
+    return (
+      <Button
+        icon="tick-circle"
+        minimal={true}
+        intent={Intent.SUCCESS}
+        text=""
+      />
+    );
+  } else if (status === 'error') {
+    return (
+      <Button
+        icon="error"
+        minimal={true}
+        intent={Intent.DANGER}
+        text={sim.results.error}
+      />
+    );
+  }
+};
 
 const mapDispatchToProps = {
   addCard: actions.resultsView.addCard,
   saveCurrentTemplate: actions.templates.saveCurrentTemplate,
   saveAsCurrentTemplate: actions.templates.saveAsCurrentTemplate,
+  saveCurrentScenario: actions.scenarios.saveCurrentScenario,
+  saveAsCurrentScenario: actions.scenarios.saveAsCurrentScenario,
   loadTemplate: actions.templates.loadTemplate,
-  getTemplatesForCurrentProject:
-    actions.templates.getTemplatesForCurrentProject,
+  setCurrentTemplateAsDefaultForCurrentScenario:
+    actions.scenarios.setCurrentTemplateAsDefaultForCurrentScenario,
   switchMainViewType: actions.common.switchMainViewType,
   runSim: actions.sim.runSim,
 };
 
 const mapStateToProps = (state) => ({
   templates: state.templates.templates,
+  scenarios: state.scenarios.scenarios,
   currentProjectMetadata: state.projects.currentProjectMetadata,
   currentTemplateMetadata: state.templates.currentTemplateMetadata,
   currentScenarioMetadata: state.scenarios.currentScenarioMetadata,
   mainViewType: state.common.mainViewType,
+  sim: state.sim,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Header);

@@ -52,50 +52,10 @@ class ResultsView extends Component {
     const { isOpen } = this.state;
     const { selectedTabId, tabs, results, status } = this.props;
 
-    let callout = null;
-    let statusText = ''
-    if (status === 'waiting') {
-      callout = (
-        <Callout
-          icon={'info-sign'}
-          intent={''}
-          title={'Waiting'}
-          className="simStatusCallout"
-        ></Callout>
-      );
-    } else if (status === 'running') {
-      callout = (
-        <Callout
-          icon={'walk'}
-          intent={'warning'}
-          title={'Running'}
-          className="simStatusCallout"
-        ></Callout>
-      );
-    } else if (status === 'success') {
-      callout = (
-        <Callout
-          icon={'tick-circle'}
-          intent={'success'}
-          title={'Success'}
-          className="simStatusCallout"
-        ></Callout>
-      );
-    } else if (status === 'error') {
-      callout = (
-        <Callout
-          icon={'error'}
-          intent={'danger'}
-          title={results.error}
-          className="simStatusCallout"
-        >
-        </Callout>
-      );
-    }
+
     return (
       <>
-        {callout}
-        <div className="tabHeader">
+        <div style={{ marginTop: '5px' }}>
           <Button
             text="Edit Tabs"
             onClick={this.handleOpen}

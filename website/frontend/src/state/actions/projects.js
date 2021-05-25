@@ -34,7 +34,7 @@ export const createProject = (name) => async (dispatch) => {
 
 // TODO
 export const renameProject = (projectId, name) => async (dispatch) => {
-  const { data } = await axios.put(
+  const { data } = await axios.patch(
     `${process.env.REACT_APP_API_URL}/rest/projects/${projectId}?format=json`,
   );
   dispatch({

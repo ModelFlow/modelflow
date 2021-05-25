@@ -8,7 +8,6 @@ from django.views.decorators.csrf import csrf_exempt
 
 root_dir = str(pathlib.Path(__file__).absolute().parents[5])
 sys.path.insert(0, os.path.join(root_dir, 'modelflow'))
-print(os.path.join(root_dir, 'modelflow'))
 
 from modelflow import run_scenario # NOQA
 

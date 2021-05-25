@@ -5,7 +5,8 @@ import actions from '../../state/actions';
 import ResultsView from '../ResultsView/ResultsView';
 import FlowView from '../FlowView/FlowView';
 import Header from '../Header/Header';
-import { updateUrlWithTemplate } from '../../services/Utilities';
+import ScenarioInputs from '../ScenarioInputs/ScenarioInputs';
+import { updateUrlParam } from '../../services/Utilities';
 
 class Main extends Component {
   componentDidMount() {
@@ -17,7 +18,7 @@ class Main extends Component {
   }
 
   fetchData = async (scenarioId, templateId) => {
-    const { loadScenario, loadTemplate, runSim, setSimError } = this.props;
+    const { loadScenario, loadTemplate, runSim, setSimError, getTemplatesForCurrentProject, getScenariosForCurrentProject } = this.props;
     // TODO: I don't like that two https requests in serial are needed here.
     // Perhaps get params will be included in the scenario view
     // await getParams();
@@ -26,6 +27,12 @@ class Main extends Component {
 
     // This is just used for potential interactivity
     const info = await loadScenario(scenarioId);
+    console.log("finished loading scenario")
+    console.log(info)
+    // We need the project metadata to first be set above
+    getTemplatesForCurrentProject();
+    getScenariosForCurrentProject();
+
     if (info.error) {
       await setSimError('Scenario Not Found');
     } else {
@@ -34,7 +41,7 @@ class Main extends Component {
       if (!templateId) {
         templateId = info.default_template;
         console.log('updating default template id');
-        updateUrlWithTemplate(templateId);
+        updateUrlParam('template', templateId);
       }
       console.log('Loading template...');
 
@@ -59,12 +66,13 @@ class Main extends Component {
     } else {
       // TODO: Re-enable parameter inputs once ready
       /*
-          <div className="paramsCabinet">
-            <AttributeInputs />
-          </div>
+
       */
       mainView = (
         <div className="grid-container">
+          <div className="paramsCabinet">
+            <ScenarioInputs />
+          </div>
           <div className="resultsDisplay">
             <ResultsView />
           </div>
@@ -86,6 +94,10 @@ const mapDispatchToProps = {
   loadScenario: actions.scenarios.loadScenario,
   setSimError: actions.sim.setSimError,
   runSim: actions.sim.runSim,
+  getTemplatesForCurrentProject:
+    actions.templates.getTemplatesForCurrentProject,
+  getScenariosForCurrentProject:
+    actions.scenarios.getScenariosForCurrentProject,
 };
 
 const mapStateToProps = (state) => ({

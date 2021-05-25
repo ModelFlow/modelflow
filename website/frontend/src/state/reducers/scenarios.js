@@ -1,11 +1,15 @@
+import { insertItem } from '../../services/Utilities';
+
 const initialState = {
   scenarios: [],
   currentScenarioMetadata: {
-    name: 'No Scenario Set',
+    name: '',
     id: 0,
   },
   currentScenarioDefaultTemplateId: 0,
-  currentScenario: {},
+  currentScenario: {
+    max_steps: '',
+  },
 };
 
 export default function reduce(state = initialState, action = {}) {
@@ -16,12 +20,35 @@ export default function reduce(state = initialState, action = {}) {
         scenarios: action.scenarios,
       };
     }
+
+    case 'ADD_SCENARIO': {
+      return {
+        ...state,
+        scenarios: insertItem(state.scenarios, {
+          id: action.id,
+          name: action.name,
+          // created_at: '',  // TODO
+        }),
+      };
+    }
+
     case 'SET_CURRENT_SCENARIO_METADATA': {
       return {
         ...state,
         currentScenarioMetadata: action.currentScenarioMetadata,
       };
     }
+
+    case 'SET_SCENARIO_MAX_STEPS': {
+      return {
+        ...state,
+        currentScenario: {
+          ...state.currentScenario,
+          max_steps: action.maxSteps,
+        },
+      };
+    }
+
     case 'SET_CURRENT_SCENARIO_DEFAULT_TEMPLATE_ID': {
       return {
         ...state,

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { apiPOST } from '../../services/Utilities';
 
 export const setSimError = (error) => async (dispatch, getState) => {
   dispatch({
@@ -8,7 +8,6 @@ export const setSimError = (error) => async (dispatch, getState) => {
 };
 
 export const runSim = () => async (dispatch, getState) => {
-  console.log(getState());
   const keysNeeded = [];
   Object.values(getState().resultsView.tabsContent).forEach((tab) => {
     tab.layout.lg.forEach((item) => {
@@ -20,14 +19,14 @@ export const runSim = () => async (dispatch, getState) => {
     type: 'SET_SIM_STATUS',
     status: 'running',
   });
-
-  const { data } = await axios.post(
-    `${process.env.REACT_APP_API_URL}/api/run_sim`,
-    {
-      scenario: getState().scenarios.currentScenario,
-      output_keys: keysNeeded,
-    },
-  );
+  const currentScenario = getState().scenarios.currentScenario;
+  console.log("pre sim:")
+  console.log(currentScenario)
+  const data = await apiPOST(`/api/run_sim`, {
+    scenario: currentScenario,
+    output_keys: keysNeeded,
+  });
+  // console.log(data)
   dispatch({
     type: 'SIM_UPDATE_RESULTS',
     results: data,

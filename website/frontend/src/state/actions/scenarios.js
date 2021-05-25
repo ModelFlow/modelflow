@@ -1,9 +1,15 @@
-import axios from 'axios';
+import { len } from 'plotly.js-basic-dist';
+import {
+  apiGET,
+  apiPATCH,
+  apiPOST,
+  updateUrlParam,
+} from '../../services/Utilities';
 
 export const getScenariosForProject = (projectId) => async (dispatch) => {
-  const { data } = await axios.get(
-    `${process.env.REACT_APP_API_URL}/rest/scenarios?project=${projectId}&format=json`,
-  );
+  const data = await apiGET(`/rest/scenarios?project=${projectId}&format=json`);
+  // if (data.error) return error;
+
   dispatch({
     type: 'SET_SCENARIOS',
     scenarios: data,
@@ -13,53 +19,11 @@ export const getScenariosForProject = (projectId) => async (dispatch) => {
 export const loadScenario = (scenarioId) => async (dispatch) => {
   console.log('before get');
 
-  let response = null;
-  let info = {};
-  try {
-    response = await axios.get(
-      `${process.env.REACT_APP_API_URL}/rest/scenarios/${scenarioId}?format=json`,
-    );
-  } catch (error) {
-    // Error 😨
-    if (error.response) {
-      /*
-       * The request was made and the server responded with a
-       * status code that falls out of the range of 2xx
-       */
-      console.log(error.response.data);
-      console.log(error.response.status);
-      console.log(error.response.headers);
-      info.error = `Encountered: ${error.response.status}`
-    } else if (error.request) {
-      /*
-       * The request was made but no response was received, `error.request`
-       * is an instance of XMLHttpRequest in the browser and an instance
-       * of http.ClientRequest in Node.js
-       */
-      console.log(error.request);
-      info.error = error.request;
-    } else {
-      // Something happened in setting up the request and triggered an Error
-      console.log('Error', error.message);
-      info.error = error.message;
-    }
-    console.log(error);
-    return info;
-  }
-  const { data } = response;
-  const { metadata } = data;
-  // Success 🎉
-  console.log(data);
+  const data = await apiGET(`/rest/scenarios/${scenarioId}?format=json`);
+  if (data.error) return data.error;
 
-  // const { data } = await axios
-  //   .get(
-  //     `${process.env.REACT_APP_API_URL}/rest/scenarios/${scenarioId}?format=json`,
-  //   )
-  //   .then((response) => {})
-  //   .catch((error) => {
-  //     console.log({ ...error });
-  //   });
-  console.log('sdfsdf');
+  // Success 🎉
+  console.log('GET SCENARIO RESULTS:');
   console.log(data);
   dispatch({
     type: 'SET_CURRENT_SCENARIO_AND_METADATA',
@@ -79,18 +43,18 @@ export const loadScenario = (scenarioId) => async (dispatch) => {
     },
   });
 
-  info.default_template = data.default_template;
-  return info;
+  // data.default_template = data.default_template;
+  // return info;
+  return data;
 };
 
 export const createScenario = (name, projectId) => async (dispatch) => {
-  const { data } = await axios.post(
-    `${process.env.REACT_APP_API_URL}/rest/scenarios/?format=json`,
-    {
-      name,
-      project: projectId,
-    },
-  );
+  const data = await apiPOST(`/rest/scenarios/?format=json`, {
+    name,
+    project: projectId,
+  });
+  // if (data.error) return error;
+
   console.log(data);
   // dispatch({
   //   type: 'CREATE_SCENARIO',
@@ -99,12 +63,9 @@ export const createScenario = (name, projectId) => async (dispatch) => {
 };
 
 export const hideScenario = (scenarioId) => async (dispatch) => {
-  const { data } = await axios.put(
-    `${process.env.REACT_APP_API_URL}/rest/scenarios/${scenarioId}?format=json`,
-    {
-      is_hidden: true,
-    },
-  );
+  const data = await apiPATCH(`/rest/scenarios/${scenarioId}/?format=json`, {
+    is_hidden: true,
+  });
   console.log(data);
   // dispatch({
   //   type: 'HIDE_SCENARIO',
@@ -113,16 +74,111 @@ export const hideScenario = (scenarioId) => async (dispatch) => {
 };
 
 export const renameScenario = (scenarioId, name) => async (dispatch) => {
-  const { data } = await axios.put(
-    `${process.env.REACT_APP_API_URL}/rest/scenarios/${scenarioId}?format=json`,
-    {
-      name,
-    },
-  );
-  console.log(data);
+  const data = await apiPATCH(`/rest/scenarios/${scenarioId}/?format=json`, {
+    name,
+  });
 
   // dispatch({
   //   type: 'RENAME_SCENARIO',
   //   projectId,
   // });
+};
+
+export const setCurrentTemplateAsDefaultForCurrentScenario = () => async (
+  dispatch,
+  getState,
+) => {
+  const templateId = getState().templates.currentTemplateMetadata.id;
+  const scenarioId = getState().scenarios.currentScenarioMetadata.id;
+
+  console.log(`Template Id: ${templateId} Scenario Id: ${scenarioId}`);
+
+  const data = await apiPATCH(`/rest/scenarios/${scenarioId}/?format=json`, {
+    default_template: templateId,
+  });
+  // TODO: handle data.error better
+
+  // TODO: store new default template in reducer
+};
+
+export const setCurrentScenarioMaxSteps = (maxSteps) => async (
+  dispatch,
+  getState,
+) => {
+  const scenarioId = getState().scenarios.currentScenarioMetadata.id;
+
+  console.log(`Scenario Id: ${scenarioId} Max steps: ${maxSteps}`);
+
+  dispatch({
+    type: 'SET_SCENARIO_MAX_STEPS',
+    maxSteps,
+  });
+
+  // if (maxSteps) {
+  //   const data = await apiPATCH(`/rest/scenarios/${scenarioId}/?format=json`, {
+  //     max_steps: parseInt(maxSteps),
+  //   });
+  //   // TODO: handle data.error better
+
+  //   // TODO: store new default template in reducer
+  // }
+};
+
+export const saveAsCurrentScenario = (name) => async (dispatch, getState) => {
+  const state = getState();
+  const dataRequest = {
+    name,
+    current_scenario: state.scenarios.currentScenario,
+
+    // We don't need project id as we can get it once we load the old scenario id
+    // project_id: state.projects.currentProjectMetadata.id,
+    scenario_id: state.scenarios.currentScenarioMetadata.id,
+  };
+  console.log(dataRequest);
+  const data = await apiPOST('/api/save_as_scenario', dataRequest);
+
+  console.log(data);
+  const { id } = data;
+
+  updateUrlParam('scenario', id);
+
+  dispatch({
+    type: 'SET_CURRENT_SCENARIO_METADATA',
+    currentScenarioMetadata: {
+      id,
+      name: name,
+    },
+  });
+
+  dispatch({
+    type: 'ADD_SCENARIO',
+    id,
+    name: name,
+  });
+};
+
+export const saveCurrentScenario = () => async (dispatch, getState) => {
+  // const { data } =
+  const scenarioId = getState().scenarios.currentScenarioMetadata.id;
+
+  // TODO: Also save instances etc.
+  const data = await apiPATCH(`/rest/scenarios/${scenarioId}/?format=json`, {
+    max_steps: parseInt(getState().scenarios.currentScenario.max_steps),
+  });
+
+  // TODO: use result from status here
+};
+
+export const getScenariosForCurrentProject = () => async (
+  dispatch,
+  getState,
+) => {
+  const projectId = getState().projects.currentProjectMetadata.id;
+  const data = await apiGET(`/rest/scenarios?project=${projectId}&format=json`);
+  // if (data.error) return error;
+
+  dispatch({
+    type: 'SET_SCENARIOS',
+    scenarios: data,
+  });
 };

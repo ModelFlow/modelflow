@@ -18,9 +18,7 @@ class PrivateExampleModel:
 
 class TestPrivate():
     scenario = {
-        "simulation_params": {
-            "max_num_steps": 3,
-        },
+        "max_steps": 3,
         "model_instances": {
             "private_ex": {
                 "model_class": PrivateExampleModel
@@ -52,9 +50,7 @@ class SharedStateExampleModel:
 
 class TestSharedState():
     scenario = {
-        "simulation_params": {
-            "max_num_steps": 3,
-        },
+        "max_steps": 3,
         "model_instances": {
             "shared_ex": {
                 "model_class": SharedStateExampleModel
@@ -102,9 +98,7 @@ class AProducer:
 
 class TestFindingOutsideSharedState():
     scenario = {
-        "simulation_params": {
-            "max_num_steps": 3,
-        },
+        "max_steps": 3,
         "model_instances": {
             "fakeroot": {
                 "model_class": Root,
@@ -138,9 +132,7 @@ class TestFindingOutsideSharedState():
 
 class TestSimpleSameNamedSharedState():
     scenario = {
-        "simulation_params": {
-            "max_num_steps": 2
-        },
+        "max_steps": 2,
         "model_instances": {
             "fakeroot": {
                 "model_class": Root
@@ -182,9 +174,7 @@ class TestSimpleSameNamedSharedState():
 
 class TestSameNamedSharedState():
     scenario = {
-        "simulation_params": {
-            "max_num_steps": 2
-        },
+        "max_steps": 2,
         "model_instances": {
             "fakeroot": {
                 "model_class": Root

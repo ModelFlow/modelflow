@@ -1,19 +1,17 @@
-/* 
-// TODO: Change back once param cabinet re-enabled
 .grid-container {
   display: grid;
-  grid-template-columns: 300px auto;
+  grid-template-columns: 200px auto;
   background-color: white;
   height: 100vh;
-} 
-*/
+}
 
+/* 
 .grid-container {
   display: grid;
   grid-template-columns: auto;
   background-color: white;
   height: 100vh;
-}
+} */
 
 .flow-container {
   display: grid;
@@ -34,5 +32,6 @@
   background-color: #F5F8FA;
   border-left: 1px solid lightgray;
   padding: 0px;
+  padding-bottom: 100px;
   overflow-y: scroll;
 }
