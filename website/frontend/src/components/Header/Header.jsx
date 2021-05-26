@@ -35,6 +35,7 @@ class Header extends Component {
   state = {
     newTemplateDialogIsOpen: false,
     newScenarioDialogIsOpen: false,
+    helpIsOpen: false,
     newTemplateName: '',
     newScenarioName: '',
   };
@@ -134,6 +135,14 @@ class Header extends Component {
     this.setState({ newTemplateDialogIsOpen: false });
   };
 
+  handleHelpOpen = () => {
+    this.setState({ helpIsOpen: true });
+  };
+
+  handleHelpClose = () => {
+    this.setState({ helpIsOpen: false });
+  };
+
   handleNewTemplateNameInput = (e) => {
     this.setState({ newTemplateName: e.target.value });
   };
@@ -202,6 +211,7 @@ class Header extends Component {
     const {
       newTemplateDialogIsOpen,
       newScenarioDialogIsOpen,
+      helpIsOpen,
       newTemplateName,
       newScenarioName,
     } = this.state;
@@ -325,6 +335,25 @@ class Header extends Component {
       </Dialog>
     );
 
+    const helpDialog = (
+      <Dialog
+        icon="info-sign"
+        onClose={this.handleHelpClose}
+        title="Help"
+        autoFocus={true}
+        canEscapeKeyClose={true}
+        canOutsideClickClose={true}
+        enforceFocus={false}
+        isOpen={helpIsOpen}
+        usePortal={true}
+      >
+        <div className={Classes.DIALOG_BODY}>
+          <p>Scenarios</p>
+          <p>Template</p>
+        </div>
+      </Dialog>
+    );
+
     return (
       <>
         <Navbar style={{ padding: '0px 10px' }}>
@@ -389,12 +418,15 @@ class Header extends Component {
             <div style={{ width: 5 }}></div>
             <Button icon="add" text="Add Card" onClick={this.clickedAddCard} />
             <div style={{ width: 5 }}></div>
-            <Button icon="help" onClick={this.TODO_OPEN_HELP} />
+            <Button icon="cog" disabled={true} />
+            <div style={{ width: 5 }}></div>
+            <Button icon="help" onClick={this.handleHelpOpen} />
           </Navbar.Group>
         </Navbar>
 
         {templateSaveAsDialog}
         {scenarioSaveAsDialog}
+        {helpDialog}
       </>
     );
     //       <Button
