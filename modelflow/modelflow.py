@@ -281,15 +281,11 @@ def setup_scenario_classes(scenario, model_library_path):
         sys.path.insert(0, model_library_path)
 
     for info in scenario["model_instances"]:
-        if 'model_class_meta' in info:
+        if 'model_class' in info:
+            if 'key' not in info['model_class']:
+                raise Exception("model_class does not have a key")
 
-            # if 'model_class_meta' not in info:
-            #     raise Exception("model instance does not have a model_class_meta")
-            
-            if 'key' not in info['model_class_meta']:
-                raise Exception("model_class_meta does not have a key")
-
-            key = info['model_class_meta']['key']
+            key = info['model_class']['key']
             info["model_class"] = getattr(importlib.import_module(key), key)
 
 

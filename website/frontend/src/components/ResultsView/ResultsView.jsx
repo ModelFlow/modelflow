@@ -52,6 +52,8 @@ class ResultsView extends Component {
     const { isOpen } = this.state;
     const { selectedTabId, tabs, results, status } = this.props;
 
+    console.log("results!!!")
+    console.log(results)
 
     return (
       <>

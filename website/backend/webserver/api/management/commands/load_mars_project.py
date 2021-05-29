@@ -149,7 +149,7 @@ def load_mars_project(self):
         for info in scenario_json['model_instances']:
             model_class = ModelClass.objects.get(
                 project=project,
-                key=info['model_class_meta']['key']
+                key=info['model_class']['key']
             )
             model_instance = ModelInstance.objects.create(
                 key=info['key'],

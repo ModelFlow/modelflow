@@ -118,7 +118,7 @@ class DefaultAttribute(models.Model):
     notes = models.TextField(null=True, blank=True)
     source = models.TextField(null=True, blank=True)
 
-    model_class = models.ForeignKey('ModelClass', on_delete=models.SET_NULL, null=True)
+    model_class = models.ForeignKey('ModelClass', on_delete=models.SET_NULL, null=True, related_name='default_attributes')
 
     class Meta:
         unique_together = ('model_class', 'key',)

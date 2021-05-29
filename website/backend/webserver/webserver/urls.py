@@ -63,7 +63,6 @@ class TemplateViewSet(viewsets.ModelViewSet):
     filterset_fields = ['project']
 
 
-
 class SmallDefaultAttributeSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -95,17 +94,55 @@ class ModelClassMetaSerializer(serializers.ModelSerializer):
         fields = ['id', 'key', 'label']
 
 
+class DefaultAttributeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = DefaultAttribute
+        fields = ['id', 'key', 'label', 'dtype', 'kind', 'notes', 'source', 'model_class', 'units', 'value', 'confidence', 'is_private']
+
+class DefaultAttributeViewSet(viewsets.ModelViewSet):
+    queryset = DefaultAttribute.objects.all()
+    serializer_class = DefaultAttributeSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['key', 'model_class', 'kind']
+
+
+class ModelClassMetaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ModelClass
+        fields = ['id', 'key', 'label']
+
+
+class ModelClassSerializer(serializers.ModelSerializer):
+
+    default_attributes = DefaultAttributeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = ModelClass
+        # run_step_code
+        fields = ['id', 'key', 'label', 'description', 'is_hidden', 'project', 'default_attributes']
+
+
+class ModelClassViewSet(viewsets.ModelViewSet):
+    queryset = ModelClass.objects.all()
+    serializer_class = ModelClassSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['key', 'project', 'is_hidden']
+
+
 class ModelInstanceSerializer(serializers.ModelSerializer):
 
     attribute_overrides = AttributeOverrideSerializer(many=True, read_only=True)
-    model_class_meta = serializers.SerializerMethodField(read_only=True)
+    model_class = ModelClassSerializer(read_only=True)
+
+    # model_class_meta = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = ModelInstance
-        fields = ['id', 'key', 'label', 'scenario', 'model_class_meta', 'initial_parent_key', 'attribute_overrides']
+        fields = ['id', 'key', 'label', 'scenario', 'model_class', 'initial_parent_key', 'attribute_overrides']
 
-    def get_model_class_meta(self, obj):
-        return ModelClassMetaSerializer(obj.model_class, context={'request': None}).data
+    # def get_model_class_meta(self, obj):
+    #     return ModelClassMetaSerializer(obj.model_class, context={'request': None}).data
 
 
 class ModelInstanceViewSet(viewsets.ModelViewSet):
@@ -115,10 +152,31 @@ class ModelInstanceViewSet(viewsets.ModelViewSet):
     filterset_fields = ['key', 'scenario', 'model_class', 'initial_parent_key']
 
 
-# ***
-# TODO: Create a light weight version that does not include the model_instances for all scenarios
-# ***
+class ModelInstanceSerializer(serializers.ModelSerializer):
+
+    attribute_overrides = AttributeOverrideSerializer(many=True, read_only=True)
+    model_class = ModelClassSerializer(read_only=True)
+
+    # model_class_meta = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = ModelInstance
+        fields = ['id', 'key', 'label', 'scenario', 'model_class', 'initial_parent_key', 'attribute_overrides']
+
+    # def get_model_class_meta(self, obj):
+    #     return ModelClassMetaSerializer(obj.model_class, context={'request': None}).data
+
+
+class ModelInstanceViewSet(viewsets.ModelViewSet):
+    queryset = ModelInstance.objects.all()
+    serializer_class = ModelInstanceSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['key', 'scenario', 'model_class', 'initial_parent_key']
+
+
 class ScenarioSerializer(serializers.ModelSerializer):
+    # TODO: Create a light weight version that does not include the model_instances for all scenarios
+
     model_instances = ModelInstanceSerializer(many=True, read_only=True)
     project_meta = serializers.SerializerMethodField(read_only=True)
 
@@ -135,31 +193,6 @@ class ScenarioViewSet(viewsets.ModelViewSet):
     serializer_class = ScenarioSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['project', 'is_hidden']
-
-
-
-class ModelClassSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ModelClass
-        fields = ['id', 'key', 'label', 'description', 'run_step_code', 'is_hidden', 'project']
-
-class ModelClassViewSet(viewsets.ModelViewSet):
-    queryset = ModelClass.objects.all()
-    serializer_class = ModelClassSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['key', 'project', 'is_hidden']
-
-class DefaultAttributeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = DefaultAttribute
-        fields = ['id', 'key', 'label', 'dtype', 'kind', 'notes', 'source', 'model_class', 'units', 'value', 'confidence', 'is_private']
-
-class DefaultAttributeViewSet(viewsets.ModelViewSet):
-    queryset = DefaultAttribute.objects.all()
-    serializer_class = DefaultAttributeSerializer
-    filter_backends = [DjangoFilterBackend]
-    filterset_fields = ['key', 'model_class', 'kind']
 
 
 # Routers provide an easy way of automatically determining the URL conf.

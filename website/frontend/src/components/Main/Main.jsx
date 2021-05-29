@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import actions from '../../state/actions';
 import ResultsView from '../ResultsView/ResultsView';
 import FlowView from '../FlowView/FlowView';
-import Header from '../Header/Header';
+import SimHeader from '../SimHeader/SimHeader';
 import ScenarioInputs from '../ScenarioInputs/ScenarioInputs';
 import { updateUrlParam } from '../../services/Utilities';
 
@@ -82,7 +82,7 @@ class Main extends Component {
 
     return (
       <>
-        <Header />
+        <SimHeader />
         {mainView}
       </>
     );
