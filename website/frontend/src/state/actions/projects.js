@@ -2,10 +2,13 @@ import { apiGET, apiPATCH, apiPOST } from '../../services/Utilities';
 
 export const getProjects = () => async (dispatch) => {
   const data = await apiGET(`/rest/projects/?format=json`);
-  dispatch({
-    type: 'SET_PROJECTS',
-    projects: data,
-  });
+  if (!data.error) {
+    dispatch({
+      type: 'SET_PROJECTS',
+      projects: data,
+    });
+  }
+  return data;
 };
 
 export const getCurrentProjectMetadata = (projectId) => async (dispatch) => {

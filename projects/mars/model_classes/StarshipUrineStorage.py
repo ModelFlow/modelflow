@@ -1,5 +1,5 @@
 class StarshipUrineStorage:
-    name = "('urine_storage',)"
+    name = "StarshipUrineStorage"
     params = []
     states = [
         {

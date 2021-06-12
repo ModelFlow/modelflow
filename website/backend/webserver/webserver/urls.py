@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import include, path
 from django.contrib.auth.models import User
 from rest_framework import generics, routers, serializers, viewsets
-from api.models import Project, Scenario, Template, ModelInstance, ModelClass, DefaultAttribute, AttributeOverride
+from api.models import Project, Scenario, Template, ModelInstance, ModelClass, DefaultAttribute, InstanceAttributeOverride
 from django_filters.rest_framework import DjangoFilterBackend
 
 
@@ -70,20 +70,20 @@ class SmallDefaultAttributeSerializer(serializers.ModelSerializer):
         fields = ['id', 'key', 'value', 'dtype']
 
 
-class AttributeOverrideSerializer(serializers.ModelSerializer):
+class InstanceAttributeOverrideSerializer(serializers.ModelSerializer):
 
     default_attribute_info = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model = AttributeOverride
+        model = InstanceAttributeOverride
         fields = ['id', 'value', 'default_attribute_info', 'model_instance']
 
     def get_default_attribute_info(self, obj):
         return SmallDefaultAttributeSerializer(obj.default_attribute, context={'request': None}).data
 
-class AttributeOverrideViewSet(viewsets.ModelViewSet):
-    queryset = AttributeOverride.objects.all()
-    serializer_class = AttributeOverrideSerializer
+class InstanceAttributeOverrideViewSet(viewsets.ModelViewSet):
+    queryset = InstanceAttributeOverride.objects.all()
+    serializer_class = InstanceAttributeOverrideSerializer
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['default_attribute', 'model_instance']
 
@@ -132,7 +132,7 @@ class ModelClassViewSet(viewsets.ModelViewSet):
 
 class ModelInstanceSerializer(serializers.ModelSerializer):
 
-    attribute_overrides = AttributeOverrideSerializer(many=True, read_only=True)
+    attribute_overrides = InstanceAttributeOverrideSerializer(many=True, read_only=True)
     model_class = ModelClassSerializer(read_only=True)
 
     # model_class_meta = serializers.SerializerMethodField(read_only=True)
@@ -151,20 +151,6 @@ class ModelInstanceViewSet(viewsets.ModelViewSet):
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['key', 'scenario', 'model_class', 'initial_parent_key']
 
-
-class ModelInstanceSerializer(serializers.ModelSerializer):
-
-    attribute_overrides = AttributeOverrideSerializer(many=True, read_only=True)
-    model_class = ModelClassSerializer(read_only=True)
-
-    # model_class_meta = serializers.SerializerMethodField(read_only=True)
-
-    class Meta:
-        model = ModelInstance
-        fields = ['id', 'key', 'label', 'scenario', 'model_class', 'initial_parent_key', 'attribute_overrides']
-
-    # def get_model_class_meta(self, obj):
-    #     return ModelClassMetaSerializer(obj.model_class, context={'request': None}).data
 
 
 class ModelInstanceViewSet(viewsets.ModelViewSet):
@@ -182,7 +168,7 @@ class ScenarioSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Scenario
-        fields = ['id', 'name', 'user', 'created_at', 'project_meta','default_template', 'model_instances', 'max_steps']
+        fields = ['id', 'name', 'user', 'created_at', 'project', 'project_meta','default_template', 'model_instances', 'max_steps']
 
     def get_project_meta(self, obj):
         return ProjectSerializer(obj.project, context={'request': None}).data
@@ -204,7 +190,7 @@ router.register('templates', TemplateViewSet)
 router.register('model_instances', ModelInstanceViewSet)
 router.register('model_classes', ModelClassViewSet)
 router.register('default_attributes', DefaultAttributeViewSet)
-router.register('attribute_override', AttributeOverrideViewSet)
+router.register('attribute_override', InstanceAttributeOverrideViewSet)
 
 
 urlpatterns = [

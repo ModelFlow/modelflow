@@ -6,7 +6,7 @@ import inspect
 import importlib
 import pathlib
 from django.core.management.base import BaseCommand
-from api.models import Project, Scenario, ModelClass, DefaultAttribute, ModelInstance, AttributeOverride, Template
+from api.models import Project, Scenario, ModelClass, DefaultAttribute, ModelInstance, InstanceAttributeOverride, Template
 
 
 class Command(BaseCommand):
@@ -26,7 +26,7 @@ def flush_db():
     Project.objects.all().delete()
     Scenario.objects.all().delete()
     ModelInstance.objects.all().delete()
-    AttributeOverride.objects.all().delete()
+    InstanceAttributeOverride.objects.all().delete()
     DefaultAttribute.objects.all().delete()
     ModelClass.objects.all().delete()
     Template.objects.all().delete()
@@ -71,6 +71,9 @@ def load_mars_project(self):
 
     print("Loading classes...")
     for filename in os.listdir(os.path.join(project_dir, 'model_classes')):
+        if filename[0] in ['.','_']:
+            continue
+        print(filename)
         module = importlib.import_module(f"model_classes.{filename.replace('.py', '')}")
         for key in dir(module):
             # Skip builtin methods
@@ -151,9 +154,10 @@ def load_mars_project(self):
                 project=project,
                 key=info['model_class']['key']
             )
+            print(f"creating: {info['key']} {scenario.id}")
             model_instance = ModelInstance.objects.create(
                 key=info['key'],
-                label=info['label'],
+                label=info['key'],
                 scenario=scenario,
                 initial_parent_key=info.get('initial_parent_key', 'root'),
                 model_class=model_class
@@ -165,7 +169,7 @@ def load_mars_project(self):
                     key=override_key,
                     model_class=model_class,
                 )
-                AttributeOverride.objects.create(
+                InstanceAttributeOverride.objects.create(
                     model_instance=model_instance,
                     default_attribute=default_attribute,
                     value=str(override_value),

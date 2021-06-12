@@ -16,6 +16,7 @@ import {
   NavbarGroup,
   NavbarHeading,
   Alignment,
+  NonIdealState,
   Menu,
   MenuDivider,
 } from '@blueprintjs/core';
@@ -26,6 +27,7 @@ class Projects extends Component {
   state = {
     newProjectDialogIsOpen: false,
     newProjectName: '',
+    nonIdealState: null,
   };
 
   handleNewProjectOpen = () => {
@@ -41,14 +43,24 @@ class Projects extends Component {
   };
 
   componentDidMount() {
-    const { getProjects } = this.props;
-    getProjects();
+    this.getData();
   }
+
+  getData = async () => {
+    const { getProjects } = this.props;
+    const data = await getProjects();
+    console.log('inside got projects');
+    console.log(data);
+    // NOTE: This should be a global check instead of just here
+    if (data.error) {
+      this.setState({ nonIdealState: data.error });
+    }
+  };
 
   handleSaveNewProject = async () => {
     const { createProject, getProjects } = this.props;
     const { newProjectName } = this.state;
-
+    console.log('inside save');
     await createProject(newProjectName);
     getProjects();
 
@@ -59,12 +71,22 @@ class Projects extends Component {
     });
 
     this.setState({ newProjectName: '', newProjectDialogIsOpen: false });
-
   };
 
   render() {
-    const { newProjectDialogIsOpen, newProjectName } = this.state;
+    const {
+      newProjectDialogIsOpen,
+      newProjectName,
+      nonIdealState,
+    } = this.state;
     const { projects } = this.props;
+    console.log(projects)
+    if (nonIdealState) {
+      return (
+        <NonIdealState icon="error" title="Error" description={nonIdealState} />
+      );
+    }
+
     const projectItems = projects.map((project) => {
       return (
         <>
@@ -119,6 +141,7 @@ class Projects extends Component {
     return (
       <>
         <Header title="Projects" />
+
         <div>
           <ul>{projectItems}</ul>
         </div>

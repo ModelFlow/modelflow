@@ -22,9 +22,15 @@ export function updateUrlParam(param, value) {
   window.history.replaceState(null, value, newurl);
 }
 
-export function insertItem(array, item) {
+export function insertItem(array, item, idx = 0) {
   const newArray = array.slice();
-  newArray.splice(0, 0, item);
+  newArray.splice(idx, 0, item);
+  return newArray;
+}
+
+export function replaceIdxWithItem(array, idx, item) {
+  const newArray = array.slice();
+  newArray.splice(idx, 1, item);
   return newArray;
 }
 

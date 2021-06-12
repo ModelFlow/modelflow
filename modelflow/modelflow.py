@@ -281,7 +281,7 @@ def setup_scenario_classes(scenario, model_library_path):
         sys.path.insert(0, model_library_path)
 
     for info in scenario["model_instances"]:
-        if 'model_class' in info:
+        if 'model_class' in info and isinstance(info['model_class'], dict):
             if 'key' not in info['model_class']:
                 raise Exception("model_class does not have a key")
 
@@ -402,7 +402,7 @@ def create_tree(model_instance_map):
 
 def add_child_to_tree(key, model_instance_map, tree):
     for info in model_instance_map.values():
-        if "initial_parent_key" not in info or info['initial_parent_key'] is None:
+        if "initial_parent_key" not in info or info['initial_parent_key'] is None or info['initial_parent_key'] == "":
             info['initial_parent_key'] = 'root'
         if info["initial_parent_key"] == key:
             # treelib needs the root to not have any parents
