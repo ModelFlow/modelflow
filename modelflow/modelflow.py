@@ -6,7 +6,6 @@ from pprint import pprint
 from types import SimpleNamespace
 from treelib import Node, Tree
 import importlib
-import traceback
 
 
 class SimulationError(Exception):
@@ -143,11 +142,10 @@ class StateFetcher:
             node = self._tree.get_node(parent_id)
             tree = self._tree.subtree(node.tag)
             for key in tree.expand_tree():
-                if key in self._shared_states_map:
-                    for state_name in self._shared_states_map[key]:
-                        if state_name == name:
-                            self._scenario_runner.key_lookup_cache[(self._key, name)] = key
-                            return key
+                for state_name in self._shared_states_map[key]:
+                    if state_name == name:
+                        self._scenario_runner.key_lookup_cache[(self._key, name)] = key
+                        return key
         all_states = []
         for info in self._shared_states_map.values():
             for key in info:
@@ -211,8 +209,7 @@ class ScenarioRunner():
                     except SimulationError as e:
                         raise SimStoppingError(e)
                     except Exception as e:
-                        tstr = traceback.format_exc()
-                        print(f"Model: '{instance_info['model_class'].__name__}' encountered an error!\n{tstr}")
+                        print(f"Model: '{instance_info['model_class'].__name__}' encountered an error!")
                         raise SimStoppingError(e)
                     
                     # goal: human1___indoor1___atmo_o2_delta
@@ -284,11 +281,15 @@ def setup_scenario_classes(scenario, model_library_path):
         sys.path.insert(0, model_library_path)
 
     for info in scenario["model_instances"]:
-        if 'model_class' in info and isinstance(info['model_class'], dict):
-            if 'key' not in info['model_class']:
-                raise Exception("model_class does not have a key")
+        if 'model_class_meta' in info:
 
-            key = info['model_class']['key']
+            # if 'model_class_meta' not in info:
+            #     raise Exception("model instance does not have a model_class_meta")
+            
+            if 'key' not in info['model_class_meta']:
+                raise Exception("model_class_meta does not have a key")
+
+            key = info['model_class_meta']['key']
             info["model_class"] = getattr(importlib.import_module(key), key)
 
 
@@ -398,7 +399,6 @@ def validate_scenario(scenario):
 
 def create_tree(model_instance_map):
     tree = Tree()
-    tree.create_node(tag='root', identifier='root', parent=None)
     # This ensures that when the tree is created, children always have a parent to reference
     add_child_to_tree('root', model_instance_map, tree)
     return tree
@@ -406,9 +406,13 @@ def create_tree(model_instance_map):
 
 def add_child_to_tree(key, model_instance_map, tree):
     for info in model_instance_map.values():
-        if "initial_parent_key" not in info or info['initial_parent_key'] is None or info['initial_parent_key'] == "":
+        if "initial_parent_key" not in info or info['initial_parent_key'] is None:
             info['initial_parent_key'] = 'root'
         if info["initial_parent_key"] == key:
+            # treelib needs the root to not have any parents
             parent = info["initial_parent_key"]
+            if parent == 'root':
+                parent = None
+
             tree.create_node(tag=info["key"], identifier=info["key"], parent=parent)
             add_child_to_tree(info["key"], model_instance_map, tree)

@@ -1,5 +1,5 @@
 class KilopowerReactor:
-    name = "KilopowerReactor"
+    name = "('Kilo Power Reactor',)"
     params = [
         {
             "key": "max_kw_ac",

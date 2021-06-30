@@ -1,5 +1,5 @@
 class StarshipUnfilteredWaterStorage:
-    name = "StarshipUnfilteredWaterStorage"
+    name = "('unfiltered_water_storage',)"
     params = []
     states = [
         {

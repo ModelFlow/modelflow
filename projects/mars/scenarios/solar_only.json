@@ -11,7 +11,7 @@
             "key": "time",
             "label": "Simulation Time",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 2,
                 "key": "Time",
                 "label": "Time"
@@ -24,7 +24,7 @@
             "key": "interplanetary_space",
             "label": "Interplanetary Space",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 21,
                 "key": "InterplanetarySpace",
                 "label": "Interplanetary Space"
@@ -37,7 +37,7 @@
             "key": "starship",
             "label": "Starship",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 9,
                 "key": "Starship",
                 "label": "starship"
@@ -50,7 +50,7 @@
             "key": "mars_surface",
             "label": "Mars Surface",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 18,
                 "key": "MarsSurface",
                 "label": "Mars Surface"
@@ -63,7 +63,7 @@
             "key": "battery_and_inverter",
             "label": "Battery and Inverter",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 31,
                 "key": "BatteryAndInverter",
                 "label": "battery"
@@ -76,7 +76,7 @@
             "key": "starship_integrated_pv",
             "label": "Starship Integrated PV",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 1,
                 "key": "StarshipIntegratedPV",
                 "label": "Starship Solar Panels"
@@ -89,7 +89,7 @@
             "key": "surface_pv",
             "label": "Surface PV",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 25,
                 "key": "SurfacePV",
                 "label": "Surface PV"
@@ -102,7 +102,7 @@
             "key": "lighting",
             "label": "Lighting",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 19,
                 "key": "Lighting",
                 "label": "lighting"
@@ -115,7 +115,7 @@
             "key": "human1",
             "label": "Human",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 20,
                 "key": "Human",
                 "label": "human"
@@ -128,7 +128,7 @@
             "key": "human2",
             "label": "Human",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 20,
                 "key": "Human",
                 "label": "human"
@@ -141,7 +141,7 @@
             "key": "human3",
             "label": "Human",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 20,
                 "key": "Human",
                 "label": "human"
@@ -154,7 +154,7 @@
             "key": "human4",
             "label": "Human",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 20,
                 "key": "Human",
                 "label": "human"
@@ -167,7 +167,7 @@
             "key": "human5",
             "label": "Human",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 20,
                 "key": "Human",
                 "label": "human"
@@ -180,7 +180,7 @@
             "key": "human6",
             "label": "Human",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 20,
                 "key": "Human",
                 "label": "human"
@@ -193,7 +193,7 @@
             "key": "indoor_air1",
             "label": "IndoorAir",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 27,
                 "key": "IndoorAir",
                 "label": "('indoor_air',)"
@@ -206,7 +206,7 @@
             "key": "potable_water_storage",
             "label": "StarshipPotableWaterStorage",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 4,
                 "key": "StarshipPotableWaterStorage",
                 "label": "('Potable Water Storage',)"
@@ -219,7 +219,7 @@
             "key": "solid_waste_storage",
             "label": "StarshipSolidWasteStorage",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 5,
                 "key": "StarshipSolidWasteStorage",
                 "label": "Solid Waste Storage"
@@ -232,7 +232,7 @@
             "key": "urine_storage",
             "label": "StarshipUrineStorage",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 7,
                 "key": "StarshipUrineStorage",
                 "label": "('urine_storage',)"
@@ -245,7 +245,7 @@
             "key": "unfiltered_water",
             "label": "StarshipUnfilteredWaterStorage",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 6,
                 "key": "StarshipUnfilteredWaterStorage",
                 "label": "('unfiltered_water_storage',)"
@@ -258,7 +258,7 @@
             "key": "food_storage",
             "label": "FoodStorage",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 3,
                 "key": "FoodStorage",
                 "label": "food_storage"
@@ -271,7 +271,7 @@
             "key": "heater",
             "label": "Heater",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 13,
                 "key": "Heater",
                 "label": "heater"
@@ -284,7 +284,7 @@
             "key": "radiators",
             "label": "Radiators",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 28,
                 "key": "StarshipRadiators",
                 "label": "Starship Integrated Radiators"
@@ -297,7 +297,7 @@
             "key": "urine_recovery",
             "label": "Urine Recovery",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 16,
                 "key": "UrineProcessorAssembly",
                 "label": "Urine Processor Assembly"
@@ -310,7 +310,7 @@
             "key": "water_recovery",
             "label": "Water Recovery",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 17,
                 "key": "WaterProcessorAssembly",
                 "label": "Water Processor Assembly"
@@ -323,7 +323,7 @@
             "key": "hydrolysis_system",
             "label": "Hydrolysis System",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 14,
                 "key": "HydrolysisSystem",
                 "label": "Hydrolysis System"
@@ -336,7 +336,7 @@
             "key": "co2_scrubbers",
             "label": "CO2 Scrubbers",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 11,
                 "key": "CO2Scubbers",
                 "label": "co2_scrubbers"
@@ -349,7 +349,7 @@
             "key": "dehumidifier",
             "label": "Dehumidifier",
             "scenario": 2,
-            "model_class": {
+            "model_class_meta": {
                 "id": 12,
                 "key": "Dehumidifier",
                 "label": "dehumidifier"

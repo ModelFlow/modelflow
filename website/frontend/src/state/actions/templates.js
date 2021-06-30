@@ -57,8 +57,7 @@ export const loadTemplate = (id) => async (dispatch) => {
   }
 
   const data = await apiGET(`/rest/templates/${id}/?format=json`);
-  console.log("load templates")
-  console.log(data.json_data);
+  console.log(data);
 
   const jsonData = JSON.parse(data.json_data);
   console.log(jsonData);

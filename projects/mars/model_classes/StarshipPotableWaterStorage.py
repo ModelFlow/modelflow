@@ -1,5 +1,5 @@
 class StarshipPotableWaterStorage:
-    name = "StarshipPotableWaterStorage"
+    name = "('Potable Water Storage',)"
     params = [
         {
             "key": "max_potable_water",

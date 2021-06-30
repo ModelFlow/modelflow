@@ -1,5 +1,5 @@
 class Plants:
-    name = "Plants"
+    name = "('plants',)"
     params = [
         {
             "key": "co2_consumed",

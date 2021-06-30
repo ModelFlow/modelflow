@@ -1,12 +1,5 @@
 # Running Locally
 
-# Using the Test project
-
-```
- ./manage.py flush
-./manage.py load_project
-```
-
 ### Using Docker
 
 ```

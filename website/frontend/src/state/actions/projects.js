@@ -1,28 +1,31 @@
-import { apiGET, apiPATCH, apiPOST } from '../../services/Utilities';
+import axios from 'axios';
 
 export const getProjects = () => async (dispatch) => {
-  const data = await apiGET(`/rest/projects/?format=json`);
-  if (!data.error) {
-    dispatch({
-      type: 'SET_PROJECTS',
-      projects: data,
-    });
-  }
-  return data;
+  const { data } = await axios.get(
+    `${process.env.REACT_APP_API_URL}/rest/projects/?format=json`,
+  );
+  dispatch({
+    type: 'SET_PROJECTS',
+    projects: data,
+  });
 };
 
 export const getCurrentProjectMetadata = (projectId) => async (dispatch) => {
-  const data = await apiGET(`/rest/projects/${projectId}?format=json`);
+  const { data } = await axios.get(
+    `${process.env.REACT_APP_API_URL}/rest/projects/${projectId}?format=json`,
+  );
+  console.log(data);
   dispatch({
     type: 'SET_CURRENT_PROJECT_METADATA',
     currentProjectMetadata: data,
   });
 };
 
+// TODO
 export const createProject = (name) => async (dispatch) => {
-  const data = await apiPOST(`/rest/projects/?format=json`, {
-    name,
-  });
+  const { data } = await axios.post(
+    `${process.env.REACT_APP_API_URL}/rest/projects/?format=json`,
+  );
   dispatch({
     type: 'SET_PROJECT',
     project: data,
@@ -31,8 +34,8 @@ export const createProject = (name) => async (dispatch) => {
 
 // TODO
 export const renameProject = (projectId, name) => async (dispatch) => {
-  const { data } = await apiPATCH(
-    `/rest/projects/${projectId}?format=json`,
+  const { data } = await axios.patch(
+    `${process.env.REACT_APP_API_URL}/rest/projects/${projectId}?format=json`,
   );
   dispatch({
     type: 'SET_PROJECT',
@@ -42,8 +45,8 @@ export const renameProject = (projectId, name) => async (dispatch) => {
 
 // TODO
 export const hideProject = (projectId) => async (dispatch) => {
-  const { data } = await apiPATCH(
-    `/rest/projects/${projectId}?format=json`,
+  const { data } = await axios.get(
+    `${process.env.REACT_APP_API_URL}/rest/projects/${projectId}?format=json`,
   );
   console.log(data);
   dispatch({

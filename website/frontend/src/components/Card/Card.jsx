@@ -241,6 +241,30 @@ class Card extends Component {
         //   '📈 CURRENTLY VIZ-ING: ' + output_states[selectedOutputKey].label,
         // );
 
+        // Create OVERALL delta line on graph, helpful for viz purposes (prolly temp, NOT made from delta components)
+        let overall_delta_y = new Array(results.time.length - 2);
+        for (var i = 0; i < overall_delta_y.length; i++) overall_delta_y[i] = 0; // Fill w 0s
+        for (var i = 1; i <= results.time.length - 1; i++) {
+          let x1 = i - 1;
+          let x2 = i + 1;
+          let y1 = output_states[selectedOutputKey].data[x1];
+          let y2 = output_states[selectedOutputKey].data[x2];
+          let delta = (y2 - y1) / (x2 - x1);
+          overall_delta_y[i - 1] = delta;
+        }
+        let overall_delta_trace = {
+          x: results.time,
+          y: overall_delta_y,
+          name: 'Delta',
+          type: 'line',
+          mode: 'lines',
+          line: {
+            color: 'gray',
+            width: 3,
+          },
+          hoverinfo: 'all',
+        };
+
         // Finalize data for quantity plot
         let plot_data = [];
         let quantity_trace = {
@@ -253,34 +277,7 @@ class Card extends Component {
         };
 
         plot_data.push(quantity_trace);
-
-        if (results.time.length) {
-          // Create OVERALL delta line on graph, helpful for viz purposes (prolly temp, NOT made from delta components)
-          let overall_delta_y = new Array(results.time.length - 2);
-          for (var i = 0; i < overall_delta_y.length; i++) overall_delta_y[i] = 0; // Fill w 0s
-          for (var i = 1; i <= results.time.length - 1; i++) {
-            let x1 = i - 1;
-            let x2 = i + 1;
-            let y1 = output_states[selectedOutputKey].data[x1];
-            let y2 = output_states[selectedOutputKey].data[x2];
-            let delta = (y2 - y1) / (x2 - x1);
-            overall_delta_y[i - 1] = delta;
-          }
-          let overall_delta_trace = {
-            x: results.time,
-            y: overall_delta_y,
-            name: 'Delta',
-            type: 'line',
-            mode: 'lines',
-            line: {
-              color: 'gray',
-              width: 3,
-            },
-            hoverinfo: 'all',
-          };
-
-          plot_data.push(overall_delta_trace);
-        }
+        plot_data.push(overall_delta_trace);
 
         // Plot for quantity
         plot_xaxis['range'] = actualXscale;

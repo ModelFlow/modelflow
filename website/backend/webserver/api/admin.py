@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Project, Scenario, Template, ScenarioRun, ModelInstance
-from .models import ModelClass, DefaultAttribute, InstanceAttributeOverride, ClassAttributeOverride
+from .models import ModelClass, DefaultAttribute, AttributeOverride
 
 # Register your models here.
 
@@ -11,5 +11,4 @@ admin.site.register(ScenarioRun)
 admin.site.register(ModelInstance)
 admin.site.register(ModelClass)
 admin.site.register(DefaultAttribute)
-admin.site.register(InstanceAttributeOverride)
-admin.site.register(ClassAttributeOverride)
+admin.site.register(AttributeOverride)

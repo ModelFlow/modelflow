@@ -1,5 +1,5 @@
 class IndoorAir:
-    name = "IndoorAir"
+    name = "('indoor_air',)"
     params = [
         {
             "key": "specific_heat_of_air",

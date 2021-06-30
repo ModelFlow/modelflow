@@ -1,5 +1,5 @@
 class BatteryAndInverter:
-    name = "battery and inverter"
+    name = "battery"
     params = [
         {
             "key": "capacity_dc_kwh",

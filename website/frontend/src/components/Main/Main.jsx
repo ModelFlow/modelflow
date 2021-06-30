@@ -5,40 +5,20 @@ import actions from '../../state/actions';
 import ResultsView from '../ResultsView/ResultsView';
 import TreeView from '../TreeView/TreeView';
 import Header from '../Header/Header';
-import FlowView from '../FlowView/FlowView';
-import SimHeader from '../SimHeader/SimHeader';
 import ScenarioInputs from '../ScenarioInputs/ScenarioInputs';
 import { updateUrlParam } from '../../services/Utilities';
-import { NonIdealState } from '@blueprintjs/core';
 
 class Main extends Component {
-  state = {
-    error: null,
-  };
-
   componentDidMount() {
     const url = new URL(window.location.href);
     // TODO: If scenario is blank then show an exception page
-    let scenarioId = url.searchParams.get('scenario') || '';
+    let scenarioId = url.searchParams.get('scenario') || '1';
     let templateId = url.searchParams.get('template') || '';
-    if (scenarioId === '') {
-      this.setState({ error: 'No URL Parameter "scenario"' });
-    } else {
-      this.setState({ error: null });
-      this.fetchData(scenarioId, templateId);
-    }
+    this.fetchData(scenarioId, templateId);
   }
 
   fetchData = async (scenarioId, templateId) => {
-    const {
-      loadScenario,
-      loadTemplate,
-      runSim,
-      setSimError,
-      getTemplatesForCurrentProject,
-      getScenariosForCurrentProject,
-      getModelClassesForCurrentProject,
-    } = this.props;
+    const { loadScenario, loadTemplate, runSim, setSimError, getTemplatesForCurrentProject, getScenariosForCurrentProject } = this.props;
     // TODO: I don't like that two https requests in serial are needed here.
     // Perhaps get params will be included in the scenario view
     // await getParams();
@@ -47,21 +27,18 @@ class Main extends Component {
 
     // This is just used for potential interactivity
     const info = await loadScenario(scenarioId);
-    if (info.error) {
-      this.setState({ error: info.error });
-      return;
-    }
+    console.log("finished loading scenario")
+    console.log(info)
     // We need the project metadata to first be set above
     getTemplatesForCurrentProject();
     getScenariosForCurrentProject();
-    getModelClassesForCurrentProject();
 
     if (info.error) {
       await setSimError('Scenario Not Found');
     } else {
       const url = new URL(window.location.href);
       let templateId = url.searchParams.get('template') || '';
-      if (!templateId && info.default_template) {
+      if (!templateId) {
         templateId = info.default_template;
         console.log('updating default template id');
         updateUrlParam('template', templateId);
@@ -78,10 +55,6 @@ class Main extends Component {
   };
 
   render() {
-    const { error } = this.state;
-    if (error) {
-      return <NonIdealState icon="error" title="Error" description={error} />;
-    }
     const { mainViewType } = this.props;
     let mainView = null;
     if (mainViewType === 'flow') {
@@ -110,7 +83,7 @@ class Main extends Component {
 
     return (
       <>
-        <SimHeader />
+        <Header />
         {mainView}
       </>
     );
@@ -126,8 +99,6 @@ const mapDispatchToProps = {
     actions.templates.getTemplatesForCurrentProject,
   getScenariosForCurrentProject:
     actions.scenarios.getScenariosForCurrentProject,
-  getModelClassesForCurrentProject:
-    actions.modelClassForm.getModelClassesForCurrentProject,
 };
 
 const mapStateToProps = (state) => ({

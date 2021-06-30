@@ -10,6 +10,7 @@ from modelflow.modelflow import run_scenario
 class TestStarship():
 
     def setup(self):
+        print('inside setup')
         self.scenario = {
             "simulation_params": {
                 "max_num_steps": 1000,
@@ -80,8 +81,8 @@ class TestStarship():
 
     def test_valid_schema_change(self):
         output = run_scenario(self.scenario)
-        assert output['trees'][0] == {'root': {'children': [{'time': {'children': [{'interplanetary_space': {'children': [{'starship': {'children': ['mass_simulator']}}]}}, 'mars_surface']}}]}}
-        assert output['trees'][47] == {'root': {'children': [{'time': {'children': ['interplanetary_space', {'mars_surface': {'children': [{'starship': {'children': ['mass_simulator']}}]}}]}}]}}
+        assert output['trees'][0] == {'time': {'children': [{'interplanetary_space': {'children': [{'starship': {'children': ['mass_simulator']}}]}}, 'mars_surface']}}
+        assert output['trees'][47] == {'time': {'children': ['interplanetary_space', {'mars_surface': {'children': [{'starship': {'children': ['mass_simulator']}}]}}]}}
 
     def test_pre_launch_checks(self):
         self.scenario['model_instances']["mass_simulator"]["overrides"]["mass"] = 100000000000

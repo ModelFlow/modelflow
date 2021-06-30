@@ -7,8 +7,6 @@ import common from './common';
 import projects from './projects';
 import attributesInput from './attributes_input';
 import scenarios from './scenarios';
-import modelClassForm from './model_class_form';
-import instanceForm from './instance_form';
 
 export {
   attributesInput,
@@ -20,6 +18,4 @@ export {
   templates,
   common,
   projects,
-  modelClassForm,
-  instanceForm,
 };
