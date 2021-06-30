@@ -6,6 +6,7 @@ from pprint import pprint
 from types import SimpleNamespace
 from treelib import Node, Tree
 import importlib
+import traceback
 
 
 class SimulationError(Exception):
@@ -142,10 +143,11 @@ class StateFetcher:
             node = self._tree.get_node(parent_id)
             tree = self._tree.subtree(node.tag)
             for key in tree.expand_tree():
-                for state_name in self._shared_states_map[key]:
-                    if state_name == name:
-                        self._scenario_runner.key_lookup_cache[(self._key, name)] = key
-                        return key
+                if key in self._shared_states_map:
+                    for state_name in self._shared_states_map[key]:
+                        if state_name == name:
+                            self._scenario_runner.key_lookup_cache[(self._key, name)] = key
+                            return key
         all_states = []
         for info in self._shared_states_map.values():
             for key in info:
@@ -209,7 +211,8 @@ class ScenarioRunner():
                     except SimulationError as e:
                         raise SimStoppingError(e)
                     except Exception as e:
-                        print(f"Model: '{instance_info['model_class'].__name__}' encountered an error!")
+                        tstr = traceback.format_exc()
+                        print(f"Model: '{instance_info['model_class'].__name__}' encountered an error!\n{tstr}")
                         raise SimStoppingError(e)
                     
                     # goal: human1___indoor1___atmo_o2_delta
@@ -395,6 +398,7 @@ def validate_scenario(scenario):
 
 def create_tree(model_instance_map):
     tree = Tree()
+    tree.create_node(tag='root', identifier='root', parent=None)
     # This ensures that when the tree is created, children always have a parent to reference
     add_child_to_tree('root', model_instance_map, tree)
     return tree
@@ -405,10 +409,6 @@ def add_child_to_tree(key, model_instance_map, tree):
         if "initial_parent_key" not in info or info['initial_parent_key'] is None or info['initial_parent_key'] == "":
             info['initial_parent_key'] = 'root'
         if info["initial_parent_key"] == key:
-            # treelib needs the root to not have any parents
             parent = info["initial_parent_key"]
-            if parent == 'root':
-                parent = None
-
             tree.create_node(tag=info["key"], identifier=info["key"], parent=parent)
             add_child_to_tree(info["key"], model_instance_map, tree)

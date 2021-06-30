@@ -11,30 +11,41 @@ import {
   AnchorButton,
   Intent,
   Icon,
+  Tab,
+  Tabs,
 } from '@blueprintjs/core';
 import ModelClass from '../ModelClass/ModelClass.jsx';
 import ModelInstance from '../ModelInstance/ModelInstance.jsx';
+import ModelClassInputs from '../ModelClassInputs/ModelClassInputs.jsx';
+import InstanceInputs from '../InstanceInputs/InstanceInputs.jsx';
 
 class ScenarioInputs extends Component {
   state = {
-    newModelClassDialogIsOpen: false,
     newInstanceDialogIsOpen: false,
+    selectedTabId: 'instances',
   };
 
   handleNewModelClassDialogOpen = () => {
-    this.setState({ newModelClassDialogIsOpen: true });
+    const { setModelClassDialogState, resetModelClassForm } = this.props;
+    resetModelClassForm();
+    setModelClassDialogState(true);
   };
 
   handleNewModelClassDialogClose = () => {
-    this.setState({ newModelClassDialogIsOpen: false });
+    const { setModelClassDialogState } = this.props;
+    setModelClassDialogState(false);
   };
 
   handleNewModelClassSubmit = async () => {
-    const { submitModelClass, getModelClassesForCurrentProject } = this.props;
+    const {
+      submitModelClass,
+      getModelClassesForCurrentProject,
+      setModelClassDialogState,
+    } = this.props;
     const data = await submitModelClass();
     if (!data.error) {
       getModelClassesForCurrentProject();
-      this.setState({ newModelClassDialogIsOpen: false });
+      setModelClassDialogState(false);
     }
   };
 
@@ -44,7 +55,7 @@ class ScenarioInputs extends Component {
     if (!data.error) {
       this.setState({ newInstanceDialogIsOpen: false });
     }
-  }
+  };
 
   handleNewInstanceDialogOpen = () => {
     this.setState({ newInstanceDialogIsOpen: true });
@@ -60,16 +71,21 @@ class ScenarioInputs extends Component {
     await runSim();
   };
 
+  handleTabChange = (tabId) => {
+    this.setState({ selectedTabId: tabId });
+  };
+
   render() {
     const {
       maxSteps,
       modelClassStatus,
       modelClassError,
       fullState,
+      modelClassDialogIsOpen,
     } = this.props;
-    const { newModelClassDialogIsOpen, newInstanceDialogIsOpen } = this.state;
+    const { newInstanceDialogIsOpen, selectedTabId } = this.state;
     console.log('inside scenarioinputs render');
-    console.log(JSON.stringify(fullState));
+    // console.log(JSON.stringify(fullState));
 
     // TODO: Add search
     const modelInstances = [];
@@ -100,7 +116,7 @@ class ScenarioInputs extends Component {
         canEscapeKeyClose={false}
         canOutsideClickClose={false}
         enforceFocus={false}
-        isOpen={newModelClassDialogIsOpen}
+        isOpen={modelClassDialogIsOpen}
         usePortal={true}
       >
         <ModelClass />
@@ -118,7 +134,7 @@ class ScenarioInputs extends Component {
               onClick={this.handleNewModelClassSubmit}
               target="_blank"
             >
-              Create
+              Submit
             </AnchorButton>
           </div>
         </div>
@@ -167,15 +183,38 @@ class ScenarioInputs extends Component {
             onValueChange={this.handleInputMaxSteps}
             value={maxSteps}
             buttonPosition={'none'}
+            fill={true}
           />
+        </FormGroup>
 
-          <Button onClick={this.handleNewModelClassDialogOpen}>
+        <Tabs
+          id="ScenarioInputsTab"
+          onChange={this.handleTabChange}
+          selectedTabId={selectedTabId}
+        >
+          <Tab
+            key="instances"
+            id="instances"
+            title="Instances"
+            panel={<InstanceInputs />}
+          />
+          <Tab
+            key="modelclasses"
+            id="modelclasses"
+            title="Classes"
+            panel={<ModelClassInputs />}
+          />
+        </Tabs>
+
+        <div>
+          <Button onClick={this.handleNewModelClassDialogOpen} fill={true}>
             New Model Class
           </Button>
-          <Button onClick={this.handleNewInstanceDialogOpen}>
+          <Button onClick={this.handleNewInstanceDialogOpen} fill={true}>
             New Instance
           </Button>
-        </FormGroup>
+        </div>
+
         {modelInstances.map((modelInstance) => {
           const paramInputs = null;
           const stateInputs = null;
@@ -215,9 +254,11 @@ const mapDispatchToProps = {
   runSim: actions.sim.runSim,
   getModelClassesForCurrentProject:
     actions.modelClassForm.getModelClassesForCurrentProject,
+  setModelClassDialogState: actions.attributesInput.setModelClassDialogState,
 };
 
 const mapStateToProps = (state) => ({
+  modelClassDialogIsOpen: state.attributesInput.modelClassDialogIsOpen,
   maxSteps: state.scenarios.currentScenario.max_steps,
   modelClassStatus: state.modelClassForm.status,
   modelClassError: state.modelClassForm.error,

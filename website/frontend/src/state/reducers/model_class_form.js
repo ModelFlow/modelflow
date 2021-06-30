@@ -4,6 +4,9 @@ import {
   appendItem,
 } from '../../services/Utilities';
 
+const default_run_step_code = `def run_step(states, params, utils):
+`;
+
 const initialState = {
   // For listing model classes per project for new instance
   modelClasses: [],
@@ -12,7 +15,7 @@ const initialState = {
   description: '',
   parameters: [],
   states: [],
-  code: '',
+  run_step_code: default_run_step_code,
   status: '',
   error: null,
 };
@@ -57,8 +60,27 @@ export default function reduce(state = initialState, action = {}) {
         [action.attrType]: appendItem(state[action.attrType], emptyItem),
       };
     }
-    case 'SUBMITTED_MODEL_CLASS': {
-      return initialState;
+    case 'RESET_MODEL_CLASS_FORM': {
+      return {
+        ...state,
+        name: '',
+        description: '',
+        parameters: [],
+        states: [],
+        run_step_code: default_run_step_code,
+      };
+    }
+
+    case 'SET_MODEL_CLASS_FORM': {
+      return {
+        ...state,
+        name: action.name,
+        description: action.description,
+        parameters: action.parameters,
+        states: action.states,
+        run_step_code: action.run_step_code,
+        error: action.error,
+      };
     }
 
     case 'SET_MODEL_CLASS_FORM_STATUS': {

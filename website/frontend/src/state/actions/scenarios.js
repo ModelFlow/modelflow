@@ -25,8 +25,7 @@ export const loadScenario = (scenarioId) => async (dispatch) => {
     return data;
   }
 
-  // Success 🎉
-  console.log('GOT SCENARIO RESULTS:');
+  console.log('Loaded scenario:');
   console.log(data);
   dispatch({
     type: 'SET_CURRENT_SCENARIO_AND_METADATA',

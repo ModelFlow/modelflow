@@ -119,8 +119,7 @@ class ModelClassSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ModelClass
-        # run_step_code
-        fields = ['id', 'key', 'label', 'description', 'is_hidden', 'project', 'default_attributes']
+        fields = ['id', 'key', 'label', 'description', 'is_hidden', 'project', 'default_attributes', 'run_step_code']
 
 
 class ModelClassViewSet(viewsets.ModelViewSet):

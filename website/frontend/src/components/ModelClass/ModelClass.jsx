@@ -84,7 +84,12 @@ class ModelClass extends Component {
   
     */
 
-    const { name, description, updateModelClassField } = this.props;
+    const {
+      name,
+      description,
+      updateModelClassField,
+      run_step_code,
+    } = this.props;
 
     /*
         <MonacoEditor
@@ -154,10 +159,9 @@ class ModelClass extends Component {
           height="300px"
           // theme='vs-dark'
           line={2}
-          onChange={(x) => updateModelClassField('code', x)}
+          onChange={(x) => updateModelClassField('run_step_code', x)}
           defaultLanguage="python"
-          defaultValue={`def run_step(states, params, utils):
-    `}
+          defaultValue={run_step_code}
         />
       </div>
     );
@@ -172,7 +176,7 @@ const mapDispatchToProps = {
 const mapStateToProps = (state) => ({
   name: state.modelClassForm.name,
   description: state.modelClassForm.description,
-  code: state.modelClassForm.code,
+  run_step_code: state.modelClassForm.run_step_code,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ModelClass);

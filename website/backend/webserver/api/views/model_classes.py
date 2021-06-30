@@ -10,7 +10,7 @@ import os
 
 @csrf_exempt
 @require_POST
-def new_model_class(request):
+def create_or_update_model_class(request):
     body = json.loads(request.body)
     project = Project.objects.filter(id=int(body['project'])).first()
     if project is None:
@@ -24,9 +24,16 @@ def new_model_class(request):
             label=body['name'],
             description=body['description'],
             project=project,
-            run_step_code=body['code'])
+            run_step_code=body['run_step_code'])
     else:
-        raise Exception("ModelClass already exists. TODO")
+        model_class.key = key
+        model_class.label = body['name']
+        model_class.description = body['description']
+        # project=project
+        print("inputed runstep code:")
+        model_class.run_step_code = body['run_step_code']
+        model_class.save()
+
 
     for param in body['parameters']:
         param['kind'] = 'param'
@@ -34,19 +41,34 @@ def new_model_class(request):
     for state in body['states']:
         state['kind'] = 'state'
     for item in body['parameters'] + body['states']:
-        DefaultAttribute.objects.create(
-            key=item['key'],
-            label=item['label'],
-            dtype=item['dtype'],
-            units=item.get('units'),
-            kind=item['kind'],
-            is_private=item.get('private', False),
-            value=str(item['value']),
-            confidence=item.get('confidence', 0),
-            notes=item.get('notes', ''),
-            source=item.get('source', ''),
-            model_class=model_class
-        )
+
+        default_attr = DefaultAttribute.objects.filter(model_class=model_class, key=item['key'], kind=item['kind']).first()
+        if default_attr is None:
+            DefaultAttribute.objects.create(
+                key=item['key'],
+                label=item['label'],
+                dtype=item['dtype'],
+                units=item.get('units'),
+                kind=item['kind'],
+                is_private=item.get('private', False),
+                value=str(item['value']),
+                confidence=item.get('confidence', 0),
+                notes=item.get('notes', ''),
+                source=item.get('source', ''),
+                model_class=model_class
+            )
+        else:
+            default_attr.key=item['key']
+            default_attr.label=item['label']
+            default_attr.dtype=item['dtype']
+            default_attr.units=item.get('units')
+            default_attr.kind=item['kind']
+            default_attr.is_private=item.get('private', False)
+            default_attr.value=str(item['value'])
+            default_attr.confidence=item.get('confidence', 0)
+            default_attr.notes=item.get('notes', '')
+            default_attr.source=item.get('source', '')
+            default_attr.save()
 
     # https://stackoverflow.com/questions/5362771/how-to-load-a-module-from-code-in-a-string
     # Note: we probably want to save the code file here as that can then help with local iteration... but then we risk getting out of sync with the database...
@@ -68,6 +90,7 @@ def new_model_class(request):
     write_file_for_model_class(model_classes_dir, model_class)
 
     return JsonResponse({'id': model_class.id})
+
 
 def write_file_for_model_class(model_classes_dir, model_class):
     model_class_text = ''
@@ -116,7 +139,7 @@ def write_file_for_model_class(model_classes_dir, model_class):
 
         model_class_text += '\n'
 
-    model_class_text += '    @staticmethod\n'
+    model_class_text += '\n    @staticmethod\n'
     for line in model_class.run_step_code.split('\n'):
         model_class_text += '    ' + line + '\n'
 
