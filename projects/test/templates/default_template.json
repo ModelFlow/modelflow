@@ -1,0 +1,31 @@
+{
+    "tabs": [
+        {
+            "id": "blank",
+            "name": "Unnamed Tab"
+        }
+    ],
+    "selectedTabId": "blank",
+    "tabsContent": {
+        "blank": {
+            "cards": {
+                "l2remc5s3cq1tn3ehmuxdu": {
+                    "outputKey": "producer___widgets"
+                }
+            },
+            "layout": {
+                "lg": [
+                    {
+                        "w": 6,
+                        "h": 6,
+                        "x": 0,
+                        "y": 0,
+                        "i": "l2remc5s3cq1tn3ehmuxdu",
+                        "moved": false,
+                        "static": false
+                    }
+                ]
+            }
+        }
+    }
+}

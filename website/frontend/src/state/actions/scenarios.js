@@ -17,13 +17,15 @@ export const getScenariosForProject = (projectId) => async (dispatch) => {
 };
 
 export const loadScenario = (scenarioId) => async (dispatch) => {
-  console.log('before get');
-
   const data = await apiGET(`/rest/scenarios/${scenarioId}?format=json`);
-  if (data.error) return data.error;
+  if (data.error) {
+    if (data.error === 'Encountered: 404') {
+      data.error = `Scenario with id ${scenarioId} not found!`;
+    }
+    return data;
+  }
 
-  // Success 🎉
-  console.log('GET SCENARIO RESULTS:');
+  console.log('Loaded scenario:');
   console.log(data);
   dispatch({
     type: 'SET_CURRENT_SCENARIO_AND_METADATA',
@@ -49,9 +51,11 @@ export const loadScenario = (scenarioId) => async (dispatch) => {
 };
 
 export const createScenario = (name, projectId) => async (dispatch) => {
+  const DEFAULT_MAX_STEPS = 100;
   const data = await apiPOST(`/rest/scenarios/?format=json`, {
     name,
     project: projectId,
+    max_steps: DEFAULT_MAX_STEPS,
   });
   // if (data.error) return error;
 
@@ -60,6 +64,7 @@ export const createScenario = (name, projectId) => async (dispatch) => {
   //   type: 'CREATE_SCENARIO',
   //   name,
   // });
+  return data.id;
 };
 
 export const hideScenario = (scenarioId) => async (dispatch) => {

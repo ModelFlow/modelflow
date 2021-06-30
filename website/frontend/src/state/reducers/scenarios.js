@@ -9,6 +9,7 @@ const initialState = {
   currentScenarioDefaultTemplateId: 0,
   currentScenario: {
     max_steps: '',
+    model_instances: [],
   },
 };
 
