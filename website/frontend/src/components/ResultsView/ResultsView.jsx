@@ -52,7 +52,6 @@ class ResultsView extends Component {
     const { isOpen } = this.state;
     const { selectedTabId, tabs, results, status } = this.props;
 
-
     return (
       <>
         <div style={{ marginTop: '5px' }}>

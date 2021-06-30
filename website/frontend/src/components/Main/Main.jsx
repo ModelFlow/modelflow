@@ -3,7 +3,7 @@ import './Main.css';
 import { connect } from 'react-redux';
 import actions from '../../state/actions';
 import ResultsView from '../ResultsView/ResultsView';
-import FlowView from '../FlowView/FlowView';
+import TreeView from '../TreeView/TreeView';
 import Header from '../Header/Header';
 import ScenarioInputs from '../ScenarioInputs/ScenarioInputs';
 import { updateUrlParam } from '../../services/Utilities';
@@ -60,7 +60,7 @@ class Main extends Component {
     if (mainViewType === 'flow') {
       mainView = (
         <div className="flow-container">
-          <FlowView />
+          <TreeView />
         </div>
       );
     } else {
@@ -74,6 +74,7 @@ class Main extends Component {
             <ScenarioInputs />
           </div>
           <div className="resultsDisplay">
+            <TreeView />
             <ResultsView />
           </div>
         </div>
