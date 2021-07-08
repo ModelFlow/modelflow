@@ -31,3 +31,12 @@ export const getParams = () => async (dispatch) => {
   });
   return params;
 };
+
+export const setModelClassDialogState = (modelClassDialogIsOpen) => async (
+  dispatch,
+) => {
+  dispatch({
+    type: 'SET_MODEL_CLASS_DIALOG_IS_OPEN',
+    modelClassDialogIsOpen,
+  });
+};

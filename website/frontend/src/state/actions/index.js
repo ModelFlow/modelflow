@@ -6,7 +6,9 @@ import * as templates from './templates';
 import * as common from './common';
 import * as projects from './projects';
 import * as scenarios from './scenarios';
-import * as modelClasses from './model_classes';
+// import * as modelClasses from './model_classes';
+import * as modelClassForm from './model_class_form';
+import * as instanceForm from './instance_form';
 
 export default {
   attributesInput,
@@ -16,6 +18,7 @@ export default {
   common,
   projects,
   scenarios,
-  modelClasses,
+  modelClassForm,
   flowView,
+  instanceForm,
 };
