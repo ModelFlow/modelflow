@@ -18,9 +18,7 @@ class PrivateExampleModel:
 
 class TestPrivate():
     scenario = {
-        "simulation_params": {
-            "max_num_steps": 3,
-        },
+        "max_steps": 3,
         "model_instances": {
             "private_ex": {
                 "model_class": PrivateExampleModel
@@ -52,9 +50,7 @@ class SharedStateExampleModel:
 
 class TestSharedState():
     scenario = {
-        "simulation_params": {
-            "max_num_steps": 3,
-        },
+        "max_steps": 3,
         "model_instances": {
             "shared_ex": {
                 "model_class": SharedStateExampleModel
@@ -102,24 +98,22 @@ class AProducer:
 
 class TestFindingOutsideSharedState():
     scenario = {
-        "simulation_params": {
-            "max_num_steps": 3,
-        },
+        "max_steps": 3,
         "model_instances": {
-            "root": {
+            "fakeroot": {
                 "model_class": Root,
             },
             "level1_group": {
                 "model_class": AGroup,
-                "parent_instance_key": "root",
+                "initial_parent_key": "fakeroot",
             },
             "level1_partA": {
                 "model_class": AProducer,
-                "parent_instance_key": "root",
+                "initial_parent_key": "fakeroot",
             },
             "level2_partA": {
                 "model_class": AConsumer,
-                "parent_instance_key": "level1_group",
+                "initial_parent_key": "level1_group",
             }
         }
     }
@@ -138,28 +132,26 @@ class TestFindingOutsideSharedState():
 
 class TestSimpleSameNamedSharedState():
     scenario = {
-        "simulation_params": {
-            "max_num_steps": 2
-        },
+        "max_steps": 2,
         "model_instances": {
-            "root": {
+            "fakeroot": {
                 "model_class": Root
             },
             "group1": {
                 "model_class": AGroup,
-                "parent_instance_key": "root"
+                "initial_parent_key": "fakeroot"
             },
             "group1_producer": {
                 "model_class": AProducer,
-                "parent_instance_key": "group1"
+                "initial_parent_key": "group1"
             },
             "group2": {
                 "model_class": AGroup,
-                "parent_instance_key": "root"
+                "initial_parent_key": "fakeroot"
             },
             "group2_producer": {
                 "model_class": AProducer,
-                "parent_instance_key": "group2",
+                "initial_parent_key": "group2",
                 "overrides": {
                     "shared_state": 100
                 }
@@ -182,39 +174,37 @@ class TestSimpleSameNamedSharedState():
 
 class TestSameNamedSharedState():
     scenario = {
-        "simulation_params": {
-            "max_num_steps": 2
-        },
+        "max_steps": 2,
         "model_instances": {
-            "root": {
+            "fakeroot": {
                 "model_class": Root
             },
             "group1": {
                 "model_class": AGroup,
-                "parent_instance_key": "root"
+                "initial_parent_key": "fakeroot"
             },
             "group1_producer": {
                 "model_class": AProducer,
-                "parent_instance_key": "group1"
+                "initial_parent_key": "group1"
             },
             "group1_consumer": {
                 "model_class": AConsumer,
-                "parent_instance_key": "group1"
+                "initial_parent_key": "group1"
             },
             "group2": {
                 "model_class": AGroup,
-                "parent_instance_key": "root"
+                "initial_parent_key": "fakeroot"
             },
             "group2_producer": {
                 "model_class": AProducer,
-                "parent_instance_key": "group2",
+                "initial_parent_key": "group2",
                 "overrides": {
                     "shared_state": 100
                 }
             },
             "group2_consumer": {
                 "model_class": AConsumer,
-                "parent_instance_key": "group2"
+                "initial_parent_key": "group2"
             }
         }
     }

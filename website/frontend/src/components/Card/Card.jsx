@@ -33,7 +33,7 @@ class Card extends Component {
   // xScale = [];
 
   scrolledIn = () => {
-    const { setSelectedUUID, uuid, selectedUUID } = this.props;
+    const { setSelectedUUID, uuid } = this.props;
     setSelectedUUID(uuid);
   };
 
@@ -44,7 +44,7 @@ class Card extends Component {
     if (target && target.getAttribute('class') === 'dragcover') {
       return;
     }
-    const { setSelectedUUID, selectedUUID } = this.props;
+    const { setSelectedUUID } = this.props;
     setSelectedUUID('');
   };
 
@@ -180,7 +180,7 @@ class Card extends Component {
     let plot_height = this.size.height * 0.87;
     this.state.plot_width = this.size.width * 0.97;
     let plot_margins = {
-      t: 60,
+      t: 10,
       b: 40,
       l: 45,
       r: 20,
@@ -237,47 +237,50 @@ class Card extends Component {
         }
 
         // HH: Some printing for dev purposes
-        console.log(
-          '📈 CURRENTLY VIZ-ING: ' + output_states[selectedOutputKey].label,
-        );
-
-        // Create OVERALL delta line on graph, helpful for viz purposes (prolly temp, NOT made from delta components)
-        let overall_delta_y = new Array(results.time.length - 2);
-        for (var i = 0; i < overall_delta_y.length; i++) overall_delta_y[i] = 0; // Fill w 0s
-        for (var i = 1; i <= results.time.length - 1; i++) {
-          let x1 = i - 1;
-          let x2 = i + 1;
-          let y1 = output_states[selectedOutputKey].data[x1];
-          let y2 = output_states[selectedOutputKey].data[x2];
-          let delta = (y2 - y1) / (x2 - x1);
-          overall_delta_y[i - 1] = delta;
-        }
-        let overall_delta_trace = {
-          x: results.time,
-          y: overall_delta_y,
-          name: 'CALCD DELTA',
-          type: 'line',
-          mode: 'lines',
-          line: {
-            color: 'gray',
-            width: 3,
-          },
-          hoverinfo: 'all',
-        };
+        // console.log(
+        //   '📈 CURRENTLY VIZ-ING: ' + output_states[selectedOutputKey].label,
+        // );
 
         // Finalize data for quantity plot
         let plot_data = [];
         let quantity_trace = {
           x: results.time,
           y: output_states[selectedOutputKey].data,
-          name: 'quantity',
+          name: 'Quantity',
           type: 'line',
           mode: 'lines',
           marker: { color: '#137cbd', width: 3 },
         };
 
         plot_data.push(quantity_trace);
-        plot_data.push(overall_delta_trace);
+
+        if (results.time.length) {
+          // Create OVERALL delta line on graph, helpful for viz purposes (prolly temp, NOT made from delta components)
+          let overall_delta_y = new Array(results.time.length - 2);
+          for (var i = 0; i < overall_delta_y.length; i++) overall_delta_y[i] = 0; // Fill w 0s
+          for (var i = 1; i <= results.time.length - 1; i++) {
+            let x1 = i - 1;
+            let x2 = i + 1;
+            let y1 = output_states[selectedOutputKey].data[x1];
+            let y2 = output_states[selectedOutputKey].data[x2];
+            let delta = (y2 - y1) / (x2 - x1);
+            overall_delta_y[i - 1] = delta;
+          }
+          let overall_delta_trace = {
+            x: results.time,
+            y: overall_delta_y,
+            name: 'Delta',
+            type: 'line',
+            mode: 'lines',
+            line: {
+              color: 'gray',
+              width: 3,
+            },
+            hoverinfo: 'all',
+          };
+
+          plot_data.push(overall_delta_trace);
+        }
 
         // Plot for quantity
         plot_xaxis['range'] = actualXscale;
@@ -292,12 +295,6 @@ class Card extends Component {
               width: this.state.plot_width,
               height: plot_height,
               margin: plot_margins,
-              title: {
-                text: 'Quantity over mission run',
-                font: {
-                  size: 15,
-                },
-              },
               xaxis: plot_xaxis,
               yaxis: plot_yaxis,
               showlegend: false,
@@ -337,14 +334,13 @@ class Card extends Component {
               .length > 0
           ) {
             // Printing for dev purposes
-            console.log(
-              '👀 ' +
-              selectedOutputKey +
-              ' has ' +
-              Object.keys(output_states[selectedOutputKey].componentDeltas)
-                .length +
-              ' component deltas',
-            );
+            // console.log(
+            //   selectedOutputKey +
+            //   ' has ' +
+            //   Object.keys(output_states[selectedOutputKey].componentDeltas)
+            //     .length +
+            //   ' component deltas',
+            // );
             console.log('AVAILABLE COMPONENT DELTAS: ');
             Object.entries(
               output_states[selectedOutputKey].componentDeltas,
@@ -448,6 +444,22 @@ class Card extends Component {
         );
       }
     }
+
+    // TODO: Bring back delta button
+    const deltaBreakdownButton = null;
+    /*
+                <span
+              style={{
+                float: 'right',
+                marginTop: '5px',
+                marginLeft: '20px',
+                display: 'inline',
+              }}
+            >
+              Delta breakdown: {deltaPlotButton}
+            </span>
+    */
+
     return (
       <>
         <div
@@ -465,29 +477,20 @@ class Card extends Component {
           }}
         >
           <div className="card_header">
-            <span className="chart_title">
+            <span className="chart_name">
               {selectedOutputKey.replace('state_', '')}
             </span>
             <span
-              style={{ float: 'right', marginTop: '5px', marginLeft: '20px' }}
+              style={{ float: 'right', marginTop: '5px', marginLeft: '5px', marginRight: '5px' }}
             >
               {deleteButton}
             </span>
             <span
-              style={{ float: 'right', marginTop: '5px', marginLeft: '20px' }}
+              style={{ float: 'right', marginTop: '5px', marginLeft: '0px' }}
             >
               {selector}
             </span>
-            <span
-              style={{
-                float: 'right',
-                marginTop: '5px',
-                marginLeft: '20px',
-                display: 'inline',
-              }}
-            >
-              Delta breakdown: {deltaPlotButton}
-            </span>
+            {deltaBreakdownButton}
           </div>
           <div style={{ display: 'table-row' }}>
             {plot}
@@ -502,18 +505,18 @@ class Card extends Component {
 }
 
 const mapDispatchToProps = {
-  removeCard: actions.resultViews.removeCard,
-  updateCardOutputKey: actions.resultViews.updateCardOutputKey,
   runSim: actions.sim.runSim,
-  setXrange: actions.resultViews.setXrange,
-  setSelectedUUID: actions.resultViews.setSelectedUUID,
+  updateCardOutputKey: actions.resultsView.updateCardOutputKey,
+  removeCard: actions.resultsView.removeCard,
+  setXrange: actions.resultsView.setXrange,
+  setSelectedUUID: actions.resultsView.setSelectedUUID,
 };
 
 const mapStateToProps = (state) => ({
-  tabsContent: state.resultViews.tabsContent,
-  selectedUUID: state.resultViews.selectedUUID,
+  tabsContent: state.resultsView.tabsContent,
+  selectedUUID: state.resultsView.selectedUUID,
   results: state.sim.results,
-  xrange: state.resultViews.xrange,
+  xrange: state.resultsView.xrange,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Card);

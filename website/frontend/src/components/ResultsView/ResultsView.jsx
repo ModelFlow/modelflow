@@ -10,7 +10,7 @@ import {
 } from '@blueprintjs/core';
 
 import React, { Component } from 'react';
-import ResultsGrid from './../ResultsGrid/ResultsGrid';
+import ResultsGrid from '../ResultsGrid/ResultsGrid';
 import { connect } from 'react-redux';
 import actions from '../../state/actions';
 import './ResultsView.css';
@@ -52,50 +52,9 @@ class ResultsView extends Component {
     const { isOpen } = this.state;
     const { selectedTabId, tabs, results, status } = this.props;
 
-    let callout = null;
-    if (status === 'waiting') {
-      callout = (
-        <Callout
-          icon={'info-sign'}
-          intent={''}
-          title={'Waiting'}
-          className="simStatusCallout"
-        ></Callout>
-      );
-    } else if (status === 'running') {
-      callout = (
-        <Callout
-          icon={'walk'}
-          intent={'warning'}
-          title={'Running'}
-          className="simStatusCallout"
-        ></Callout>
-      );
-    } else if (status === 'success') {
-      callout = (
-        <Callout
-          icon={'tick-circle'}
-          intent={'success'}
-          title={'Success'}
-          className="simStatusCallout"
-        ></Callout>
-      );
-    } else if (status === 'error') {
-      callout = (
-        <Callout
-          icon={'error'}
-          intent={'danger'}
-          title={'Error'}
-          className="simStatusCallout"
-        >
-          {results.error}
-        </Callout>
-      );
-    }
     return (
       <>
-        {callout}
-        <div className="tabHeader">
+        <div style={{ marginTop: '5px' }}>
           <Button
             text="Edit Tabs"
             onClick={this.handleOpen}
@@ -125,7 +84,7 @@ class ResultsView extends Component {
                       dir="auto"
                       style={{ width: '425px', marginBottom: '10px' }}
                       onChange={(e) => this.handleTabTitleChange(tab.id, e)}
-                      value={tab.title}
+                      value={tab.name}
                     />
                     <Button
                       disabled={tabs.length === 1}
@@ -162,7 +121,7 @@ class ResultsView extends Component {
               selectedTabId={selectedTabId}
             >
               {tabs.map((tab) => {
-                return <Tab key={tab.id} id={tab.id} title={tab.title} />;
+                return <Tab key={tab.id} id={tab.id} title={tab.name} />;
               })}
             </Tabs>
           </div>
@@ -174,15 +133,15 @@ class ResultsView extends Component {
 }
 
 const mapDispatchToProps = {
-  switchTab: actions.resultViews.switchTab,
-  addTab: actions.resultViews.addTab,
-  removeTab: actions.resultViews.removeTab,
-  editTabTitle: actions.resultViews.editTabTitle,
+  switchTab: actions.resultsView.switchTab,
+  addTab: actions.resultsView.addTab,
+  removeTab: actions.resultsView.removeTab,
+  editTabTitle: actions.resultsView.editTabTitle,
 };
 
 const mapStateToProps = (state) => ({
-  selectedTabId: state.resultViews.selectedTabId,
-  tabs: state.resultViews.tabs,
+  selectedTabId: state.resultsView.selectedTabId,
+  tabs: state.resultsView.tabs,
   results: state.sim.results,
   status: state.sim.status,
 });

@@ -1,0 +1,355 @@
+{
+    "tabs": [
+        {
+            "id": "blank",
+            "name": "Energy"
+        },
+        {
+            "id": "ptt9eqetxiimtegi0yzql",
+            "name": "Indoor Air"
+        },
+        {
+            "id": "45ryxu2syp9uluyp7itern",
+            "name": "Water"
+        },
+        {
+            "id": "c00j79oj4nu59p3m9ama0k",
+            "name": "ISRU"
+        },
+        {
+            "id": "abb6std7zxje9zyqfx8ucv",
+            "name": "Mission"
+        }
+    ],
+    "selectedTabId": "blank",
+    "tabsContent": {
+        "blank": {
+            "cards": {
+                "epqvp3fi5b2buh6l7hj86": {
+                    "outputKey": "battery_and_inverter___generated_dc_kwh"
+                },
+                "72afli2adq4m9nlv0pt": {
+                    "outputKey": "battery_and_inverter___available_dc_kwh"
+                },
+                "31smyax4t3dl7b8vnudho": {
+                    "outputKey": "starship_integrated_pv___battery_and_inverter__generated_dc_kwh_deltas"
+                },
+                "kkuptpyqj8b0ducw43h84n9": {
+                    "outputKey": "urine_recovery___battery_and_inverter__available_dc_kwh_deltas"
+                },
+                "kkorexcckvbv4zsru2wldn": {
+                    "outputKey": "co2_scrubbers___battery_and_inverter__available_dc_kwh_deltas"
+                },
+                "vrbsxx5suuz5ynzpys6k": {
+                    "outputKey": "water_recovery___battery_and_inverter__available_dc_kwh_deltas"
+                },
+                "gjvx45x2bdrb4xualrscrp": {
+                    "outputKey": "hydrolysis_system___battery_and_inverter__available_dc_kwh_deltas"
+                }
+            },
+            "layout": {
+                "lg": [
+                    {
+                        "w": 6,
+                        "h": 2,
+                        "x": 0,
+                        "y": 11,
+                        "i": "gjvx45x2bdrb4xualrscrp",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 6,
+                        "h": 6,
+                        "x": 0,
+                        "y": 13,
+                        "i": "vrbsxx5suuz5ynzpys6k",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 6,
+                        "h": 2,
+                        "x": 0,
+                        "y": 7,
+                        "i": "kkorexcckvbv4zsru2wldn",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 6,
+                        "h": 2,
+                        "x": 0,
+                        "y": 9,
+                        "i": "kkuptpyqj8b0ducw43h84n9",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 6,
+                        "h": 2,
+                        "x": 0,
+                        "y": 5,
+                        "i": "31smyax4t3dl7b8vnudho",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 3,
+                        "h": 5,
+                        "x": 0,
+                        "y": 0,
+                        "i": "72afli2adq4m9nlv0pt",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 3,
+                        "h": 5,
+                        "x": 3,
+                        "y": 0,
+                        "i": "epqvp3fi5b2buh6l7hj86",
+                        "moved": false,
+                        "static": false
+                    }
+                ]
+            }
+        },
+        "ptt9eqetxiimtegi0yzql": {
+            "cards": {
+                "y4q58k86l7q3o6jiv7r5j9": {
+                    "outputKey": "indoor_air1___atmo_o2"
+                },
+                "bm4xi0n5vmbsrk8w8nbmjj": {
+                    "outputKey": "indoor_air1___atmo_co2"
+                },
+                "igkbo5lo4adb3e3zev92i": {
+                    "outputKey": "human1___indoor_air1__atmo_o2_deltas"
+                },
+                "33rvl0glp1szp00oe7q6": {
+                    "outputKey": "human1___indoor_air1__atmo_co2_deltas"
+                },
+                "eemat9oc7lcuqmb05584nn": {
+                    "outputKey": "co2_scrubbers___indoor_air1__atmo_co2_deltas"
+                },
+                "ismr6bjbjxndiwb29gfhi": {
+                    "outputKey": "hydrolysis_system___indoor_air1__atmo_o2_deltas"
+                }
+            },
+            "layout": {
+                "lg": [
+                    {
+                        "w": 3,
+                        "h": 5,
+                        "x": 0,
+                        "y": 6,
+                        "i": "ismr6bjbjxndiwb29gfhi",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 3,
+                        "h": 5,
+                        "x": 3,
+                        "y": 6,
+                        "i": "eemat9oc7lcuqmb05584nn",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 6,
+                        "h": 3,
+                        "x": 0,
+                        "y": 14,
+                        "i": "33rvl0glp1szp00oe7q6",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 6,
+                        "h": 3,
+                        "x": 0,
+                        "y": 11,
+                        "i": "igkbo5lo4adb3e3zev92i",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 3,
+                        "h": 6,
+                        "x": 3,
+                        "y": 0,
+                        "i": "bm4xi0n5vmbsrk8w8nbmjj",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 3,
+                        "h": 6,
+                        "x": 0,
+                        "y": 0,
+                        "i": "y4q58k86l7q3o6jiv7r5j9",
+                        "moved": false,
+                        "static": false
+                    }
+                ]
+            }
+        },
+        "45ryxu2syp9uluyp7itern": {
+            "cards": {
+                "zvgqq4h34hfxcwvo3qbjre": {
+                    "outputKey": "potable_water_storage___potable_water"
+                },
+                "wbjhz19gfu9j12e2e56fmg": {
+                    "outputKey": "unfiltered_water___unfiltered_water"
+                },
+                "99b3wme5p9bpzybz8987oa": {
+                    "outputKey": "urine_recovery___unfiltered_water__unfiltered_water_deltas"
+                },
+                "uz47ewxrl5o11tnnb7ze08o": {
+                    "outputKey": "dehumidifier___unfiltered_water__unfiltered_water_deltas"
+                },
+                "b43ui4kac5tje711xro3e": {
+                    "outputKey": "water_recovery___unfiltered_water__unfiltered_water_deltas"
+                },
+                "btnprdwamybq2glucfkzu": {
+                    "outputKey": "hydrolysis_system___potable_water_storage__potable_water_deltas"
+                }
+            },
+            "layout": {
+                "lg": [
+                    {
+                        "w": 3,
+                        "h": 5,
+                        "x": 3,
+                        "y": 13,
+                        "i": "btnprdwamybq2glucfkzu",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 3,
+                        "h": 5,
+                        "x": 0,
+                        "y": 13,
+                        "i": "b43ui4kac5tje711xro3e",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 3,
+                        "h": 5,
+                        "x": 3,
+                        "y": 8,
+                        "i": "uz47ewxrl5o11tnnb7ze08o",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 3,
+                        "h": 5,
+                        "x": 0,
+                        "y": 8,
+                        "i": "99b3wme5p9bpzybz8987oa",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 6,
+                        "h": 5,
+                        "x": 0,
+                        "y": 3,
+                        "i": "wbjhz19gfu9j12e2e56fmg",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 6,
+                        "h": 3,
+                        "x": 0,
+                        "y": 0,
+                        "i": "zvgqq4h34hfxcwvo3qbjre",
+                        "moved": false,
+                        "static": false
+                    }
+                ]
+            }
+        },
+        "c00j79oj4nu59p3m9ama0k": {
+            "cards": {
+                "11w60q51lpedsq98peh70a": {
+                    "outputKey": "starship___lch4"
+                },
+                "x66ub6bkk8kv9keo9tg68g": {
+                    "outputKey": "starship___lox"
+                }
+            },
+            "layout": {
+                "lg": [
+                    {
+                        "w": 3,
+                        "h": 6,
+                        "x": 3,
+                        "y": 0,
+                        "i": "x66ub6bkk8kv9keo9tg68g",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 3,
+                        "h": 6,
+                        "x": 0,
+                        "y": 0,
+                        "i": "11w60q51lpedsq98peh70a",
+                        "moved": false,
+                        "static": false
+                    }
+                ]
+            }
+        },
+        "abb6std7zxje9zyqfx8ucv": {
+            "cards": {
+                "n5hku40fhk8zo5mom6a5": {
+                    "outputKey": "starship___status"
+                },
+                "83m24naamsdyjwg6yw9f7b": {
+                    "outputKey": "time___hours_since_mars_midnight"
+                },
+                "paafu0d9m6qzpb261ndv": {
+                    "outputKey": "time___current_utc"
+                }
+            },
+            "layout": {
+                "lg": [
+                    {
+                        "w": 3,
+                        "h": 5,
+                        "x": 3,
+                        "y": 6,
+                        "i": "paafu0d9m6qzpb261ndv",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 3,
+                        "h": 5,
+                        "x": 0,
+                        "y": 6,
+                        "i": "83m24naamsdyjwg6yw9f7b",
+                        "moved": false,
+                        "static": false
+                    },
+                    {
+                        "w": 6,
+                        "h": 6,
+                        "x": 0,
+                        "y": 0,
+                        "i": "n5hku40fhk8zo5mom6a5",
+                        "moved": false,
+                        "static": false
+                    }
+                ]
+            }
+        }
+    }
+}

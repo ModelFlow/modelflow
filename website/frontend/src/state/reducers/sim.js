@@ -101,6 +101,16 @@ export default function reduce(state = initialState, action = {}) {
       };
     }
 
+    case 'SET_SIM_ERROR': {
+      return {
+        ...state,
+        status: 'error',
+        results: {
+          error: action.error,
+        },
+      };
+    }
+
     case 'INCREMENT_FORCE_UPDATE_COUNTER': {
       return {
         ...state,

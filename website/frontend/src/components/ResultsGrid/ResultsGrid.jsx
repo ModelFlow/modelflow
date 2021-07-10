@@ -41,11 +41,11 @@ class ResultsGrid extends Component {
 }
 
 const mapDispatchToProps = {
-  updateLayout: actions.resultViews.updateLayout,
+  updateLayout: actions.resultsView.updateLayout,
 };
 
 const mapStateToProps = (state) => ({
-  tabsContent: state.resultViews.tabsContent,
+  tabsContent: state.resultsView.tabsContent,
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(ResultsGrid);

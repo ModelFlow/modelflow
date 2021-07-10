@@ -1,9 +1,12 @@
+import os
+import sys
 import copy
 import time
 from pprint import pprint
 from types import SimpleNamespace
 from treelib import Node, Tree
 import importlib
+import traceback
 
 
 class SimulationError(Exception):
@@ -140,10 +143,11 @@ class StateFetcher:
             node = self._tree.get_node(parent_id)
             tree = self._tree.subtree(node.tag)
             for key in tree.expand_tree():
-                for state_name in self._shared_states_map[key]:
-                    if state_name == name:
-                        self._scenario_runner.key_lookup_cache[(self._key, name)] = key
-                        return key
+                if key in self._shared_states_map:
+                    for state_name in self._shared_states_map[key]:
+                        if state_name == name:
+                            self._scenario_runner.key_lookup_cache[(self._key, name)] = key
+                            return key
         all_states = []
         for info in self._shared_states_map.values():
             for key in info:
@@ -157,21 +161,25 @@ class ScenarioRunner():
     def __init__(self):
         self.key_lookup_cache = {}
 
-    def setup_and_run_sim(self, scenario, outputs_filter=[]):
+    def setup_and_run_sim(self, scenario, model_library_path='', outputs_filter=[]):
+        # Add the unique from the model_instances map to the values
+        # if the format is a dictionary. Note on the web the format is a list.
+        if isinstance(scenario['model_instances'], dict):
+            for key, value in scenario["model_instances"].items():
+                value["key"] = key
+            scenario["model_instances"] = scenario["model_instances"].values()
 
         validate_scenario(scenario)
-        setup_scenario_classes(scenario)
-
-        # Add the unique from the model_instances map to the values
-        for key, value in scenario["model_instances"].items():
-            value["key"] = key
-        model_instances_values = scenario["model_instances"].values()
+        setup_scenario_classes(scenario, model_library_path)
 
         max_steps = setup_global_sim_params(scenario)
+        print(f'using max steps: {max_steps}')
 
-        tree = create_tree(scenario["model_instances"])
-        
-        shared_states_map, private_states_map, params, utils_map = setup_vars_and_utils(scenario["model_instances"], tree, self)
+        model_instance_map = {x['key']: x for x in scenario['model_instances']}
+
+        tree = create_tree(model_instance_map)
+        print(tree)
+        shared_states_map, private_states_map, params, utils_map = setup_vars_and_utils(model_instance_map, tree, self)
         # shared_states_map:
         # - the instance name
         # -- the state key
@@ -185,7 +193,7 @@ class ScenarioRunner():
             for ith_iter in range(max_steps):
                 # t1 = time.time()
                 # print(f"ITERATION NUMBER: {ith_iter}")
-                for instance_info in model_instances_values:
+                for instance_info in scenario["model_instances"]:
                     if not hasattr(instance_info["model_class"], "run_step"):
                         continue
 
@@ -203,7 +211,8 @@ class ScenarioRunner():
                     except SimulationError as e:
                         raise SimStoppingError(e)
                     except Exception as e:
-                        print(f"Model: '{instance_info['model_class'].__name__}' encountered an error!")
+                        tstr = traceback.format_exc()
+                        print(f"Model: '{instance_info['model_class'].__name__}' encountered an error!\n{tstr}")
                         raise SimStoppingError(e)
                     
                     # goal: human1___indoor1___atmo_o2_delta
@@ -245,15 +254,16 @@ class ScenarioRunner():
         return final_output
     
 
-def run_scenario(scenario):
-    return ScenarioRunner().setup_and_run_sim(scenario)
+def run_scenario(scenario, model_library_path=''):
+    return ScenarioRunner().setup_and_run_sim(scenario, model_library_path)
 
-def get_params(scenario):
-    setup_scenario_classes(scenario)
+# I think this method is deprecated
+def get_params(scenario, model_library_path):
+    setup_scenario_classes(scenario, model_library_path)
 
     params = []
     index = 0
-    for info in scenario["model_instances"].values():
+    for info in scenario["model_instances"]:
         actual_instance = info["model_class"]
         if hasattr(actual_instance, "params"):
             for param in actual_instance.params:
@@ -269,19 +279,30 @@ def get_params(scenario):
     return params
 
 
-def setup_scenario_classes(scenario):
-    for info in scenario["model_instances"].values():
-        if isinstance(info["model_class"], str):
-            path, classname = info["model_class"].split("::")
-            path = path.replace('.py','').replace('/','.')
-            info["model_class"] = getattr(importlib.import_module(path), classname)
+def setup_scenario_classes(scenario, model_library_path):
+    if len(model_library_path) > 0:
+        sys.path.insert(0, model_library_path)
+
+    for info in scenario["model_instances"]:
+        if 'model_class' in info and isinstance(info['model_class'], dict):
+            if 'key' not in info['model_class']:
+                raise Exception("model_class does not have a key")
+
+            key = info['model_class']['key']
+            info["model_class"] = getattr(importlib.import_module(key), key)
 
 
 def setup_global_sim_params(scenario):
     max_steps = DEFAULT_MAX_STEPS
-    if "simulation_params" in scenario:
-        if "max_num_steps" in scenario["simulation_params"]:
-            max_steps = scenario["simulation_params"]["max_num_steps"]
+    if "max_steps" in scenario:
+        try:
+            max_steps = int(scenario['max_steps'])
+        except:
+            pass
+
+        if max_steps < 2:
+            max_steps = DEFAULT_MAX_STEPS
+
     return max_steps
 
 
@@ -377,13 +398,17 @@ def validate_scenario(scenario):
 
 def create_tree(model_instance_map):
     tree = Tree()
+    tree.create_node(tag='root', identifier='root', parent=None)
     # This ensures that when the tree is created, children always have a parent to reference
-    add_child_to_tree(None, model_instance_map, tree)
+    add_child_to_tree('root', model_instance_map, tree)
     return tree
 
 
 def add_child_to_tree(key, model_instance_map, tree):
     for info in model_instance_map.values():
-        if info.get("parent_instance_key", None) == key:
-            tree.create_node(tag=info["key"], identifier=info["key"], parent=info.get("parent_instance_key", None))
+        if "initial_parent_key" not in info or info['initial_parent_key'] is None or info['initial_parent_key'] == "":
+            info['initial_parent_key'] = 'root'
+        if info["initial_parent_key"] == key:
+            parent = info["initial_parent_key"]
+            tree.create_node(tag=info["key"], identifier=info["key"], parent=parent)
             add_child_to_tree(info["key"], model_instance_map, tree)
