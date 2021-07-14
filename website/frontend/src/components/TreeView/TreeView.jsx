@@ -1,84 +1,95 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import actions from '../../state/actions';
+import React, { Component } from 'react' 
+import { connect } from 'react-redux' 
+import actions from '../../state/actions' 
 
-import Plotly from 'plotly.js-strict-dist';
-import createPlotlyComponent from 'react-plotly.js/factory';
+import Plotly from 'plotly.js-strict-dist' 
+import createPlotlyComponent from 'react-plotly.js/factory' 
 
-import Card from '../Card/Card'; // Not necessary, delete line
-import CardSimple from '../CardSimple/CardSimple';
+import Card from '../Card/Card'  // Not necessary, delete line
+import CardSimple from '../CardSimple/CardSimple' 
 
-import './TreeView.css';
-import styled from '@emotion/styled';
-import { isElementOfType } from '@blueprintjs/core/lib/esm/common/utils';
+import './TreeView.css' 
+import styled from '@emotion/styled' 
+import { isElementOfType } from '@blueprintjs/core/lib/esm/common/utils' 
 
-const Plot = createPlotlyComponent(Plotly);
-let treeLabels = ['time'];
-let treeParents = [''];
+const Plot = createPlotlyComponent(Plotly) 
 
 class TreeView extends Component {
   render() {
     // Get data for tree graph
-    const { results } = this.props;
-    console.log('🌴')
-    console.log(results)
-    if(!results.tree_changes){ // Make sure "results" actually has results first
+    const { results } = this.props 
+    console.log('🌴 GENERATING TREEVIEW')
+    if(!results.tree_changes){ // Make sure results are ready in first place
+      console.log('🛑 No simulation results to generate tree')
       return null
     }
+
+    // Get some important tree data from backend
     let tree = results.tree_changes[0].tree
-    console.log(tree)
+    let treeViewData = results.tree_changes[0].treeViewData
+    
+    if(tree === null) {
+      console.log('🛑 No tree to generate tree')
+      return null
+    } else if(treeViewData === null) {
+      console.log('🛑 No treeView data to generate tree')
+      return null
+    }
 
-    treeToArrays(tree) // For treeLabels and treeParents, uses recursion! Hope there's a more efficient way...
+    console.log('✅ Tree and treeView data received:')
+    console.log('🌲 Full tree: ' + String(tree))
+    /* 
+      ASSUMPTIONS:
+      - treeViewData[0] = Plotly TreeView labels
+      - treeViewData[1] = Plotly TreeView parent labels
+    */
+    console.log('🌲🗺 Tree graph data:')
+    let treeLabels = treeViewData[0]
+    console.log("Plotly labels: " + String(treeLabels))
+    let treeParents = treeViewData[1]
+    console.log("Plotly parents: " + String(treeParents))
 
-    // If array lengths aren't same, something's off :/
-    console.log("tree label array length: " + treeLabels.length)
-    console.log("tree parents array elngth: " + treeParents.length)
-
-    // TODO: WAIT until plot array size > 1
-
-    // Set up plot
-    let plot = null;
-
+    // Create plot
+    let plot = null 
     let treeData = [{
       type: "treemap",
       labels: treeLabels, // ["Eve", "Cain", "Seth", "Enos", "Noam", "Abel", "Awan", "Enoch", "Azura"],
       parents: treeParents, // ["", "Eve", "Eve", "Seth", "Seth", "Eve", "Eve", "Awan", "Eve" ]
     }]
-
     let treeLayout = {
       autosize: true,
       margin: 10
     }
-
     plot = ( 
       <Plot
         data = {treeData}
         layout = {treeLayout}
       />
-    );
+    )
       
     return (
         <CardSimple 
           uuid="test" 
           item="test" 
           content={plot} 
-          cardTitle="Overall system tree 🌲" 
+          cardTitle="Overall system tree" 
         />
-    );
+    ) 
   }
 }
 
 const mapDispatchToProps = {
   requestForceUpdate: actions.sim.requestForceUpdate,
-};
+} 
 
 const mapStateToProps = (state) => ({
   results: state.sim.results,
   forceUpdateCounter: state.sim.forceUpdateCounter,
-});
+}) 
 
+/*
 const treeToArrays = (treeObj) => {
-  console.log('🥴 recursive on...')
+  console.log('🥴 Currently starting recursion on...')
   console.log(treeObj)
 
   if(Object.keys(treeObj).length !== 0) {
@@ -86,7 +97,7 @@ const treeToArrays = (treeObj) => {
       console.log(`${key}: ${value}`) 
       console.log(value)
       if(value.children !== null) {
-        console.log("value has children")
+        console.log("Value has children")
         console.log(value.children)
 
         value.children.forEach(element => {
@@ -125,6 +136,6 @@ const treeToArrays = (treeObj) => {
       }
     }
   }
-}
+} */
 
-export default connect(mapStateToProps, mapDispatchToProps)(TreeView);
+export default connect(mapStateToProps, mapDispatchToProps)(TreeView) 

@@ -304,29 +304,10 @@ class Card extends Component {
 
         // Plot for component deltas
         if (this.state.isDeltaPlotVisible == true) {
-          // Check if user wants to see delta plots
-          // Update plot widths
-          this.state.plot_width = this.size.width * 0.48;
-          plot = ( // Need more efficient way to update!
-            <Plot
-              data={plot_data}
-              layout={{
-                width: this.state.plot_width,
-                height: plot_height,
-                margin: plot_margins,
-                title: {
-                  text: 'Quantity over mission run',
-                  font: {
-                    size: 15,
-                  },
-                },
-                xaxis: plot_xaxis,
-                yaxis: plot_yaxis,
-                showlegend: false,
-              }}
-            />
-          );
+          // TODO: May need to do some CSS sizing here to fit addit plots
 
+          // TODO: Uncomment below if needed
+          /*
           // Now check if component has delta plot
           if (
             output_states[selectedOutputKey].componentDeltas != null &&
@@ -432,7 +413,11 @@ class Card extends Component {
             plot_componentDeltas = (
               <span>{selectedOutputKey} has no component deltas</span>
             );
-          }
+          } */
+
+          plot_componentDeltas = (
+            <span>👀 Delta breakdown plots coming soon...</span>
+          );
         }
       }
       if (selectedOutputKey === 'none') {
