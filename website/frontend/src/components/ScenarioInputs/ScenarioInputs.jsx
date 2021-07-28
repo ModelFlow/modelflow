@@ -255,6 +255,7 @@ const mapDispatchToProps = {
   getModelClassesForCurrentProject:
     actions.modelClassForm.getModelClassesForCurrentProject,
   setModelClassDialogState: actions.attributesInput.setModelClassDialogState,
+  resetModelClassForm: actions.modelClassForm.resetModelClassForm,
 };
 
 const mapStateToProps = (state) => ({
