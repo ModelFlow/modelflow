@@ -40,7 +40,7 @@ class Time:
             "value": 0,
             "confidence": 0,
             "notes": "",
-            "source": ""
+            "source": "https://www.giss.nasa.gov/tools/mars24/help/notes.html"
         }
     ]
     @staticmethod
@@ -54,6 +54,6 @@ class Time:
         # TODO: Integrate with actual landing site location
         states.hours_since_mars_midnight += states.seconds_per_sim_step / 3600
 
-        # TODO: Handle fact that mars sol is not 24 hours and this is completely wrong
-        if states.hours_since_mars_midnight >= 24:
+        # Mars Sol is 24 hours 39 minutes 35.244 Earth seconds: https://www.giss.nasa.gov/tools/mars24/help/notes.html
+        if states.hours_since_mars_midnight >= 24.65979:
             states.hours_since_mars_midnight = 0
