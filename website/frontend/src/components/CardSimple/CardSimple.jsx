@@ -1,3 +1,4 @@
+/*
 import React, { useState, Component } from 'react'  
 import { connect } from 'react-redux'  
 import Plotly from 'plotly.js-basic-dist'  
@@ -181,3 +182,4 @@ const mapStateToProps = (state) => ({
 })  
 
 export default connect(mapStateToProps, mapDispatchToProps)(CardSimple)  
+*/

@@ -56,25 +56,27 @@ class TreeView extends Component {
       labels: treeLabels, // ["Eve", "Cain", "Seth", "Enos", "Noam", "Abel", "Awan", "Enoch", "Azura"],
       parents: treeParents, // ["", "Eve", "Eve", "Seth", "Seth", "Eve", "Eve", "Awan", "Eve" ]
     }]
+    let plot_margins = {
+      t: 10,
+      b: 10,
+      l: 10,
+      r: 10,
+    };
     let treeLayout = {
-      autosize: true,
-      margin: 10
+      width: 800,
+      height: 300,
+      margin: plot_margins,
     }
     plot = ( 
       <Plot
+        onInitialized={(figure, graphDiv) => {
+          this.setScrollListeners(graphDiv);
+        }}
         data = {treeData}
         layout = {treeLayout}
       />
     )
-      
-    return (
-        <CardSimple 
-          uuid="test" 
-          item="test" 
-          content={plot} 
-          cardTitle="Overall system tree" 
-        />
-    ) 
+    return plot
   }
 }
 

@@ -9,10 +9,12 @@ export const updateLayout = (newLayout) => async (dispatch) => {
   });
 };
 
-export const addCard = () => async (dispatch) => {
+export const addCard = (cardType) => async (dispatch) => {
+  console.log('🃏 AddCard detected in actions/results_view.js, type: ' + cardType)
   const card = {
     uuid: makeUUID(),
     outputKey: 'none',
+    cardType,
   };
   dispatch({
     type: 'ADD_CARD',

@@ -4,6 +4,8 @@ import './ResultsGrid.css';
 import { Responsive, WidthProvider } from 'react-grid-layout';
 import Card from '../Card/Card';
 import actions from '../../state/actions';
+import { Fragment } from 'react';
+import TreeView from '../TreeView/TreeView';
 
 const ResponsiveGridLayout = WidthProvider(Responsive);
 
@@ -19,23 +21,26 @@ class ResultsGrid extends Component {
     // Note: Although not used, passing in item to Card is needed
     // to trigger a rerender when the card is resized
     return (
-      <ResponsiveGridLayout
-        layouts={layout}
-        rowHeight={50} // Card height
-        measureBeforeMount
-        isResizable
-        breakpoints={{ lg: 1200 }}
-        cols={{ lg: 6 }}
-        draggableHandle=".card_header"
-        onLayoutChange={this.onLayoutChange}
-        compactType="vertical"
-      >
-        {layout.lg.map((item) => (
-          <div key={item.i}>
-            <Card uuid={item.i} item={item} tabId={tabId} />
-          </div>
-        ))}
-      </ResponsiveGridLayout>
+      <Fragment>
+        <ResponsiveGridLayout
+          layouts={layout}
+          rowHeight={50} // Card height
+          measureBeforeMount
+          isResizable
+          breakpoints={{ lg: 1200 }}
+          cols={{ lg: 6 }}
+          draggableHandle=".card_header"
+          onLayoutChange={this.onLayoutChange}
+          compactType="vertical"
+        >
+          {layout.lg.map((item) => {
+            return (
+              <div key={item.i}>
+                <Card uuid={item.i} item={item} tabId={tabId} />
+              </div>)
+          })}
+        </ResponsiveGridLayout>
+      </Fragment>
     );
   }
 }
