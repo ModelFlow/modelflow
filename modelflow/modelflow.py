@@ -410,8 +410,8 @@ def create_tree(model_instance_map):
     add_child_to_tree('root', model_instance_map, tree)
 
     # At this point TreeView data should be updated
-    print("--- NEW TREEVIEW LABELS " + str(len(TREEVIEW_DATA[0])) + ": " + str(TREEVIEW_DATA[0]))
-    print("--- NEW TREEVIEW PARENTS " + str(len(TREEVIEW_DATA[1])) + ": " + str(TREEVIEW_DATA[1]))
+    # print("--- NEW TREEVIEW LABELS " + str(len(TREEVIEW_DATA[0])) + ": " + str(TREEVIEW_DATA[0]))
+    # print("--- NEW TREEVIEW PARENTS " + str(len(TREEVIEW_DATA[1])) + ": " + str(TREEVIEW_DATA[1]))
     return tree
 
 # Update arrays (declared at top of this file) for Plotly TreeView

@@ -179,7 +179,9 @@ class Card extends Component { // Renders 1 card for 1 sim component
     let plot_componentDeltas = null;
     let plot_title = null;
     let selector = null;
-    let deleteButton = null;
+    let deleteButton = (
+      <Button small icon="delete" onClick={this.deleteClicked} />
+    );
     let deltaPlotButton = null;
     if (this.contentRef) {
       const { width, height } = this.contentRef.getBoundingClientRect();
@@ -248,9 +250,6 @@ class Card extends Component { // Renders 1 card for 1 sim component
           >
             <Button small icon="properties" />
           </Select>
-        );
-        deleteButton = (
-          <Button small icon="delete" onClick={this.deleteClicked} />
         );
         deltaPlotButton = (
           <Button

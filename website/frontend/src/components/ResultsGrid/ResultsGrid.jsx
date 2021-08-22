@@ -21,7 +21,7 @@ class ResultsGrid extends Component {
     // Note: Although not used, passing in item to Card is needed
     // to trigger a rerender when the card is resized
     return (
-      <Fragment>
+      <>
         <ResponsiveGridLayout
           layouts={layout}
           rowHeight={50} // Card height
@@ -40,7 +40,7 @@ class ResultsGrid extends Component {
               </div>)
           })}
         </ResponsiveGridLayout>
-      </Fragment>
+      </>
     );
   }
 }
