@@ -420,18 +420,21 @@ def add_child_to_tree(key, model_instance_map, tree):
     global TREEVIEW_DATA
     print(str(TREEVIEW_DATA))
     for info in model_instance_map.values():
-        if "initial_parent_key" not in info or info['initial_parent_key'] is None or info['initial_parent_key'] == "":
+        print('CURRENT INFO:')
+        print(info)
+        
+        # TreeView CASE 1: Just root, so no parent
+        if ("initial_parent_key" not in info) or (info['initial_parent_key'] is None) or (info['initial_parent_key'] == ""):
             info['initial_parent_key'] = 'root'
 
-            # TreeView CASE 1: Just root, so no parent
             TREEVIEW_DATA[0].append('root') # Label
-            TREEVIEW_DATA[1].append(info[""]) # Parent
+            TREEVIEW_DATA[1].append("") # Parent
 
+        # TreeView CASE 2: Add child and parent
         if info["initial_parent_key"] == key:
             parent = info["initial_parent_key"]
             tree.create_node(tag=info["key"], identifier=info["key"], parent=parent)
             
-            # TreeView CASE 2: Add child and parent
             TREEVIEW_DATA[0].append(info["key"]) # Label
             TREEVIEW_DATA[1].append(info["initial_parent_key"]) # Parent
 
