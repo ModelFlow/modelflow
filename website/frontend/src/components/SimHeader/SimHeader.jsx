@@ -43,9 +43,10 @@ class SimHeader extends Component {
   // componentDidMount() {
   // }
 
-  clickedAddCard = () => {
+  clickedAddCard = (cardType) => {
+    console.log('🃏 AddCard detected in SimHeader.jsx, type: ' + cardType)
     const { addCard } = this.props;
-    addCard();
+    addCard(cardType);
   };
 
   clickedSaveTemplate = () => {
@@ -337,6 +338,20 @@ class SimHeader extends Component {
       </Dialog>
     );
 
+    // For adding specific Card type
+    const templateAddCard = (
+      <Menu>
+        <MenuItem
+          text="Tree Hierarchy"
+          onClick={this.clickedAddCard.bind(this, 'TREEVIEW')}
+        />
+        <MenuItem
+          text="Mission Component"
+          onClick={this.clickedAddCard.bind(this, 'COMPONENT')}
+        />
+      </Menu>
+    );
+
     const helpDialog = (
       <Dialog
         icon="info-sign"
@@ -355,7 +370,8 @@ class SimHeader extends Component {
         </div>
       </Dialog>
     );
-
+      
+    // 👇 TODO: Just want multi-option "Add Card" later
     return (
       <>
         <Navbar style={{ padding: '0px 10px' }}>
@@ -417,8 +433,14 @@ class SimHeader extends Component {
                 <AnchorButton icon="floppy-disk" rightIcon="caret-down" />
               </Popover2>
             </ButtonGroup>
+
             <div style={{ width: 5 }}></div>
-            <Button icon="add" text="Card" onClick={this.clickedAddCard} />
+            {/* ORIGINAL ADD BUTTON ==> <Button icon="add" text="Card (original)" onClick={this.clickedAddCard} /> */}
+            <div style={{ width: 5 }}></div>
+            <Popover2 content={templateAddCard} minimal={true}>
+              <AnchorButton icon="add" text="Card" rightIcon="caret-down" />
+            </Popover2>
+
             <div style={{ width: 5 }}></div>
             <Button icon="cog" disabled={true} />
             <div style={{ width: 5 }}></div>

@@ -17,6 +17,11 @@ class SimStoppingError(Exception):
 
 DEFAULT_MAX_STEPS = 1000
 
+# Prep data for Plotly TreeView component
+# NOTE: Ideally just have create_tree() return treeview data,
+# but unfortunatley I didn't have time getting recursion changes 
+# # to stick, so that's why using global var in meantime... -HH
+TREEVIEW_DATA = [[], []]
 
 class Utils:
 
@@ -179,6 +184,7 @@ class ScenarioRunner():
 
         tree = create_tree(model_instance_map)
         print(tree)
+        # NOTE: Expect TREEVIEWDATA to be updated at this point
         shared_states_map, private_states_map, params, utils_map = setup_vars_and_utils(model_instance_map, tree, self)
         # shared_states_map:
         # - the instance name
@@ -246,7 +252,7 @@ class ScenarioRunner():
         except SimStoppingError as e:
             sim_error = e
 
-        final_output = dict(states=states_output, trees=tree_outputs, delta_outputs=delta_outputs)
+        final_output = dict(states=states_output, trees=tree_outputs, treeview_data = TREEVIEW_DATA, delta_outputs=delta_outputs)
         if sim_error is not None:
             print("GOT ERROR:")
             print(sim_error)
@@ -395,20 +401,44 @@ def validate_scenario(scenario):
     for info in scenario:
         pass
 
-
 def create_tree(model_instance_map):
     tree = Tree()
+    global TREEVIEW_DATA
+    TREEVIEW_DATA = [[], []] # Reset TreeView arrays
     tree.create_node(tag='root', identifier='root', parent=None)
     # This ensures that when the tree is created, children always have a parent to reference
     add_child_to_tree('root', model_instance_map, tree)
+
+    # At this point TreeView data should be updated
+    # print("--- NEW TREEVIEW LABELS " + str(len(TREEVIEW_DATA[0])) + ": " + str(TREEVIEW_DATA[0]))
+    # print("--- NEW TREEVIEW PARENTS " + str(len(TREEVIEW_DATA[1])) + ": " + str(TREEVIEW_DATA[1]))
     return tree
 
-
+# Update arrays (declared at top of this file) for Plotly TreeView
 def add_child_to_tree(key, model_instance_map, tree):
+    print('------------- HELLO! About to update tree, here is current tree... -------------')
+    global TREEVIEW_DATA
+    print(str(TREEVIEW_DATA))
     for info in model_instance_map.values():
-        if "initial_parent_key" not in info or info['initial_parent_key'] is None or info['initial_parent_key'] == "":
+        print('CURRENT INFO:')
+        print(info)
+        
+        # TreeView CASE 1: Just root, so no parent
+        if ("initial_parent_key" not in info) or (info['initial_parent_key'] is None) or (info['initial_parent_key'] == ""):
             info['initial_parent_key'] = 'root'
+
+            TREEVIEW_DATA[0].append('root') # Label
+            TREEVIEW_DATA[1].append("") # Parent
+
+        # TreeView CASE 2: Add child and parent
         if info["initial_parent_key"] == key:
             parent = info["initial_parent_key"]
             tree.create_node(tag=info["key"], identifier=info["key"], parent=parent)
-            add_child_to_tree(info["key"], model_instance_map, tree)
+            
+            TREEVIEW_DATA[0].append(info["key"]) # Label
+            TREEVIEW_DATA[1].append(info["initial_parent_key"]) # Parent
+
+            add_child_to_tree(info["key"], model_instance_map, tree) # Recurse
+
+        
+

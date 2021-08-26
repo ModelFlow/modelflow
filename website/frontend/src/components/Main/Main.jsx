@@ -86,7 +86,6 @@ class Main extends Component {
     if (mainViewType === 'flow') {
       mainView = (
         <div className="flow-container">
-          <TreeView />
         </div>
       );
     } else {
@@ -100,7 +99,6 @@ class Main extends Component {
             <ScenarioInputs />
           </div>
           <div className="resultsDisplay">
-            <TreeView />
             <ResultsView />
           </div>
         </div>

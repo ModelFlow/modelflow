@@ -11,9 +11,9 @@ sys.path.insert(0, os.path.join(root_dir, 'modelflow'))
 
 from modelflow import run_scenario # NOQA
 
-
 @csrf_exempt
 @require_POST
+
 def run_sim(request):
     body = json.loads(request.body)
 
@@ -54,11 +54,16 @@ def run_sim(request):
     outputs.pop('states', None)
     outputs.pop('delta_outputs', None)
 
+    # 🌲📈 NOTE: Get arrays for Plotly TreeView here
+    treeview_data = outputs['treeview_data']
+
     outputs["tree_changes"] = []
     prev_tree = None
     for i, tree in enumerate(outputs['trees']):
         if tree != prev_tree:
-            outputs["tree_changes"].append(dict(index=i, tree=tree))
+            outputs["tree_changes"].append(dict(index=i, tree=tree, treeViewData=treeview_data))
+            print('(o_o) NEW TREE ADDED: ' + str(tree))
+            print('(o_o) NEW TREEVIEW DATA ADDED: ' + str(treeview_data))
         prev_tree = tree
     outputs.pop('trees')
 

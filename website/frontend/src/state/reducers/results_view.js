@@ -77,7 +77,10 @@ export default function reduce(state = initialState, action = {}) {
     }
     case 'ADD_CARD': {
       const { selectedTabId } = state;
-      return {
+      console.log('🃏 Card type received in reducers/results_view: ' + action.card.cardType)
+      console.log(action.card)
+      
+      return { 
         ...state,
         tabsContent: {
           ...state.tabsContent,
@@ -93,11 +96,12 @@ export default function reduce(state = initialState, action = {}) {
                 y: 0,
                 w: 6,
                 h: 6,
+                cardType: action.card.cardType /* make sure only added card gets cardType */
               }),
             },
           },
         },
-      };
+      }  
     }
     case 'REMOVE_CARD': {
       const { uuid } = action;
@@ -130,6 +134,7 @@ export default function reduce(state = initialState, action = {}) {
               ...state.tabsContent[selectedTabId].cards,
               [action.uuid]: {
                 outputKey: action.outputKey,
+
               },
             },
           },
