@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "paths": {
+      "@modelflow/core": ["./packages/core/src/index.ts"],
+      "@modelflow/std": ["./packages/std/src/index.ts"]
+    }
+  }
+}

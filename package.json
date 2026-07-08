@@ -1,0 +1,19 @@
+{
+  "name": "modelflow",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ModelFlow — an agent-friendly, hierarchical, composable simulation engine (Simulink in code).",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "bun test",
+    "typecheck": "bunx tsc --noEmit -p tsconfig.base.json",
+    "example:tank": "bun run packages/examples/src/run.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/bun": "latest"
+  }
+}
