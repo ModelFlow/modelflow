@@ -47,10 +47,12 @@ export function Landing({
   theme,
   setTheme,
   onLaunch,
+  onLibrary,
 }: {
   theme: 'light' | 'dark';
   setTheme: (t: 'light' | 'dark') => void;
   onLaunch: () => void;
+  onLibrary: () => void;
 }) {
   return (
     <div className="landing">
@@ -63,6 +65,9 @@ export function Landing({
             ModelFlow
           </div>
           <div className="grow" />
+          <button className="lnav-link" onClick={onLibrary}>
+            Model Library
+          </button>
           <a
             className="iconbtn"
             href="https://github.com/ModelFlow/modelflow"
@@ -99,9 +104,9 @@ export function Landing({
             <button className="pill lg" onClick={onLaunch}>
               Launch the live demo →
             </button>
-            <a className="pill secondary lg" href="#example">
-              See the example
-            </a>
+            <button className="pill secondary lg" onClick={onLibrary}>
+              Browse the Model Library
+            </button>
           </div>
         </div>
       </section>
@@ -167,6 +172,9 @@ export function Landing({
       <footer className="lfoot">
         <div className="wrap">
           <span>ModelFlow</span>
+          <button className="foot-link" onClick={onLibrary}>
+            Model Library
+          </button>
           <a className="foot-link" href="https://github.com/ModelFlow/modelflow" target="_blank" rel="noreferrer">
             GitHub ↗
           </a>

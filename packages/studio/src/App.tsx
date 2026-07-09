@@ -19,6 +19,7 @@ import { layeredLayout } from './layout';
 import { Scope, type Trace } from './Scope';
 import { Tornado } from './Tornado';
 import { sensitivity, type SensiResult } from './sensitivity';
+import { publishModel } from './library';
 import {
   evalAlert,
   loadTemplates,
@@ -365,7 +366,7 @@ export function App({
             1 step = {STEP_H} h
           </span>
           <div className="grow" />
-          <button className="tbtn" onClick={() => setShowModels((s) => !s)}>
+          <button className="tbtn hide-models-btn" onClick={() => setShowModels((s) => !s)}>
             {showModels ? 'Hide models' : 'Show models'}
           </button>
           <div className="pop-anchor">
@@ -976,6 +977,7 @@ function ComponentCard({ spec, def, onApply }: { spec: ModelSpec; def?: ModelDef
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(spec.source.step ?? '');
   const [note, setNote] = useState<{ ok: boolean; msg: string } | null>(null);
+  const [published, setPublished] = useState(false);
   useEffect(() => {
     setText(spec.source.step ?? '');
     setNote(null);
@@ -1060,9 +1062,21 @@ function ComponentCard({ spec, def, onApply }: { spec: ModelSpec; def?: ModelDef
                   </button>
                 </>
               ) : (
-                <button className="code-btn" onClick={() => setEditing(true)}>
-                  Edit
-                </button>
+                <>
+                  <button
+                    className="code-btn"
+                    onClick={() => {
+                      publishModel(spec);
+                      setPublished(true);
+                      setTimeout(() => setPublished(false), 1600);
+                    }}
+                  >
+                    {published ? 'Published ✓' : 'Publish to Library'}
+                  </button>
+                  <button className="code-btn" onClick={() => setEditing(true)}>
+                    Edit
+                  </button>
+                </>
               )}
             </div>
           </div>
