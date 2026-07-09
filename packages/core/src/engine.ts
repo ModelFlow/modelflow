@@ -43,6 +43,7 @@ class BusHandleImpl implements BusHandle {
   constructor(
     bus: CompiledBus,
     readonly attach: BusAttach,
+    readonly nodeKey: string,
   ) {
     this.bus = bus;
     this.band = attach.band ?? 0;
@@ -165,6 +166,40 @@ export interface EngineOptions {
   record?: boolean;
 }
 
+/** A node in the introspected wiring graph (for generic UIs). */
+export interface GraphNode {
+  key: string;
+  type: string;
+  parent: string | null;
+  fidelity: Fidelity;
+  health: Health;
+  providesBus?: string;
+}
+
+/** An edge in the introspected wiring graph. */
+export interface GraphEdge {
+  id: string;
+  source: string;
+  sourcePort: string;
+  target: string;
+  targetPort: string;
+  /** Net name (signal) or `bus.<commodity>`. */
+  net: string;
+  unit: string;
+  kind: 'signal' | 'bus';
+}
+
+export interface InstanceView {
+  key: string;
+  type: string;
+  parent: string | null;
+  fidelity: Fidelity;
+  health: Health;
+  status: string;
+  params: Record<string, number>;
+  keyFigures: readonly (readonly [string, number, string])[];
+}
+
 /**
  * The simulation engine: flattens a scenario into a wired signal graph and
  * steps it deterministically at a fixed dt. Evaluation order is env-providers
@@ -186,6 +221,7 @@ export class Engine {
   private byKey = new Map<string, Node>();
   private children = new Map<string, string[]>();
   private buses: CompiledBus[] = [];
+  private edges: GraphEdge[] = [];
   private scn!: Scenario;
 
   constructor(
@@ -271,6 +307,7 @@ export class Engine {
       hasDriver: boolean;
       readers: number;
       readerPorts: { key: string; portName: string; unit: string }[];
+      driverRef?: { key: string; portName: string };
     };
     const netByName = new Map<string, NetEntry>();
     const initVals = new Map<number, number>();
@@ -309,6 +346,7 @@ export class Engine {
               });
             }
             e.hasDriver = true;
+            e.driverRef = { key: spec.key, portName };
             // The driver's output unit is the net's canonical unit; readers convert to it.
             (e.net as { unit: string }).unit = port.unit;
             node.outMap[portName] = e.net.id;
@@ -370,7 +408,7 @@ export class Engine {
           });
           continue;
         }
-        const h = new BusHandleImpl(owner, attach);
+        const h = new BusHandleImpl(owner, attach, node.key);
         node.busHandles[attachName] = h;
         if (attach.role === 'offer') owner.offerHandles.push(h);
         else if (attach.role === 'request') owner.requestHandles.push(h);
@@ -403,6 +441,58 @@ export class Engine {
     ];
     for (const node of this.nodes) node.ctx = new Ctx(this, node);
     for (const node of this.order) node.def.init?.(node.ctx);
+
+    // --- introspection graph (signal edges + bus edges) ---
+    for (const [name, e] of netByName) {
+      if (e.net.flow || !e.driverRef) continue;
+      for (const rp of e.readerPorts) {
+        this.edges.push({
+          id: `s:${name}:${rp.key}.${rp.portName}`,
+          source: e.driverRef.key,
+          sourcePort: e.driverRef.portName,
+          target: rp.key,
+          targetPort: rp.portName,
+          net: name,
+          unit: e.net.unit,
+          kind: 'signal',
+        });
+      }
+    }
+    for (const b of this.buses) {
+      for (const h of b.offerHandles)
+        this.edges.push({ id: `bo:${b.commodity}:${h.nodeKey}`, source: h.nodeKey, sourcePort: 'offer', target: b.ownerKey, targetPort: b.commodity, net: `bus.${b.commodity}`, unit: '', kind: 'bus' });
+      for (const h of b.requestHandles)
+        this.edges.push({ id: `br:${b.commodity}:${h.nodeKey}`, source: b.ownerKey, sourcePort: b.commodity, target: h.nodeKey, targetPort: 'request', net: `bus.${b.commodity}`, unit: '', kind: 'bus' });
+    }
+  }
+
+  /** The wiring graph — nodes + typed edges — for a generic inspector UI. */
+  structure(): { nodes: GraphNode[]; edges: GraphEdge[] } {
+    return {
+      nodes: this.nodes.map((n) => ({
+        key: n.key,
+        type: n.type,
+        parent: n.parent,
+        fidelity: n.fidelity,
+        health: n.health,
+        providesBus: n.def.providesBus,
+      })),
+      edges: this.edges,
+    };
+  }
+
+  /** Live per-instance snapshot (params, status, key figures) for asset tables. */
+  instanceViews(): InstanceView[] {
+    return this.nodes.map((n) => ({
+      key: n.key,
+      type: n.type,
+      parent: n.parent,
+      fidelity: n.fidelity,
+      health: n.health,
+      status: n.def.status?.(n.ctx) ?? 'nominal',
+      params: { ...n.params },
+      keyFigures: n.def.keyFigures?.(n.ctx) ?? [],
+    }));
   }
 
   private resolveParams(spec: InstanceSpec, def: ModelDef, idx: number, issues: ValidationIssue[]): Record<string, number> {

@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "studio",
+      "runtimeExecutable": "/Users/adamraudonis/.bun/bin/bun",
+      "runtimeArgs": ["run", "--cwd", "packages/studio", "dev"],
+      "port": 5273,
+      "autoPort": true
+    }
+  ]
+}

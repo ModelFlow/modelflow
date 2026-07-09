@@ -37,7 +37,14 @@ export {
   suggest,
   type ValidationIssue,
 } from './validate';
-export { Engine, type LogEntry } from './engine';
+export {
+  Engine,
+  type LogEntry,
+  type EngineOptions,
+  type GraphNode,
+  type GraphEdge,
+  type InstanceView,
+} from './engine';
 export type {
   Recording,
   RecFrame,
