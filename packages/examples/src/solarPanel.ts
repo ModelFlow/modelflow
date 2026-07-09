@@ -25,20 +25,20 @@ export const SolarPanel = defineModel({
     efficiency: param(0.22, 'frac', 'Reference conversion efficiency (STC)', {
       min: 0,
       max: 1,
-      source: 'Spectrolab XTJ Prime datasheet',
-      sourceUrl: 'https://www.spectrolab.com/DataSheets/cells/XTJ_Prime.pdf',
-      notes: 'Beginning-of-life efficiency at Standard Test Conditions (AM0, 25 °C). Derate ~1%/yr for radiation damage on multi-year missions.',
+      source: 'Panel datasheet (STC)',
+      sourceUrl: 'https://www.nrel.gov/pv/module-efficiency.html',
+      notes: 'Beginning-of-life efficiency at Standard Test Conditions (AM1.5, 25 °C). Derate ~0.5 %/yr for age-related degradation.',
     }),
     tempCoeff: param(-0.0035, '1/K', 'Power temperature coefficient (L1+)', {
       max: 0,
       source: 'Typical triple-junction III-V cell',
       notes: 'Fractional power loss per kelvin above the 25 °C reference temperature.',
     }),
-    soiling: param(0.08, 'frac', 'Dust / soiling loss fraction (L2)', {
+    soiling: param(0.05, 'frac', 'Dust / soiling loss fraction (L2)', {
       min: 0,
       max: 1,
-      source: 'Mars dust deposition studies',
-      notes: 'Fraction of output lost to dust accumulation on the array between cleanings.',
+      source: 'NREL soiling-loss field studies',
+      notes: 'Fraction of output lost to dust/dirt accumulation on the panels between cleanings.',
     }),
   },
   state: () => ({}),

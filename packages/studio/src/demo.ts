@@ -4,11 +4,13 @@ import { SolarPanel } from '../../examples/src/solarPanel';
 import { DiurnalIrradiance, Inverter } from './demoModels';
 
 /**
- * A solar microgrid: the sun drives two PV arrays (W), inverters tie them to a
- * power bus (kW — auto-converted), and three prioritised loads draw from it.
- * As the sun rises the bus fills; when it can't cover everything, the priority
- * policy sheds the low-priority ISRU load first. Exercises ports, unit
- * auto-conversion, hierarchy, buses, and arbitration in one legible demo.
+ * A rooftop solar microgrid (on Earth). The sun drives two PV arrays (which put
+ * out watts); inverters tie them to a shared power bus (in kilowatts — auto-
+ * converted). Three building loads draw from the bus at different priorities:
+ * essential circuits first, then HVAC, then EV charging. When a cloud passes or
+ * the sun sets and supply falls short, the lowest-priority load (EV charging) is
+ * shed first. It exercises ports, unit auto-conversion, hierarchy, buses, and
+ * priority arbitration in one legible demo.
  */
 export const microgridRegistry = registry(
   arbitratedBus('power', priorityProRata()),
@@ -33,8 +35,8 @@ export const microgrid: Scenario = {
     { key: 'array_B', type: 'SolarPanel', parent: 'grid', params: { area: 30 }, connect: { irradiance: 'sun', power: 'dc_B' } },
     { key: 'inv_A', type: 'Inverter', parent: 'grid', connect: { dc: 'dc_A' } },
     { key: 'inv_B', type: 'Inverter', parent: 'grid', connect: { dc: 'dc_B' } },
-    { key: 'life_support', type: 'Load:power', parent: 'grid', params: { demand: 4, band: 0 }, connect: { served: 'sv_ls' } },
-    { key: 'habitat', type: 'Load:power', parent: 'grid', params: { demand: 3, band: 1 }, connect: { served: 'sv_hab' } },
-    { key: 'isru_plant', type: 'Load:power', parent: 'grid', params: { demand: 12, band: 2 }, connect: { served: 'sv_isru' } },
+    { key: 'essential', type: 'Load:power', parent: 'grid', params: { demand: 4, band: 0 }, connect: { served: 'sv_essential' } },
+    { key: 'hvac', type: 'Load:power', parent: 'grid', params: { demand: 3, band: 1 }, connect: { served: 'sv_hvac' } },
+    { key: 'ev_charging', type: 'Load:power', parent: 'grid', params: { demand: 12, band: 2 }, connect: { served: 'sv_ev' } },
   ],
 };

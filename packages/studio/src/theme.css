@@ -327,3 +327,56 @@ a.iconbtn { text-decoration: none; }
 .tor-key .sw.minus { background: color-mix(in srgb, var(--accent) 42%, transparent); }
 .tor-key .sw.plus { background: var(--accent); }
 .tor-skip, .tor-empty, .tor-baselbl { color: var(--text-faint); }
+
+/* ---------- simulation sub-toolbar ---------- */
+.subbar { display: flex; align-items: center; gap: 10px; height: 42px; padding: 0 14px; border-bottom: 1px solid var(--border); background: var(--bg-elev); flex: 0 0 auto; }
+.sub-sep { width: 1px; height: 18px; background: var(--border); }
+.subclock { font-family: var(--mono); font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
+.sub-dt { font-family: var(--mono); font-size: 11px; color: var(--text-faint); white-space: nowrap; }
+.tbtn { background: var(--bg); border: 1px solid var(--border); color: var(--text-muted); font-size: 12px; padding: 6px 11px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+.tbtn:hover { color: var(--text); border-color: var(--border-strong); }
+.tbtn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tbtn.primary:hover { background: var(--accent-hover); }
+.tbtn.primary:disabled { opacity: 0.5; cursor: default; }
+.tbtn.alarm { color: #fff; background: var(--bad); border-color: var(--bad); }
+
+/* popovers */
+.pop-anchor { position: relative; }
+.pop-scrim { position: fixed; inset: 0; z-index: 40; }
+.popover { position: absolute; top: 118%; right: 0; z-index: 41; width: 302px; background: var(--bg); border: 1px solid var(--border-strong); border-radius: 10px; box-shadow: 0 10px 34px rgba(16, 24, 40, 0.16); overflow: hidden; }
+.popover.wide { width: 340px; }
+.pop-h { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); font-weight: 600; padding: 11px 14px 5px; border-top: 1px solid var(--border); }
+.pop-h:first-child { border-top: 0; }
+.pop-body { padding: 2px 14px 12px; }
+.pop-empty { font-size: 12px; color: var(--text-faint); padding: 6px 0; line-height: 1.4; }
+.alert-row, .save-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.alert-row .mono, .save-row .sr-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.save-row .sr-meta { color: var(--text-faint); font-size: 10.5px; white-space: nowrap; }
+.x { background: none; border: 0; color: var(--text-faint); cursor: pointer; font-size: 15px; line-height: 1; padding: 0 3px; }
+.x:hover { color: var(--bad); }
+.alert-form, .save-form { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+.alert-form select, .save-form input, .alert-form .pinput { flex: 1; min-width: 0; }
+.popover select, .pinput { padding: 5px 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; font-size: 12px; }
+.pinput { width: 82px; text-align: right; }
+.pinput:focus, .popover select:focus { outline: none; border-color: var(--accent); }
+
+/* alert banner */
+.alert-banner { display: flex; align-items: center; gap: 12px; padding: 7px 16px; background: color-mix(in srgb, var(--bad) 11%, var(--bg)); border-bottom: 1px solid color-mix(in srgb, var(--bad) 38%, var(--border)); flex: 0 0 auto; overflow-x: auto; }
+.ab-icon { color: var(--bad); }
+.ab-item { font-size: 11.5px; color: var(--bad); white-space: nowrap; }
+
+/* hide-models layout */
+.workspace.no-models { grid-template-columns: 1fr 304px; }
+.workspace.no-models .canvas { grid-column: 1; }
+.workspace.no-models .inspector { grid-column: 2; }
+.workspace.no-models .scope-wrap { grid-column: 1 / 3; }
+
+/* editable parameters */
+.param-edit { display: inline-flex; align-items: center; gap: 5px; }
+.punit { font-size: 10.5px; color: var(--text-faint); }
+.ovr-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); margin-left: 6px; vertical-align: middle; }
+
+/* scenario JSON */
+.scenario-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.scenario-bar .mono { font-size: 12px; color: var(--text-muted); }
+.scenario-json { background: var(--bg-inset); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; font-family: var(--mono); font-size: 12px; line-height: 1.5; color: var(--text); overflow: auto; max-height: calc(100vh - 220px); }

@@ -19,6 +19,18 @@ import { layeredLayout } from './layout';
 import { Scope, type Trace } from './Scope';
 import { Tornado } from './Tornado';
 import { sensitivity, type SensiResult } from './sensitivity';
+import {
+  evalAlert,
+  loadTemplates,
+  storeTemplates,
+  loadParamSets,
+  storeParamSets,
+  uid,
+  type Alert,
+  type AlertOp,
+  type ViewTemplate,
+  type ParamSet,
+} from './workspace';
 import './theme.css';
 
 const STEP_H = microgrid.timestepSeconds / 3600; // hours of simulated time per step
@@ -38,11 +50,19 @@ const SPEEDS = [
 const PALETTE = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777', '#65a30d'];
 const WINDOW = 220;
 
-function buildEngine(fid: Record<string, number> = {}): Engine {
-  const scn =
-    Object.keys(fid).length > 0
-      ? { ...microgrid, instances: microgrid.instances.map((i) => (fid[i.key] != null ? { ...i, fidelity: fid[i.key] as 0 | 1 | 2 } : i)) }
-      : microgrid;
+function buildEngine(fid: Record<string, number> = {}, paramOv: Record<string, Record<string, number>> = {}): Engine {
+  const dirty = Object.keys(fid).length > 0 || Object.keys(paramOv).length > 0;
+  const scn = dirty
+    ? {
+        ...microgrid,
+        instances: microgrid.instances.map((i) => {
+          const patch: { fidelity?: 0 | 1 | 2; params?: Record<string, number> } = {};
+          if (fid[i.key] != null) patch.fidelity = fid[i.key] as 0 | 1 | 2;
+          if (paramOv[i.key]) patch.params = { ...(i.params ?? {}), ...paramOv[i.key] };
+          return Object.keys(patch).length ? { ...i, ...patch } : i;
+        }),
+      }
+    : microgrid;
   const e = new Engine(microgrid.timestepSeconds, 0, microgrid.seed);
   e.build(scn, microgridRegistry);
   return e;
@@ -86,13 +106,19 @@ export function App({
   onBack?: () => void;
 }) {
   const fidRef = useRef<Record<string, number>>({});
+  const paramOvRef = useRef<Record<string, Record<string, number>>>({});
   const engineRef = useRef<Engine>();
-  if (!engineRef.current) engineRef.current = buildEngine(fidRef.current);
-  const [view, setView] = useState<'sim' | 'components' | 'sensitivity'>('sim');
+  if (!engineRef.current) engineRef.current = buildEngine(fidRef.current, paramOvRef.current);
+  const [view, setView] = useState<'sim' | 'components' | 'sensitivity' | 'scenario'>('sim');
   const [speedIdx, setSpeedIdx] = useState(1);
   const [sps, setSps] = useState(0); // measured steps/sec (throughput readout)
   const [selected, setSelected] = useState<string | null>(null);
   const [traceIds, setTraceIds] = useState<string[]>(['bus.power.offered', 'bus.power.served', 'bus.power.unmet']);
+  const [showModels, setShowModels] = useState(true);
+  const [alerts, setAlerts] = useState<Alert[]>([{ id: uid(), seriesId: 'bus.power.unmet', op: '>', threshold: 5 }]);
+  const [popover, setPopover] = useState<null | 'alerts' | 'save'>(null);
+  const [templates, setTemplates] = useState<ViewTemplate[]>(() => loadTemplates());
+  const [paramSets, setParamSets] = useState<ParamSet[]>(() => loadParamSets());
   const [, setRender] = useState(0);
   const [ver, setVer] = useState(0);
 
@@ -221,20 +247,71 @@ export function App({
   };
 
   const rebuild = () => {
-    engineRef.current = buildEngine(fidRef.current);
+    engineRef.current = buildEngine(fidRef.current, paramOvRef.current);
     setVer((v) => v + 1);
     setRender((r) => r + 1);
   };
-  const setFidelity = (key: string, level: number) => {
-    // Rebuild with the new fidelity but fast-forward to the SAME moment, so the
-    // output change is visible immediately (not reset to midnight).
+  // Rebuild but fast-forward to the SAME moment, so a fidelity/param change shows
+  // its impact immediately instead of resetting to midnight.
+  const rebuildInPlace = () => {
     const prevStep = Math.min(engineRef.current!.stepIndex, 200000);
-    fidRef.current = { ...fidRef.current, [key]: level };
-    const e = buildEngine(fidRef.current);
+    const e = buildEngine(fidRef.current, paramOvRef.current);
     e.run(prevStep);
     engineRef.current = e;
     setVer((v) => v + 1);
     setRender((r) => r + 1);
+  };
+  const setFidelity = (key: string, level: number) => {
+    fidRef.current = { ...fidRef.current, [key]: level };
+    rebuildInPlace();
+  };
+  const setParam = (key: string, param: string, value: number) => {
+    if (!Number.isFinite(value)) return;
+    paramOvRef.current = { ...paramOvRef.current, [key]: { ...(paramOvRef.current[key] ?? {}), [param]: value } };
+    rebuildInPlace();
+  };
+
+  // alerts evaluated live against the current signal values
+  const triggered = alerts
+    .map((a) => {
+      const s = engineRef.current!.history.series(a.seriesId);
+      const value = s ? s.latest : engineRef.current!.netValue(a.seriesId);
+      return { alert: a, value, on: evalAlert(a.op, value, a.threshold) };
+    })
+    .filter((t) => t.on);
+
+  const saveTemplate = (name: string) => {
+    const next = [...templates.filter((x) => x.name !== name), { name, traceIds, alerts, showModels, fidelity: { ...fidRef.current } }];
+    setTemplates(next);
+    storeTemplates(next);
+  };
+  const loadTemplate = (t: ViewTemplate) => {
+    setTraceIds(t.traceIds);
+    setAlerts(t.alerts);
+    setShowModels(t.showModels);
+    fidRef.current = t.fidelity ?? {};
+    rebuild();
+    setPopover(null);
+  };
+  const deleteTemplate = (name: string) => {
+    const next = templates.filter((x) => x.name !== name);
+    setTemplates(next);
+    storeTemplates(next);
+  };
+  const saveParamSet = (name: string) => {
+    const next = [...paramSets.filter((x) => x.name !== name), { name, overrides: JSON.parse(JSON.stringify(paramOvRef.current)) }];
+    setParamSets(next);
+    storeParamSets(next);
+  };
+  const loadParamSet = (p: ParamSet) => {
+    paramOvRef.current = JSON.parse(JSON.stringify(p.overrides));
+    rebuild();
+    setPopover(null);
+  };
+  const deleteParamSet = (name: string) => {
+    const next = paramSets.filter((x) => x.name !== name);
+    setParamSets(next);
+    storeParamSets(next);
   };
 
   const traces: Trace[] = traceIds.map((id, i) => {
@@ -255,48 +332,88 @@ export function App({
           {onBack && <span className="back-hint">← overview</span>}
         </button>
         <span className="chip">{microgrid.name}</span>
-        <span className="chip" title="How much simulated time one step advances">
-          Δt = {STEP_H} h / step
-        </span>
-        <span className="readout tnum">
-          day {day} · {String(hour).padStart(2, '0')}:00 · step {engine.stepIndex.toLocaleString()}
-        </span>
         <div className="grow" />
-        {view === 'sim' && (
-          <>
-            <div className="seg speed" role="group" title="Playback speed (steps of simulated time per real second)">
-              {SPEEDS.map((s, i) => (
-                <button key={s.label} aria-selected={speedIdx === i} onClick={() => setSpeedIdx(i)}>
-                  {s.label}
-                </button>
-              ))}
-            </div>
-            <span className="throughput tnum" title="Simulation steps computed per real second — the pace is a choice, not a limit">
-              {fmtInt(sps)} steps/s
-            </span>
-          </>
-        )}
         <div className="seg" role="tablist">
-          <button role="tab" aria-selected={view === 'sim'} onClick={() => setView('sim')}>
-            Simulation
-          </button>
-          <button role="tab" aria-selected={view === 'components'} onClick={() => setView('components')}>
-            Components
-          </button>
-          <button role="tab" aria-selected={view === 'sensitivity'} onClick={() => setView('sensitivity')}>
-            Sensitivity
-          </button>
+          {(['sim', 'components', 'sensitivity', 'scenario'] as const).map((v) => (
+            <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)}>
+              {v === 'sim' ? 'Simulation' : v === 'components' ? 'Components' : v === 'sensitivity' ? 'Sensitivity' : 'Scenario'}
+            </button>
+          ))}
         </div>
-        <button className="pill secondary" onClick={rebuild}>
-          Reset
-        </button>
         <button className="iconbtn" title="Toggle theme" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
           {theme === 'light' ? '☾' : '☀'}
         </button>
       </header>
 
+      {view === 'sim' && (
+        <div className="subbar">
+          <div className="seg speed" role="group" title="Playback speed (steps of simulated time per real second)">
+            {SPEEDS.map((s, i) => (
+              <button key={s.label} aria-selected={speedIdx === i} onClick={() => setSpeedIdx(i)}>
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <span className="throughput tnum" title="Simulation steps computed per real second — the pace is a choice, not a limit">
+            {fmtInt(sps)} steps/s
+          </span>
+          <span className="sub-sep" />
+          <span className="subclock tnum">
+            day {day} · {String(hour).padStart(2, '0')}:00 · step {engine.stepIndex.toLocaleString()}
+          </span>
+          <span className="sub-dt" title="How much simulated time one step advances">
+            1 step = {STEP_H} h
+          </span>
+          <div className="grow" />
+          <button className="tbtn" onClick={() => setShowModels((s) => !s)}>
+            {showModels ? 'Hide models' : 'Show models'}
+          </button>
+          <div className="pop-anchor">
+            <button className={`tbtn${triggered.length ? ' alarm' : ''}`} onClick={() => setPopover((p) => (p === 'alerts' ? null : 'alerts'))}>
+              ⚠ Alerts{alerts.length ? ` (${alerts.length})` : ''}
+            </button>
+            {popover === 'alerts' && (
+              <AlertsPopover engine={engine} alerts={alerts} setAlerts={setAlerts} onClose={() => setPopover(null)} />
+            )}
+          </div>
+          <div className="pop-anchor">
+            <button className="tbtn" onClick={() => setPopover((p) => (p === 'save' ? null : 'save'))}>
+              Save / Load
+            </button>
+            {popover === 'save' && (
+              <SaveLoadPopover
+                templates={templates}
+                paramSets={paramSets}
+                hasParamOverrides={Object.keys(paramOvRef.current).length > 0}
+                onSaveTemplate={saveTemplate}
+                onLoadTemplate={loadTemplate}
+                onDeleteTemplate={deleteTemplate}
+                onSaveParamSet={saveParamSet}
+                onLoadParamSet={loadParamSet}
+                onDeleteParamSet={deleteParamSet}
+              />
+            )}
+          </div>
+          <button className="tbtn" onClick={rebuild}>
+            Reset
+          </button>
+        </div>
+      )}
+
+      {view === 'sim' && triggered.length > 0 && (
+        <div className="alert-banner">
+          <span className="ab-icon">⚠</span>
+          {triggered.map((t) => (
+            <span className="ab-item mono" key={t.alert.id}>
+              {t.alert.seriesId} {t.alert.op} {t.alert.threshold} · now {fmt(t.value)}
+            </span>
+          ))}
+        </div>
+      )}
+
       {view === 'sim' ? (
-        <div className="workspace">
+        <div className={`workspace${showModels ? '' : ' no-models'}`}>
+          {showModels && (
           <aside className="assets">
             <div className="panel-h">Models · {views.length}</div>
             {views.map((v) => (
@@ -319,6 +436,7 @@ export function App({
               </button>
             ))}
           </aside>
+          )}
 
           <div className="canvas">
             <ReactFlow
@@ -361,6 +479,7 @@ export function App({
                 onClose={() => setSelected(null)}
                 onViewLogic={() => setView('components')}
                 onSetFidelity={setFidelity}
+                onSetParam={setParam}
               />
             ) : (
               <SignalPicker engine={engine} traceIds={traceIds} onToggle={toggleTrace} />
@@ -373,6 +492,8 @@ export function App({
         </div>
       ) : view === 'sensitivity' ? (
         <SensitivityView />
+      ) : view === 'scenario' ? (
+        <ScenarioView />
       ) : (
         <div className="components">
           <div className="components-inner">
@@ -403,6 +524,7 @@ function AssetInspector({
   onClose,
   onViewLogic,
   onSetFidelity,
+  onSetParam,
 }: {
   keyName: string;
   engine: Engine;
@@ -413,6 +535,7 @@ function AssetInspector({
   onClose: () => void;
   onViewLogic: () => void;
   onSetFidelity: (key: string, level: number) => void;
+  onSetParam: (key: string, param: string, value: number) => void;
 }) {
   const maxFid = def?.maxFidelity ?? 1;
   const inst = microgrid.instances.find((i) => i.key === keyName);
@@ -496,17 +619,23 @@ function AssetInspector({
 
       {spec && spec.params.length > 0 && (
         <>
-          <div className="insp-h">Parameters</div>
+          <div className="insp-h">Parameters — editable</div>
           {spec.params.map((p) => {
             const url = p.sourceUrl ?? p.sources?.find((s) => s.url)?.url;
             const cite = p.source ?? p.sources?.find((s) => s.citation)?.citation;
+            const cur = view?.params?.[p.name] ?? p.value;
+            const overridden = Math.abs(cur - p.value) > 1e-12;
             return (
               <div className="kv col" key={p.name}>
                 <div className="kv">
-                  <span className="mono">{p.name}</span>
-                  <b className="tnum">
-                    {fmt(p.value)} {p.unit}
-                  </b>
+                  <span className="mono">
+                    {p.name}
+                    {overridden && <span className="ovr-dot" title={`default ${fmt(p.value)}`} />}
+                  </span>
+                  <span className="param-edit">
+                    <ParamInput value={cur} onCommit={(n) => onSetParam(keyName, p.name, n)} />
+                    {p.unit && <span className="punit mono">{p.unit}</span>}
+                  </span>
                 </div>
                 {p.notes && <div className="pnote">{p.notes}</div>}
                 {(url || cite) &&
@@ -638,6 +767,192 @@ function SensitivityView() {
             ±{Math.round(delta * 100)}% — longest bars at the top are the parameters that matter most.
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// ---------- editable parameter input (commits on blur / Enter) ----------
+function ParamInput({ value, onCommit }: { value: number; onCommit: (n: number) => void }) {
+  const [v, setV] = useState(String(value));
+  useEffect(() => setV(String(value)), [value]);
+  const commit = () => {
+    const n = parseFloat(v);
+    if (Number.isFinite(n) && n !== value) onCommit(n);
+    else setV(String(value));
+  };
+  return (
+    <input
+      className="pinput tnum"
+      value={v}
+      onChange={(e) => setV(e.target.value)}
+      onBlur={commit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') (e.currentTarget as HTMLInputElement).blur();
+        if (e.key === 'Escape') {
+          setV(String(value));
+          (e.currentTarget as HTMLInputElement).blur();
+        }
+      }}
+    />
+  );
+}
+
+// ---------- alerts popover ----------
+function AlertsPopover({
+  engine,
+  alerts,
+  setAlerts,
+  onClose,
+}: {
+  engine: Engine;
+  alerts: Alert[];
+  setAlerts: (a: Alert[]) => void;
+  onClose: () => void;
+}) {
+  const series = engine.history.all.map((s) => s.id).sort();
+  const [sid, setSid] = useState(series.find((s) => s === 'bus.power.unmet') ?? series[0] ?? '');
+  const [op, setOp] = useState<AlertOp>('>');
+  const [thr, setThr] = useState('5');
+  const add = () => {
+    const t = parseFloat(thr);
+    if (!sid || !Number.isFinite(t)) return;
+    setAlerts([...alerts, { id: uid(), seriesId: sid, op, threshold: t }]);
+  };
+  return (
+    <>
+      <div className="pop-scrim" onClick={onClose} />
+      <div className="popover">
+        <div className="pop-h">Alert conditions</div>
+        <div className="pop-body">
+          {alerts.length === 0 && <div className="pop-empty">No alerts yet.</div>}
+          {alerts.map((a) => (
+            <div className="alert-row" key={a.id}>
+              <span className="mono">
+                {a.seriesId} {a.op} {a.threshold}
+              </span>
+              <button className="x" onClick={() => setAlerts(alerts.filter((x) => x.id !== a.id))} title="Remove">
+                ×
+              </button>
+            </div>
+          ))}
+          <div className="alert-form">
+            <select value={sid} onChange={(e) => setSid(e.target.value)}>
+              {series.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            <select value={op} onChange={(e) => setOp(e.target.value as AlertOp)}>
+              {(['>', '>=', '<', '<='] as AlertOp[]).map((o) => (
+                <option key={o} value={o}>
+                  {o}
+                </option>
+              ))}
+            </select>
+            <input className="pinput tnum" value={thr} onChange={(e) => setThr(e.target.value)} />
+            <button className="tbtn primary" onClick={add}>
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ---------- save / load popover ----------
+function SaveLoadPopover({
+  templates,
+  paramSets,
+  hasParamOverrides,
+  onSaveTemplate,
+  onLoadTemplate,
+  onDeleteTemplate,
+  onSaveParamSet,
+  onLoadParamSet,
+  onDeleteParamSet,
+}: {
+  templates: ViewTemplate[];
+  paramSets: ParamSet[];
+  hasParamOverrides: boolean;
+  onSaveTemplate: (n: string) => void;
+  onLoadTemplate: (t: ViewTemplate) => void;
+  onDeleteTemplate: (n: string) => void;
+  onSaveParamSet: (n: string) => void;
+  onLoadParamSet: (p: ParamSet) => void;
+  onDeleteParamSet: (n: string) => void;
+}) {
+  const [tName, setTName] = useState('');
+  const [pName, setPName] = useState('');
+  return (
+    <div className="popover wide">
+      <div className="pop-h">Views — charts, scope, alerts &amp; layout</div>
+      <div className="pop-body">
+        <div className="save-form">
+          <input className="pinput" placeholder="name this view" value={tName} onChange={(e) => setTName(e.target.value)} />
+          <button className="tbtn primary" disabled={!tName.trim()} onClick={() => { onSaveTemplate(tName.trim()); setTName(''); }}>
+            Save current
+          </button>
+        </div>
+        {templates.length === 0 && <div className="pop-empty">No saved views.</div>}
+        {templates.map((t) => (
+          <div className="save-row" key={t.name}>
+            <span className="sr-name">{t.name}</span>
+            <span className="sr-meta">{t.traceIds.length} traces · {t.alerts.length} alerts</span>
+            <button className="tbtn" onClick={() => onLoadTemplate(t)}>Load</button>
+            <button className="x" onClick={() => onDeleteTemplate(t.name)}>×</button>
+          </div>
+        ))}
+      </div>
+      <div className="pop-h">Parameter sets</div>
+      <div className="pop-body">
+        <div className="save-form">
+          <input className="pinput" placeholder="name this parameter set" value={pName} onChange={(e) => setPName(e.target.value)} />
+          <button className="tbtn primary" disabled={!pName.trim() || !hasParamOverrides} onClick={() => { onSaveParamSet(pName.trim()); setPName(''); }}>
+            Save current
+          </button>
+        </div>
+        {!hasParamOverrides && paramSets.length === 0 && (
+          <div className="pop-empty">Edit a model’s parameters in the inspector, then save the set here.</div>
+        )}
+        {paramSets.map((p) => (
+          <div className="save-row" key={p.name}>
+            <span className="sr-name">{p.name}</span>
+            <span className="sr-meta">{Object.keys(p.overrides).length} models</span>
+            <button className="tbtn" onClick={() => onLoadParamSet(p)}>Load</button>
+            <button className="x" onClick={() => onDeleteParamSet(p.name)}>×</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------- scenario JSON ----------
+function ScenarioView() {
+  const json = JSON.stringify(microgrid, null, 2);
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard?.writeText(json);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1400);
+  };
+  return (
+    <div className="components">
+      <div className="components-inner">
+        <p className="components-lead">
+          The entire solar-microgrid simulation is this one JSON spec — every model instance, its wiring, parameters, and
+          load priorities. It’s pure data: hand it to any ModelFlow runtime and it runs identically.
+        </p>
+        <div className="scenario-bar">
+          <span className="mono">solar-microgrid.json · {microgrid.instances.length} instances</span>
+          <button className="tbtn" onClick={copy}>
+            {copied ? 'Copied ✓' : 'Copy JSON'}
+          </button>
+        </div>
+        <pre className="scenario-json">{json}</pre>
       </div>
     </div>
   );
