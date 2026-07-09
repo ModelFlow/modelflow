@@ -3,7 +3,7 @@ import type { Unit, NetId } from './types';
 /**
  * A port is a named, typed, directional connection point on a model. Output
  * ports drive a net; input ports read one. Ports are the point-to-point
- * ("Simulink wire") half of ModelFlow's wiring — the other half is buses.
+ * (single wire) half of ModelFlow's wiring — the other half is buses.
  */
 export interface PortDecl {
   readonly dir: 'in' | 'out';

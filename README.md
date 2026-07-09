@@ -1,12 +1,13 @@
 # ModelFlow
 
-**An agent-friendly, hierarchical, composable simulation engine — Simulink, in code.**
+**Reusable, composable models — at any level of detail — for humanity's hardest system-simulation problems.**
 
-ModelFlow builds a simulation of *any* system out of small, reusable model
-blocks — power grids, life-support loops, supply chains, budgets — wires them
-together (with typed ports or shared resource buses), and runs it fast and
-deterministically. Models are plain TypeScript objects; scenarios are plain
-JSON, so a person *or an LLM* can author them reliably.
+ModelFlow builds a simulation of *any* system out of small, **reusable,
+composable** models, each dialable from a coarse estimate to full physics, and
+wires them together (with typed ports or shared resource buses) to take on the
+toughest problems: life support on Mars, power on the Moon, compute in orbit.
+Models are plain TypeScript objects; scenarios are plain JSON, so a person *or an
+LLM* can author them reliably.
 
 ### ▶ Live demo — [modelflow-microgrid.netlify.app](https://modelflow-microgrid.netlify.app)
 
@@ -94,6 +95,14 @@ eng.instanceViews();                           // live params / status / key fig
   with **nearest-owner** binding, pluggable **arbitration policies** (priority
   triage, reserves), subtree aggregation, and runtime re-parenting. One
   `arbitratedBus('power')` replaces a hand-written power grid + labor pool.
+
+## Levels of detail
+
+The same model can run at different **fidelities**. A model declares the level it
+supports; a scenario picks per instance (`fidelity: 0 | 1 | 2`) and `ctx.fidelity`
+lets the `step` branch — a distilled coefficient for fast multi-year sweeps, an
+analytic formula, or resolved physics when a single number decides the outcome.
+You dial detail up or down **without rewiring** the model.
 
 ## Units that convert themselves
 

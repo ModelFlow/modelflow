@@ -18,8 +18,12 @@ export const Tank = defineModel({
 
 const CONCEPTS: Array<{ t: string; d: string }> = [
   {
-    t: 'Models are data',
-    d: 'A model is one object — declare ports, params, and state, then write step(). No base class, no boilerplate. A person or an LLM can author one in fifteen lines.',
+    t: 'Reusable & composable',
+    d: 'Model something once — a solar array, an electrolyzer, a crew member — then reuse and nest it. Small models compose into subsystems, and subsystems into an entire base.',
+  },
+  {
+    t: 'Levels of detail, on demand',
+    d: 'Run each model at the fidelity the question needs — a distilled coefficient for fast multi-year sweeps, or resolved physics when a single number decides the outcome. Swap detail without rewiring.',
   },
   {
     t: 'Two ways to wire',
@@ -30,16 +34,12 @@ const CONCEPTS: Array<{ t: string; d: string }> = [
     d: 'Declare a port in kW and feed it a W output — ModelFlow converts on the wire. Connect power to a mass-flow input and it’s rejected at build, with a plain-English error.',
   },
   {
-    t: 'Hierarchy & re-parenting',
-    d: 'Nest models into subsystems. Resources resolve to the nearest owner in the tree, and models can even move at runtime — a crew member walking from ship to habitat.',
-  },
-  {
     t: 'Deterministic & fast',
-    d: 'One typed-array signal pool, a seeded RNG per model, a fixed timestep. ~33M model-steps per second in a browser tab, and parameter sweeps fan out across every core.',
+    d: 'One typed-array signal pool, a seeded RNG per model, a fixed timestep. Tens of millions of model-steps per second, and parameter sweeps fan out across every core.',
   },
   {
     t: 'Agent-friendly',
-    d: 'Scenarios are JSON, validated with errors that name the fix (“did you mean SolarFarm?”). The whole surface is designed so an LLM gets a new model right on the first try.',
+    d: 'Models are plain TypeScript; scenarios are JSON, validated with errors that name the fix. The whole surface is designed so a person — or an LLM — gets a new model right on the first try.',
   },
 ];
 
@@ -76,12 +76,12 @@ export function Landing({
         <div className="hero-in">
           <div className="eyebrow">Open-source simulation engine</div>
           <h1>
-            Simulink, <span className="accent">in code.</span>
+            Model humanity’s <span className="accent">hardest systems.</span>
           </h1>
           <p className="sub">
-            ModelFlow builds any system from small, reusable models — power grids, life-support loops, supply chains,
-            budgets — wired together and run fast and deterministically. Models are plain TypeScript; scenarios are plain
-            JSON.
+            ModelFlow builds simulations from reusable, composable models — each dialed to whatever level of detail the
+            question needs — to take on the toughest system problems: keeping people alive on Mars, powering a base on
+            the Moon, running a data center in orbit.
           </p>
           <div className="hero-cta">
             <button className="pill lg" onClick={onLaunch}>
