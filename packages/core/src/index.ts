@@ -17,7 +17,7 @@ export {
 } from './units';
 export type { PortDecl, Net } from './signal';
 export { inPort, outPort } from './signal';
-export type { ParamSpec } from './param';
+export type { ParamSpec, ParamSource } from './param';
 export { param } from './param';
 export type { CommoditySpec } from './commodity';
 export { CommodityRegistry } from './commodity';

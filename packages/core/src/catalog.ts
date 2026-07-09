@@ -7,6 +7,7 @@
  */
 import type { ModelDef } from './model';
 import type { ModelRegistry } from './registry';
+import type { ParamSource } from './param';
 import { parseUnit, describeDimension } from './units';
 
 export interface PortSpec {
@@ -25,7 +26,10 @@ export interface ParamPublicSpec {
   unit: string;
   dimension: string;
   desc: string;
+  notes?: string;
   source?: string;
+  sourceUrl?: string;
+  sources?: ParamSource[];
   confidence?: 'low' | 'med' | 'high';
   min?: number;
   max?: number;
@@ -77,7 +81,10 @@ export function modelSpec(def: ModelDef): ModelSpec {
     unit: ps.unit,
     dimension: dimOf(ps.unit),
     desc: ps.desc,
+    notes: ps.notes,
     source: ps.source,
+    sourceUrl: ps.sourceUrl,
+    sources: ps.sources,
     confidence: ps.confidence,
     min: ps.min,
     max: ps.max,

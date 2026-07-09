@@ -304,15 +304,39 @@ function ComponentCard({ spec, def, onApply }: { spec: ModelSpec; def?: ModelDef
           </div>
         ))}
         {spec.params.length > 0 && <div className="io-h">Parameters</div>}
-        {spec.params.map((p) => (
-          <div className="io p" key={p.name}>
-            <span className="nm">{p.name}</span>
-            <span className="un">
-              {fmt(p.value)} {p.unit}
-            </span>
-            <span className="dm">{p.dimension}</span>
-          </div>
-        ))}
+        {spec.params.map((p) => {
+          const links = [
+            ...(p.sourceUrl || p.source ? [{ url: p.sourceUrl, label: p.source ?? 'source' }] : []),
+            ...(p.sources ?? []).map((s) => ({ url: s.url, label: s.citation ?? 'source' })),
+          ];
+          return (
+            <div key={p.name}>
+              <div className="io p">
+                <span className="nm">{p.name}</span>
+                <span className="un">
+                  {fmt(p.value)} {p.unit}
+                </span>
+                <span className="dm">{p.dimension}</span>
+              </div>
+              {(p.notes || links.length > 0) && (
+                <div className="io-meta">
+                  {p.notes && <span className="note">{p.notes}</span>}
+                  {links.map((l, i) =>
+                    l.url ? (
+                      <a key={i} className="src-link" href={l.url} target="_blank" rel="noreferrer">
+                        {l.label} ↗
+                      </a>
+                    ) : (
+                      <span key={i} className="src-cite">
+                        {l.label}
+                      </span>
+                    ),
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
         {spec.providesBus && <div className="card-bus">provides the “{spec.providesBus}” bus</div>}
       </div>
       {spec.source.step && (

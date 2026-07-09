@@ -208,3 +208,9 @@ pre.hljs { margin: 0; background: var(--bg-inset); border: 1px solid var(--borde
 a.iconbtn { text-decoration: none; }
 .foot-link { color: var(--text-muted); text-decoration: none; font-weight: 500; }
 .foot-link:hover { color: var(--accent); }
+
+.io-meta { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 0 0 7px 0; }
+.io-meta .note { font-size: 11px; color: var(--text-muted); line-height: 1.45; flex: 1 1 100%; }
+.io-meta .src-link { font-size: 11px; color: var(--accent); text-decoration: none; }
+.io-meta .src-link:hover { text-decoration: underline; }
+.io-meta .src-cite { font-size: 11px; color: var(--text-faint); }

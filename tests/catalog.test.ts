@@ -21,6 +21,8 @@ test('params carry units, dimensions, and provenance', () => {
   const eff = spec.params.find((p) => p.name === 'efficiency')!;
   expect(eff.dimension).toBe('dimensionless');
   expect(eff.source).toContain('Spectrolab');
+  expect(eff.sourceUrl).toContain('spectrolab.com');
+  expect(eff.notes).toContain('Beginning-of-life');
   expect(eff.min).toBe(0);
   expect(eff.max).toBe(1);
 });

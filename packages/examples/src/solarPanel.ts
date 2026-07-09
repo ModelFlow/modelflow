@@ -16,8 +16,18 @@ export const SolarPanel = defineModel({
   },
   params: {
     area: param(10, 'm^2', 'Total active cell area'),
-    efficiency: param(0.22, 'frac', 'Reference conversion efficiency (STC)', { source: 'Spectrolab XTJ Prime', min: 0, max: 1 }),
-    tempCoeff: param(-0.0035, '1/K', 'Power temperature coefficient', { source: 'typical III-V cell', max: 0 }),
+    efficiency: param(0.22, 'frac', 'Reference conversion efficiency (STC)', {
+      min: 0,
+      max: 1,
+      source: 'Spectrolab XTJ Prime datasheet',
+      sourceUrl: 'https://www.spectrolab.com/DataSheets/cells/XTJ_Prime.pdf',
+      notes: 'Beginning-of-life efficiency at Standard Test Conditions (AM0, 25 °C). Derate ~1%/yr for radiation damage on multi-year missions.',
+    }),
+    tempCoeff: param(-0.0035, '1/K', 'Power temperature coefficient', {
+      max: 0,
+      source: 'Typical triple-junction III-V cell',
+      notes: 'Fractional power loss per kelvin above the 25 °C reference temperature.',
+    }),
   },
   state: () => ({}),
   step(ctx) {
