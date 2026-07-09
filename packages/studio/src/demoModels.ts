@@ -12,8 +12,9 @@ export const DiurnalIrradiance = defineModel({
   },
   state: () => ({}),
   step(ctx) {
-    const phase = (ctx.t % ctx.params.periodSeconds) / ctx.params.periodSeconds; // 0..1
-    ctx.out.irradiance = Math.max(0, ctx.params.peak * Math.sin(2 * Math.PI * phase));
+    const phase = (ctx.t % ctx.params.periodSeconds) / ctx.params.periodSeconds; // 0..1 over a day
+    // Peak at solar noon (phase 0.5); dark before 6am / after 6pm.
+    ctx.out.irradiance = Math.max(0, ctx.params.peak * Math.sin(2 * Math.PI * (phase - 0.25)));
   },
   keyFigures: (ctx) => [['Irradiance', ctx.out.irradiance, 'W/m²']],
 });

@@ -48,6 +48,8 @@ export interface ModelSpec {
   ports: PortSpec[];
   params: ParamPublicSpec[];
   buses: BusSpec[];
+  /** The model's actual logic, as source, for viewing/editing. */
+  source: { step?: string; declare?: string; init?: string };
 }
 
 function dimOf(unit: string): string {
@@ -96,6 +98,11 @@ export function modelSpec(def: ModelDef): ModelSpec {
     ports,
     params,
     buses,
+    source: {
+      step: def.step ? def.step.toString() : undefined,
+      declare: def.declare ? def.declare.toString() : undefined,
+      init: def.init ? def.init.toString() : undefined,
+    },
   };
 }
 

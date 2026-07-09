@@ -1,4 +1,4 @@
-/** A tiny dependency-free SVG line chart over a rolling window of values. */
+/** A minimal, dependency-free SVG line chart with a stable footprint. */
 export function Chart({
   title,
   unit,
@@ -10,9 +10,9 @@ export function Chart({
   values: number[];
   color: string;
 }) {
-  const W = 260;
-  const H = 90;
-  const pad = 6;
+  const W = 236;
+  const H = 74;
+  const pad = 4;
   const n = values.length;
   let min = Infinity;
   let max = -Infinity;
@@ -24,28 +24,29 @@ export function Chart({
     min = 0;
     max = 1;
   }
-  if (max - min < 1e-9) {
-    max = min + 1;
-  }
+  if (max - min < 1e-9) max = min + 1;
   const x = (i: number) => pad + (i / Math.max(1, n - 1)) * (W - 2 * pad);
   const y = (v: number) => H - pad - ((v - min) / (max - min)) * (H - 2 * pad);
-  const d = values.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const line = values.map((v, i) => `${i === 0 ? 'M' : 'L'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const area = n ? `${line} L${x(n - 1).toFixed(1)},${H - pad} L${x(0).toFixed(1)},${H - pad} Z` : '';
   const latest = n ? values[n - 1] : 0;
+  const fmt = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 1 });
 
   return (
     <div className="chart">
-      <div className="chart-head">
-        <span className="chart-title">{title}</span>
-        <span className="chart-val" style={{ color }}>
-          {latest.toLocaleString(undefined, { maximumFractionDigits: 2 })} {unit}
+      <div className="chart-h">
+        <span className="chart-t">{title}</span>
+        <span className="chart-v tnum" style={{ color }}>
+          {fmt(latest)} {unit}
         </span>
       </div>
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none">
-        <path d={d} fill="none" stroke={color} strokeWidth={1.5} />
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
+        <path d={area} fill={color} opacity={0.08} />
+        <path d={line} fill="none" stroke={color} strokeWidth={1.5} vectorEffect="non-scaling-stroke" />
       </svg>
-      <div className="chart-range">
-        <span>{min.toLocaleString(undefined, { maximumFractionDigits: 1 })}</span>
-        <span>{max.toLocaleString(undefined, { maximumFractionDigits: 1 })}</span>
+      <div className="chart-x tnum">
+        <span>{fmt(min)}</span>
+        <span>{fmt(max)}</span>
       </div>
     </div>
   );
