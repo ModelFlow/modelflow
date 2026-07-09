@@ -1,26 +1,43 @@
 # ModelFlow
 
-**An agent-friendly, hierarchical, composable simulation engine — Simulink in code.**
+**An agent-friendly, hierarchical, composable simulation engine — Simulink, in code.**
 
-ModelFlow lets you build a simulation of *any* system out of small, reusable
-model blocks, wire them together (explicitly, or through shared resource buses),
-and run it fast and deterministically. Models are plain objects; scenarios are
-plain JSON — so a person *or an LLM* can author them reliably.
+ModelFlow builds a simulation of *any* system out of small, reusable model
+blocks — power grids, life-support loops, supply chains, budgets — wires them
+together (with typed ports or shared resource buses), and runs it fast and
+deterministically. Models are plain TypeScript objects; scenarios are plain
+JSON, so a person *or an LLM* can author them reliably.
+
+### ▶ Live demo — [modelflow-microgrid.netlify.app](https://modelflow-microgrid.netlify.app)
+
+An interactive solar-microgrid example running in the browser, plus a generic
+inspector (connection graph, live charts, editable model logic).
 
 > Rewritten in TypeScript in 2026 for performance and agent-authoring. The
 > original 2020 Python prototype lives in git history at tag `legacy-python-2020`.
 
+---
+
+## Packages
+
 ```
 packages/
-  core/   @modelflow/core   the engine — zero domain knowledge
-  std/    @modelflow/std    generic primitives: Source, Sink, Storage, Controller, ArbitratedBus
-  examples/                 runnable, domain-free demos (the tank loop)
-tests/                      bun test
+  core/       @modelflow/core   the engine — zero domain knowledge
+  std/        @modelflow/std     generic primitives + policies + parallel sweeps
+  studio/     @modelflow/studio  a generic Vite/React inspector UI (the live demo)
+  examples/                      runnable, domain-free demos + benchmarks
+tests/                           bun test
 ```
+
+`@modelflow/std` ships `Source`, `Sink`, `Storage`, `Converter`, `Controller`,
+`Constant`, and `arbitratedBus` with the `priorityProRata` allocation policy.
+
+---
 
 ## A model is one object
 
-No base class, no `super`. Declare ports, params, and state; write `step`.
+No base class, no `super`. Declare ports (each with a **unit**), params, and
+state; write `step`. Author-time checks reject a typo'd port before you ever run.
 
 ```ts
 import { defineModel, inPort, outPort, param } from '@modelflow/core';
@@ -48,10 +65,10 @@ const scenario = {
   version: 1, name: 'tank-loop', seed: 42,
   timestepSeconds: 1, durationSeconds: 3600, sampleEverySteps: 10,
   instances: [
-    { key: 'src',  type: 'Source',     params: { maxFlow: 5 },                       connect: { cmd: 'src_cmd', flow: 'in_flow' } },
-    { key: 'tank', type: 'Tank',        params: { capacity: 1000 },                   connect: { inflow: 'in_flow', outflow: 'drain', level: 'lvl' } },
-    { key: 'sink', type: 'Sink',        params: { rate: 2 },                          connect: { draw: 'drain' } },
-    { key: 'ctl',  type: 'Controller',  params: { setpoint: 500, band: 50, onValue: 5 }, connect: { measure: 'lvl', cmd: 'src_cmd' } },
+    { key: 'src',  type: 'Source',     params: { maxFlow: 5 },                          connect: { cmd: 'src_cmd', flow: 'in_flow' } },
+    { key: 'tank', type: 'Tank',       params: { capacity: 1000 },                       connect: { inflow: 'in_flow', outflow: 'drain', level: 'lvl' } },
+    { key: 'sink', type: 'Sink',       params: { rate: 2 },                              connect: { draw: 'drain' } },
+    { key: 'ctl',  type: 'Controller', params: { setpoint: 500, band: 50, onValue: 5 },  connect: { measure: 'lvl', cmd: 'src_cmd' } },
   ],
 };
 ```
@@ -59,11 +76,14 @@ const scenario = {
 Run it:
 
 ```ts
-import { Engine } from '@modelflow/core';
+import { Engine, registry } from '@modelflow/core';
+
 const eng = new Engine(scenario.timestepSeconds, 0, scenario.seed);
-eng.build(scenario, registry);   // validates wiring; throws with fixes on error
+eng.build(scenario, registry(/* models */));  // validates wiring; throws with fixes on error
 eng.run();
-eng.history.series('lvl');        // the recorded time series
+eng.history.series('lvl');                     // the recorded time series
+eng.structure();                               // nodes + edges, for a diagram
+eng.instanceViews();                           // live params / status / key figures
 ```
 
 ## Two ways to wire
@@ -75,25 +95,90 @@ eng.history.series('lvl');        // the recorded time series
   triage, reserves), subtree aggregation, and runtime re-parenting. One
   `arbitratedBus('power')` replaces a hand-written power grid + labor pool.
 
-## Design principles
+## Units that convert themselves
+
+Every port and param declares a unit. ModelFlow does real dimensional analysis,
+so it **auto-converts compatible units on the wire** and **rejects incompatible
+ones at build**.
+
+```ts
+import { convert } from '@modelflow/core';
+
+convert(1, 'kW', 'W');        // 1000
+convert(0, '°C', 'K');        // 273.15
+convert(1, 'kg/s', 't/day');  // 86.4
+```
+
+Wire a model that outputs `W` into one that declares its input in `kW`, and the
+value is converted for you. Wire `kg/s` into a `W` input, and `Engine.build`
+throws: *“unit mismatch … power vs mass flow.”* The parser understands SI
+prefixes and compound units (`W/m^2`, `kW·h`, `J/(kg·K)`, `mmHg`, affine `°C`).
+
+## Publishable components
+
+`modelSpec(def)` / `catalog(registry)` describe every model as a portable
+component — each interface point annotated with its unit **and** physical
+dimension **and** provenance — so a model can be published and dropped into
+another simulation with its contract fully understood.
+
+```
+SolarPanel — Photovoltaic array: irradiance + cell temperature → DC power.
+  → irradiance   W/m^2   [power density]
+  → cellTemp     °C      [temperature]
+  ← power        W       [power]
+  • efficiency   0.22    frac    [dimensionless]   src: Spectrolab XTJ Prime
+```
+
+## Deterministic & fast
 
 - **Deterministic** — `(scenario, seed)` → identical output. Per-instance RNG
   streams, fixed timestep, insertion-order evaluation (no topological sort).
-- **Fast** — one reused `Float64Array` signal pool; no per-step allocation on
-  the hot path.
-- **Agent-friendly** — author-time checks catch a typo'd port before you run;
-  `Engine.build` reports *every* scenario problem at once, each with the legal
-  alternatives and a suggested fix.
-- **Domain-free core** — Mars/Moon/data-center specifics live in domain packages
-  that import ModelFlow; the engine emits a `Recording` any viewer can play.
+- **Fast** — one reused `Float64Array` signal pool, zero per-step allocation.
+  **~33M model-steps/sec** single-threaded (recording on); **~49M/sec** in
+  compute-only mode.
+- **Parallel sweeps** — `runSweep()` fans a Monte-Carlo / trade study across
+  Web Workers (Bun *and* the browser). Measured **~4.7× on 10 cores
+  (231M model-steps/sec)**, results bit-identical to single-thread.
+
+```ts
+import { runSweep } from '@modelflow/std';
+const results = await runSweep({ module: './myTarget.ts', cases, workers: 8 });
+```
+
+## ModelFlow Studio
+
+A **generic** inspector UI (`packages/studio`) driven purely by engine
+introspection — point it at any scenario and get:
+
+- an **assets** table with live key figures,
+- a **connection graph** (React Flow) with unit-labelled signal edges and
+  arbitrated bus edges,
+- live **time-series charts**, and
+- a **component catalog** where each model's TypeScript `step(ctx)` is shown and
+  can be **edited and re-run live**.
+
+Light and dark themed. It's the [live demo](https://modelflow-microgrid.netlify.app).
+
+```
+bun run --cwd packages/studio dev     # → http://localhost:5273
+```
+
+## Domain-free core
+
+Mars / Moon / orbital-data-center specifics live in domain packages that import
+ModelFlow; the engine emits a `Recording` (per-signal series + frames + events +
+key figures) that any viewer can play. The core knows nothing about any of them.
 
 ## Develop
 
 ```
 bun install
-bun test
-bun run example:tank
+bun test                       # unit + integration + units + sweep tests
 bun run typecheck
+bun run example:tank           # run the tank-loop example
+bun run packages/examples/src/bench.ts        # single-thread throughput
+bun run packages/examples/src/benchSweep.ts   # parallel sweep throughput
+bun run --cwd packages/studio dev             # the Studio UI
 ```
 
 ## License
