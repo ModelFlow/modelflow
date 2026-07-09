@@ -63,12 +63,15 @@ const nodeTypes = { flow: FlowNode };
 
 const figOf = (v?: InstanceView) => v?.keyFigures[0];
 
-export function App() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light');
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
-
+export function App({
+  theme,
+  setTheme,
+  onBack,
+}: {
+  theme: 'light' | 'dark';
+  setTheme: (t: 'light' | 'dark') => void;
+  onBack?: () => void;
+}) {
   const engineRef = useRef<Engine>();
   if (!engineRef.current) engineRef.current = buildEngine();
   const [running, setRunning] = useState(true);
@@ -141,12 +144,13 @@ export function App() {
   return (
     <div className="app">
       <header className="top">
-        <div className="brand">
+        <button className="brand" onClick={onBack} style={{ background: 'none', border: 0, padding: 0 }}>
           <svg className="glyph" viewBox="0 0 16 16" fill="currentColor">
             <path d="M8 0l8 8-8 8-8-8z" />
           </svg>
           ModelFlow
-        </div>
+          {onBack && <span className="back-hint">← overview</span>}
+        </button>
         <span className="chip">{microgrid.name}</span>
         <span className="readout tnum">
           day {day} · {String(hour).padStart(2, '0')}:00 · step {engine.stepIndex}
@@ -166,7 +170,7 @@ export function App() {
         <button className="pill secondary" onClick={rebuild}>
           Reset
         </button>
-        <button className="iconbtn" title="Toggle theme" onClick={() => setTheme((t) => (t === 'light' ? 'dark' : 'light'))}>
+        <button className="iconbtn" title="Toggle theme" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
           {theme === 'light' ? '☾' : '☀'}
         </button>
       </header>

@@ -17,3 +17,6 @@ coverage/
 # Env
 .env
 .env.*
+
+# deploy artifacts
+*.zip

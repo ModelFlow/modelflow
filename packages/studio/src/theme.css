@@ -39,7 +39,7 @@
 }
 
 * { box-sizing: border-box; }
-html, body, #root { height: 100%; margin: 0; }
+html, body, #root { margin: 0; min-height: 100%; }
 body {
   background: var(--bg);
   color: var(--text);
@@ -152,3 +152,55 @@ textarea.src { width: 100%; border: 0; resize: vertical; min-height: 160px; outl
 .apply-note { padding: 6px 14px; font-size: 11px; }
 .apply-note.ok { color: var(--good); }
 .apply-note.err { color: var(--bad); }
+
+/* ---------- landing page ---------- */
+.back-hint { font-size: 10px; color: var(--text-faint); font-weight: 400; margin-left: 8px; }
+.landing { min-height: 100vh; background: var(--bg); color: var(--text); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+.lnav { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+.lnav-in { max-width: 1080px; margin: 0 auto; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 24px; }
+
+.hero { padding: 88px 0 64px; text-align: center; }
+.hero-in { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+.eyebrow { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--accent); margin-bottom: 18px; }
+.hero h1 { font-size: 62px; line-height: 1.02; letter-spacing: -0.03em; font-weight: 700; margin: 0 0 20px; }
+.hero h1 .accent { color: var(--accent); }
+.hero .sub { font-size: 18px; line-height: 1.6; color: var(--text-muted); margin: 0 auto 32px; max-width: 640px; }
+.hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.pill.lg { padding: 11px 20px; font-size: 14px; border-radius: 9px; text-decoration: none; }
+a.pill { text-decoration: none; }
+
+.concepts { padding: 24px 0 40px; }
+.grid6 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+.concept { background: var(--bg); padding: 22px 22px; }
+.concept:hover { background: var(--bg-elev); }
+.c-t { font-weight: 650; font-size: 15px; margin-bottom: 7px; letter-spacing: -0.01em; }
+.c-t::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 2px; background: var(--accent); margin-right: 9px; vertical-align: middle; }
+.c-d { color: var(--text-muted); font-size: 13px; line-height: 1.55; }
+
+.codeblock { padding: 56px 0; border-top: 1px solid var(--border); }
+.wrap.two { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: 40px; align-items: center; }
+.codeblock h2, .example h2 { font-size: 30px; letter-spacing: -0.02em; margin: 0 0 14px; font-weight: 700; }
+.lede { color: var(--text-muted); font-size: 15px; line-height: 1.65; }
+.lede code { font-family: var(--mono); font-size: 13px; background: var(--bg-inset); padding: 1px 5px; border-radius: 4px; }
+pre.hljs { margin: 0; background: var(--bg-inset); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; font-family: var(--mono); font-size: 12.5px; line-height: 1.6; color: var(--text); overflow-x: auto; tab-size: 2; }
+
+.example { padding: 56px 0 72px; border-top: 1px solid var(--border); text-align: center; }
+.ex-head { max-width: 720px; margin: 0 auto; }
+.ex-flow { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 36px 0; }
+.ex-flow .b { background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: 9px; padding: 10px 16px; font-size: 13px; font-weight: 550; }
+.ex-flow .b.bus { border-color: var(--bus); color: var(--bus); }
+.ex-flow .arr { color: var(--text-faint); font-size: 16px; }
+.ex-cta { margin-top: 12px; }
+.ex-foot { color: var(--text-faint); font-size: 13px; margin-top: 28px; }
+
+.lfoot { border-top: 1px solid var(--border); padding: 28px 0; }
+.lfoot .wrap { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; }
+.lfoot .dim { color: var(--text-faint); font-weight: 400; }
+
+@media (max-width: 760px) {
+  .hero h1 { font-size: 44px; }
+  .wrap.two { grid-template-columns: 1fr; gap: 24px; }
+  .hero { padding: 56px 0 40px; }
+}
