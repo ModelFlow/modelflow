@@ -124,7 +124,7 @@ export function Landing({
       <section className="example" id="example">
         <div className="wrap">
           <div className="ex-head">
-            <h2>A worked example — a solar microgrid</h2>
+            <h2>Example simulation — solar microgrid</h2>
             <p className="lede">
               The sun drives two photovoltaic arrays that output <b>watts</b>. Inverters tie them to a shared power bus —
               and because each inverter declares its input in <b>kilowatts</b>, ModelFlow auto-converts W→kW on the wire.
