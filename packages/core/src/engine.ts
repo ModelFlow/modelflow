@@ -5,7 +5,7 @@ import type { Scenario, InstanceSpec } from './scenario';
 import type { ModelRegistry } from './registry';
 import type { AllocationPolicy, BusAttach, BusHandle, BusRequest, ReserveView } from './bus';
 import { CommodityRegistry } from './commodity';
-import { History } from './history';
+import { History, TimeSeries } from './history';
 import { SimClock } from './clock';
 import { makeRng, hashSeed, type Rng } from './rng';
 import { AggregateValidationError, suggest, type ValidationIssue } from './validate';
@@ -43,6 +43,11 @@ class CompiledBus {
   grantFractions = new Float64Array(0);
   private reqs: BusRequest[] = [];
   reserve: ReserveView | null = null;
+  // Direct series handles (null when recording is off).
+  private tsOffered: TimeSeries | null = null;
+  private tsDemanded: TimeSeries | null = null;
+  private tsServed: TimeSeries | null = null;
+  private tsUnmet: TimeSeries | null = null;
 
   constructor(
     readonly commodity: string,
@@ -50,14 +55,21 @@ class CompiledBus {
     readonly policy: AllocationPolicy | null,
   ) {}
 
-  /** After all handles attached: fix request indices + preallocate buffers. */
   finalize(): void {
     const n = this.requestHandles.length;
     this.grantFractions = new Float64Array(n);
     this.reqs = this.requestHandles.map((h, i) => {
       h.reqIndex = i;
-      return { amount: 0, band: h.attach.band ?? 0, tag: h.attach.tag ?? '' };
+      return { amount: 0, band: h.band, tag: h.attach.tag ?? '' };
     });
+  }
+
+  bindSeries(history: History): void {
+    const c = this.commodity;
+    this.tsOffered = history.ensure(`bus.${c}.offered`, `bus.${c}.offered`, '');
+    this.tsDemanded = history.ensure(`bus.${c}.demanded`, `bus.${c}.demanded`, '');
+    this.tsServed = history.ensure(`bus.${c}.served`, `bus.${c}.served`, '');
+    this.tsUnmet = history.ensure(`bus.${c}.unmet`, `bus.${c}.unmet`, '');
   }
 
   begin(): void {
@@ -65,7 +77,7 @@ class CompiledBus {
     for (const h of this.requestHandles) h.demand = 0;
   }
 
-  resolve(dt: number, history: History): void {
+  resolve(dt: number): void {
     let supply = 0;
     for (const h of this.offerHandles) supply += h.offer;
     let demanded = 0;
@@ -79,13 +91,14 @@ class CompiledBus {
       ? this.policy.allocate(supply, this.reqs, this.reserve, dt)
       : proRata(supply, demanded, this.reqs.length);
     this.grantFractions.set(fr);
-    let served = 0;
-    for (let i = 0; i < this.reqs.length; i++) served += this.grantFractions[i] * this.reqs[i].amount;
-    const c = this.commodity;
-    history.record(`bus.${c}.offered`, `bus.${c}.offered`, '', supply);
-    history.record(`bus.${c}.demanded`, `bus.${c}.demanded`, '', demanded);
-    history.record(`bus.${c}.served`, `bus.${c}.served`, '', served);
-    history.record(`bus.${c}.unmet`, `bus.${c}.unmet`, '', Math.max(0, demanded - served));
+    if (this.tsOffered) {
+      let served = 0;
+      for (let i = 0; i < this.reqs.length; i++) served += this.grantFractions[i] * this.reqs[i].amount;
+      this.tsOffered.stage(supply);
+      this.tsDemanded!.stage(demanded);
+      this.tsServed!.stage(served);
+      this.tsUnmet!.stage(Math.max(0, demanded - served));
+    }
   }
 }
 
@@ -108,6 +121,8 @@ interface Node extends ModelInstanceView {
   state: object;
   health: Health;
   rng: Rng;
+  inMap: Record<string, number>;
+  outMap: Record<string, number>;
   inCursor: Record<string, number>;
   outCursor: Record<string, number>;
   busHandles: Record<string, BusHandle>;
@@ -122,6 +137,11 @@ export interface LogEntry {
   msg: string;
 }
 
+export interface EngineOptions {
+  /** Record time series each step (default true). Turn OFF for sweeps. */
+  record?: boolean;
+}
+
 /**
  * The simulation engine: flattens a scenario into a wired signal graph and
  * steps it deterministically at a fixed dt. Evaluation order is env-providers
@@ -133,9 +153,11 @@ export class Engine {
   readonly history = new History();
   readonly commodities = new CommodityRegistry();
   readonly logs: LogEntry[] = [];
+  readonly record: boolean;
 
   private buf = new Float64Array(0);
   private nets: Net[] = [];
+  private netHandles: TimeSeries[] = [];
   private nodes: Node[] = [];
   private order: Node[] = [];
   private byKey = new Map<string, Node>();
@@ -147,8 +169,10 @@ export class Engine {
     readonly dt: number,
     epochMs: number,
     private readonly masterSeed: number,
+    opts: EngineOptions = {},
   ) {
     this.clock = new SimClock(epochMs, dt);
+    this.record = opts.record ?? true;
   }
 
   get t(): number {
@@ -158,7 +182,6 @@ export class Engine {
     return this.clock.step;
   }
 
-  /** Flatten hierarchy, resolve wiring + nearest-owner buses, validate, init. */
   build(scn: Scenario, reg: ModelRegistry): void {
     this.scn = scn;
     for (const c of scn.commodities ?? []) this.commodities.register(c);
@@ -166,7 +189,7 @@ export class Engine {
 
     // --- instances -> nodes ---
     const seenKeys = new Set<string>();
-    const specs: { spec: InstanceSpec; def: ModelDef; idx: number }[] = [];
+    const specs: { spec: InstanceSpec; def: ModelDef }[] = [];
     scn.instances.forEach((spec, idx) => {
       if (seenKeys.has(spec.key)) {
         issues.push({ path: `instances[${idx}].key`, message: `duplicate key "${spec.key}".` });
@@ -183,44 +206,30 @@ export class Engine {
         });
         return;
       }
-      specs.push({ spec, def, idx });
+      specs.push({ spec, def });
     });
 
-    // --- parent validation + children map ---
-    for (const { spec, idx } of specs) {
+    for (const { spec } of specs) {
       const parent = spec.parent ?? null;
       if (parent !== null && !seenKeys.has(parent)) {
-        issues.push({ path: `instances[${idx}].parent`, message: `parent "${parent}" does not exist.` });
+        issues.push({ path: `instances[${indexOf(scn, spec.key)}].parent`, message: `parent "${parent}" does not exist.` });
       }
     }
 
-    // --- nets (explicit connect names + private per-port nets) ---
-    const netByName = new Map<string, { net: Net; hasDriver: boolean; readers: number }>();
-    const initVals = new Map<number, number>();
-    const getNet = (name: string, unit: string, flow: boolean): { net: Net; hasDriver: boolean; readers: number } => {
-      let e = netByName.get(name);
-      if (!e) {
-        const net: Net = { id: this.nets.length, name, unit, flow };
-        this.nets.push(net);
-        e = { net, hasDriver: false, readers: 0 };
-        netByName.set(name, e);
-      }
-      return e;
-    };
-
-    // Pre-create nodes (without cursors) so params resolve before wiring.
-    for (const { spec, def, idx } of specs) {
-      const params = this.resolveParams(spec, def, idx, issues);
+    // --- create nodes (params resolved; wiring maps filled below) ---
+    for (const { spec, def } of specs) {
       const node: Node = {
         key: spec.key,
         type: def.type,
         def,
         parent: spec.parent ?? null,
         fidelity: Math.min(spec.fidelity ?? def.fidelity ?? 1, def.maxFidelity ?? 1) as Fidelity,
-        params,
+        params: this.resolveParams(spec, def, indexOf(scn, spec.key), issues),
         state: def.state(),
         health: 'nominal',
         rng: makeRng(hashSeed(this.masterSeed, spec.key)),
+        inMap: {},
+        outMap: {},
         inCursor: {},
         outCursor: {},
         busHandles: {},
@@ -233,11 +242,23 @@ export class Engine {
       this.children.set(node.parent ?? '', sibs);
     }
 
-    // Wire ports to nets.
+    // --- nets + port wiring ---
+    const netByName = new Map<string, { net: Net; hasDriver: boolean; readers: number }>();
+    const initVals = new Map<number, number>();
+    const getNet = (name: string, unit: string, flow: boolean) => {
+      let e = netByName.get(name);
+      if (!e) {
+        const net: Net = { id: this.nets.length, name, unit, flow };
+        this.nets.push(net);
+        e = { net, hasDriver: false, readers: 0 };
+        netByName.set(name, e);
+      }
+      return e;
+    };
+
     for (const { spec, def } of specs) {
       const node = this.byKey.get(spec.key)!;
       const ports = def.ports ?? {};
-      // validate connect keys reference real ports
       for (const portName of Object.keys(spec.connect ?? {})) {
         if (!ports[portName]) {
           const s = suggest(portName, Object.keys(ports));
@@ -259,17 +280,16 @@ export class Engine {
               });
             }
             e.hasDriver = true;
-            node.outCursor = defineOut(node.outCursor, portName, e.net.id, this);
+            node.outMap[portName] = e.net.id;
           } else {
             e.readers++;
-            node.inCursor = defineIn(node.inCursor, portName, e.net.id, this);
+            node.inMap[portName] = e.net.id;
           }
         } else {
-          // unconnected -> private net
           const priv = getNet(`${spec.key}.${portName}`, port.unit, false);
           if (port.dir === 'out') {
             priv.hasDriver = true;
-            node.outCursor = defineOut(node.outCursor, portName, priv.net.id, this);
+            node.outMap[portName] = priv.net.id;
           } else {
             if (port.required) {
               issues.push({
@@ -278,31 +298,22 @@ export class Engine {
               });
             }
             initVals.set(priv.net.id, port.default ?? 0);
-            node.inCursor = defineIn(node.inCursor, portName, priv.net.id, this);
+            node.inMap[portName] = priv.net.id;
           }
         }
       }
     }
 
-    // Undriven shared nets (readers but no output writes them).
     for (const [name, e] of netByName) {
       if (!e.net.flow && !e.hasDriver && e.readers > 0) {
-        issues.push({
-          path: `net "${name}"`,
-          message: `net "${name}" has readers but no driver (no output port connects to it).`,
-        });
+        issues.push({ path: `net "${name}"`, message: `net "${name}" has readers but no driver (no output port connects to it).` });
       }
     }
 
-    // --- buses: create owners, then bind attachments to nearest owner ---
-    const busOwners = new Map<string, CompiledBus[]>(); // commodity -> owners (any depth)
+    // --- buses: owners then nearest-owner attachment binding ---
     for (const node of this.nodes) {
       if (node.def.providesBus) {
-        const cb = new CompiledBus(node.def.providesBus, node.key, node.def.policy ?? null);
-        this.buses.push(cb);
-        const arr = busOwners.get(node.def.providesBus) ?? [];
-        arr.push(cb);
-        busOwners.set(node.def.providesBus, arr);
+        this.buses.push(new CompiledBus(node.def.providesBus, node.key, node.def.policy ?? null));
       }
     }
     for (const node of this.nodes) {
@@ -330,14 +341,23 @@ export class Engine {
     // --- allocate signal pool + init defaults ---
     this.buf = new Float64Array(this.nets.length);
     for (const [id, v] of initVals) this.buf[id] = v;
+    const buf = this.buf;
 
-    // --- eval order: env providers first, else instance order ---
+    // --- cursors (closed over the concrete buffer) + series handles ---
+    for (const node of this.nodes) {
+      node.inCursor = buildCursor(node.inMap, buf, false);
+      node.outCursor = buildCursor(node.outMap, buf, true);
+    }
+    if (this.record) {
+      this.netHandles = this.nets.map((n) => this.history.ensure(n.name, n.name, n.unit));
+      for (const b of this.buses) b.bindSeries(this.history);
+    }
+
+    // --- eval order + ctx + init ---
     this.order = [
       ...this.nodes.filter((n) => n.def.isEnvProvider),
       ...this.nodes.filter((n) => !n.def.isEnvProvider),
     ];
-
-    // --- build ctx + run init ---
     for (const node of this.nodes) node.ctx = new Ctx(this, node);
     for (const node of this.order) node.def.init?.(node.ctx);
   }
@@ -349,25 +369,18 @@ export class Engine {
     for (const [k, v] of Object.entries(spec.params ?? {})) {
       if (!(k in specs)) {
         const s = suggest(k, Object.keys(specs));
-        issues.push({
-          path: `instances[${idx}].params.${k}`,
-          message: `model "${def.type}" has no param "${k}".${s ? ` Did you mean "${s}"?` : ''}`,
-        });
+        issues.push({ path: `instances[${idx}].params.${k}`, message: `model "${def.type}" has no param "${k}".${s ? ` Did you mean "${s}"?` : ''}` });
         continue;
       }
       const ps = specs[k];
       if ((ps.min !== undefined && v < ps.min) || (ps.max !== undefined && v > ps.max)) {
-        issues.push({
-          path: `instances[${idx}].params.${k}`,
-          message: `value ${v} out of range [${ps.min ?? '-∞'}, ${ps.max ?? '∞'}] for "${def.type}".`,
-        });
+        issues.push({ path: `instances[${idx}].params.${k}`, message: `value ${v} out of range [${ps.min ?? '-∞'}, ${ps.max ?? '∞'}] for "${def.type}".` });
       }
       out[k] = v;
     }
     return out;
   }
 
-  /** Walk up the parent chain (incl. self) to the closest bus for a commodity. */
   private nearestBus(key: string, commodity: string): CompiledBus | null {
     let cur: string | null = key;
     while (cur !== null) {
@@ -381,24 +394,28 @@ export class Engine {
   /** Advance one fixed timestep. */
   step(): void {
     const dt = this.dt;
+    const order = this.order;
     for (const b of this.buses) b.begin();
-    for (const n of this.order) if (n.def.isEnvProvider) n.def.declare?.(n.ctx);
-    for (const n of this.order) if (n.def.isEnvProvider) n.def.step(n.ctx);
-    for (const n of this.order) if (!n.def.isEnvProvider) n.def.declare?.(n.ctx);
-    for (const b of this.buses) b.resolve(dt, this.history);
-    for (const n of this.order) if (!n.def.isEnvProvider) n.def.step(n.ctx);
-    for (const net of this.nets) this.history.record(net.name, net.name, net.unit, this.buf[net.id]);
-    this.history.commitStep();
+    for (const n of order) if (n.def.isEnvProvider) n.def.declare?.(n.ctx);
+    for (const n of order) if (n.def.isEnvProvider) n.def.step(n.ctx);
+    for (const n of order) if (!n.def.isEnvProvider) n.def.declare?.(n.ctx);
+    for (const b of this.buses) b.resolve(dt);
+    for (const n of order) if (!n.def.isEnvProvider) n.def.step(n.ctx);
+    if (this.record) {
+      const buf = this.buf;
+      const nets = this.nets;
+      const hs = this.netHandles;
+      for (let i = 0; i < hs.length; i++) hs[i].stage(buf[nets[i].id]);
+      this.history.commitStep();
+    }
     this.clock.advance();
   }
 
-  /** Run to the scenario's duration (or a given step count). */
   run(steps?: number): void {
     const n = steps ?? Math.round(this.scn.durationSeconds / this.dt);
     for (let i = 0; i < n; i++) this.step();
   }
 
-  /** Sum `f` over the subtree rooted at `key` (self + all descendants). */
   aggregate(key: string, f: (m: ModelInstanceView) => number): number {
     let sum = 0;
     const stack = [key];
@@ -412,7 +429,6 @@ export class Engine {
     return sum;
   }
 
-  /** Move a node (and its subtree) to a new parent mid-sim; rebind its buses. */
   reparent(key: string, newParent: string | null): void {
     const node = this.byKey.get(key);
     if (!node) throw new Error(`reparent: unknown key "${key}"`);
@@ -436,7 +452,7 @@ export class Engine {
         const owner = this.nearestBus(node.key, attach.commodity);
         if (!owner) continue;
         const h = node.busHandles[attachName] as BusHandleImpl;
-        (h as { bus: CompiledBus }).bus = owner;
+        h.bus = owner;
         if (attach.role === 'offer') owner.offerHandles.push(h);
         else if (attach.role === 'request') owner.requestHandles.push(h);
         else owner.readHandles.push(h);
@@ -449,7 +465,7 @@ export class Engine {
     return this.nodes.find(pred);
   }
 
-  /** Direct read of a net's current value (test/debug). */
+  /** Direct read of a net's current value (test/metric/debug). */
   netValue(name: string): number {
     const net = this.nets.find((n) => n.name === name);
     return net ? this.buf[net.id] : NaN;
@@ -459,15 +475,8 @@ export class Engine {
     this.logs.push({ step: this.clock.step, t: this.clock.t, key, sev, msg });
   }
 
-  /** Read-only accessors for the emitter (Phase 1). */
   get allNodes(): readonly ModelInstanceView[] {
     return this.nodes;
-  }
-  bufRef(): Float64Array {
-    return this.buf;
-  }
-  netId(name: string): number {
-    return this.nets.find((n) => n.name === name)?.id ?? -1;
   }
 }
 
@@ -475,20 +484,23 @@ function indexOf(scn: Scenario, key: string): number {
   return scn.instances.findIndex((s) => s.key === key);
 }
 
-function defineIn(obj: Record<string, number>, name: string, id: number, eng: Engine): Record<string, number> {
-  Object.defineProperty(obj, name, { get: () => eng.bufRef()[id], enumerable: true, configurable: true });
-  return obj;
-}
-function defineOut(obj: Record<string, number>, name: string, id: number, eng: Engine): Record<string, number> {
-  Object.defineProperty(obj, name, {
-    get: () => eng.bufRef()[id],
-    set: (v: number) => {
-      eng.bufRef()[id] = v;
-    },
-    enumerable: true,
-    configurable: true,
-  });
-  return obj;
+function buildCursor(map: Record<string, number>, buf: Float64Array, writable: boolean): Record<string, number> {
+  const o: Record<string, number> = {};
+  for (const name in map) {
+    const id = map[name];
+    if (writable) {
+      Object.defineProperty(o, name, {
+        get: () => buf[id],
+        set: (v: number) => {
+          buf[id] = v;
+        },
+        enumerable: true,
+      });
+    } else {
+      Object.defineProperty(o, name, { get: () => buf[id], enumerable: true });
+    }
+  }
+  return o;
 }
 
 /** Per-instance step context; built once, delegates live time to the engine. */
@@ -523,7 +535,7 @@ class Ctx implements StepCtx {
     return this.node.fidelity;
   }
   emit(id: string, value: number): void {
-    this.eng.history.record(id, id, '', value);
+    if (this.eng.record) this.eng.history.record(id, id, '', value);
   }
   log(sev: Severity, msg: string): void {
     this.eng.emitLog(this.node.key, sev, msg);

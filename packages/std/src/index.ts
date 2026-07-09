@@ -5,3 +5,4 @@
  */
 export { Constant, Source, Sink, Controller, Storage } from './primitives';
 export { arbitratedBus, busSource, busLoad, priorityProRata } from './bus';
+export { runSweep, runSweepInline, runCase, type SweepTarget } from './sweep';
