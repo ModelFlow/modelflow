@@ -204,3 +204,7 @@ pre.hljs { margin: 0; background: var(--bg-inset); border: 1px solid var(--borde
   .wrap.two { grid-template-columns: 1fr; gap: 24px; }
   .hero { padding: 56px 0 40px; }
 }
+
+a.iconbtn { text-decoration: none; }
+.foot-link { color: var(--text-muted); text-decoration: none; font-weight: 500; }
+.foot-link:hover { color: var(--accent); }
