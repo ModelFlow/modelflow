@@ -86,7 +86,7 @@ export function Landing({
 
       <section className="hero">
         <div className="hero-in">
-          <div className="eyebrow">Open-source simulation engine</div>
+          <div className="eyebrow">Model-Based Design for Models</div>
           <h1>
             Model humanity’s <span className="accent">hardest systems.</span>
           </h1>

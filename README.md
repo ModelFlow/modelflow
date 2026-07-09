@@ -1,6 +1,9 @@
 # ModelFlow
 
-**Reusable, composable models — at any level of detail — for humanity's hardest system-simulation problems.**
+**Model-Based Design for Models.**
+
+Reusable, composable models — at any level of detail — for humanity's hardest
+system-simulation problems.
 
 ModelFlow builds a simulation of *any* system out of small, **reusable,
 composable** models, each dialable from a coarse estimate to full physics, and

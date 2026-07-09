@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "ModelFlow — reusable, composable, multi-fidelity models for humanity's hardest system-simulation problems.",
+  "description": "ModelFlow — Model-Based Design for Models. Reusable, composable, multi-fidelity models for humanity's hardest system-simulation problems.",
   "workspaces": [
     "packages/*"
   ],
