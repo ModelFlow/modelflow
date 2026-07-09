@@ -3,6 +3,18 @@
  * Zero domain knowledge: no Mars, no "sol", no baked-in resource names.
  */
 export type { Unit, NetId, Fidelity, Health, Severity } from './types';
+export {
+  parseUnit,
+  convert,
+  conversion,
+  unitsCompatible,
+  describeDimension,
+  dimEqual,
+  UnitError,
+  DIM_NAMES,
+  type Dimension,
+  type ResolvedUnit,
+} from './units';
 export type { PortDecl, Net } from './signal';
 export { inPort, outPort } from './signal';
 export type { ParamSpec } from './param';
@@ -35,3 +47,11 @@ export type {
   RecScene,
 } from './recording';
 export { round4 } from './recording';
+export {
+  modelSpec,
+  catalog,
+  type ModelSpec,
+  type PortSpec,
+  type ParamPublicSpec,
+  type BusSpec,
+} from './catalog';

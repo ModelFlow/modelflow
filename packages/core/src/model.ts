@@ -57,6 +57,8 @@ export interface ModelDef<
 > {
   /** Unique class id used to reference this model from a scenario. */
   readonly type: string;
+  /** One-line human description for the component catalog. */
+  readonly description?: string;
   readonly ports?: Record<string, PortDecl>;
   readonly params?: PS;
   readonly buses?: Record<string, BusAttach>;

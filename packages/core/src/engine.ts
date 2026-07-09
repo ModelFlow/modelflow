@@ -9,6 +9,29 @@ import { History, TimeSeries } from './history';
 import { SimClock } from './clock';
 import { makeRng, hashSeed, type Rng } from './rng';
 import { AggregateValidationError, suggest, type ValidationIssue } from './validate';
+import { conversion, parseUnit, describeDimension, dimEqual } from './units';
+
+/** Returns a problem string if two units can't be wired together, else null. */
+function unitMismatch(netUnit: string, portUnit: string): string | null {
+  // An empty unit is an unspecified "wildcard" — generic primitives (Source,
+  // Controller…) adopt whatever they're wired to. Declared units are strict.
+  if (netUnit === '' || portUnit === '') return null;
+  let a, b;
+  try {
+    a = parseUnit(netUnit);
+  } catch {
+    return `unknown unit "${netUnit}"`;
+  }
+  try {
+    b = parseUnit(portUnit);
+  } catch {
+    return `unknown unit "${portUnit}"`;
+  }
+  if (!dimEqual(a.dim, b.dim)) {
+    return `${portUnit} [${describeDimension(b.dim)}] cannot connect to a net carrying ${netUnit} [${describeDimension(a.dim)}]`;
+  }
+  return null;
+}
 
 /** Live handle backing `ctx.bus.<name>`; zero-alloc, reads/writes bus accumulators. */
 class BusHandleImpl implements BusHandle {
@@ -243,14 +266,20 @@ export class Engine {
     }
 
     // --- nets + port wiring ---
-    const netByName = new Map<string, { net: Net; hasDriver: boolean; readers: number }>();
+    type NetEntry = {
+      net: Net;
+      hasDriver: boolean;
+      readers: number;
+      readerPorts: { key: string; portName: string; unit: string }[];
+    };
+    const netByName = new Map<string, NetEntry>();
     const initVals = new Map<number, number>();
-    const getNet = (name: string, unit: string, flow: boolean) => {
+    const getNet = (name: string, unit: string, flow: boolean): NetEntry => {
       let e = netByName.get(name);
       if (!e) {
         const net: Net = { id: this.nets.length, name, unit, flow };
         this.nets.push(net);
-        e = { net, hasDriver: false, readers: 0 };
+        e = { net, hasDriver: false, readers: 0, readerPorts: [] };
         netByName.set(name, e);
       }
       return e;
@@ -280,9 +309,12 @@ export class Engine {
               });
             }
             e.hasDriver = true;
+            // The driver's output unit is the net's canonical unit; readers convert to it.
+            (e.net as { unit: string }).unit = port.unit;
             node.outMap[portName] = e.net.id;
           } else {
             e.readers++;
+            e.readerPorts.push({ key: spec.key, portName, unit: port.unit });
             node.inMap[portName] = e.net.id;
           }
         } else {
@@ -307,6 +339,17 @@ export class Engine {
     for (const [name, e] of netByName) {
       if (!e.net.flow && !e.hasDriver && e.readers > 0) {
         issues.push({ path: `net "${name}"`, message: `net "${name}" has readers but no driver (no output port connects to it).` });
+      }
+      // Unit-safety: every reader must be dimensionally compatible with the net.
+      for (const rp of e.readerPorts) {
+        const problem = unitMismatch(e.net.unit, rp.unit);
+        if (problem) {
+          issues.push({
+            path: `${rp.key}.${rp.portName}`,
+            message: `unit mismatch on net "${name}": ${problem}.`,
+            fix: `make the units dimensionally compatible (ModelFlow auto-converts scale, e.g. W↔kW).`,
+          });
+        }
       }
     }
 
@@ -345,7 +388,7 @@ export class Engine {
 
     // --- cursors (closed over the concrete buffer) + series handles ---
     for (const node of this.nodes) {
-      node.inCursor = buildCursor(node.inMap, buf, false);
+      node.inCursor = buildInCursor(node, buf, this.nets);
       node.outCursor = buildCursor(node.outMap, buf, true);
     }
     if (this.record) {
@@ -499,6 +542,38 @@ function buildCursor(map: Record<string, number>, buf: Float64Array, writable: b
     } else {
       Object.defineProperty(o, name, { get: () => buf[id], enumerable: true });
     }
+  }
+  return o;
+}
+
+/**
+ * Input cursor with automatic unit conversion. The buffer holds each net's
+ * value in the driver's (canonical) unit; a reader whose port declares a
+ * different-but-compatible unit gets it converted on read. Identity reads keep
+ * the bare `buf[id]` fast path; scale-only reads are one multiply.
+ */
+function buildInCursor(node: Node, buf: Float64Array, nets: Net[]): Record<string, number> {
+  const o: Record<string, number> = {};
+  const ports = node.def.ports ?? {};
+  for (const name in node.inMap) {
+    const id = node.inMap[name];
+    const portUnit = ports[name]?.unit ?? '';
+    const netUnit = nets[id].unit;
+    let k = 1;
+    let off = 0;
+    // '' is a wildcard (passthrough); only convert when both units are declared.
+    if (portUnit !== netUnit && portUnit !== '' && netUnit !== '') {
+      try {
+        const c = conversion(netUnit, portUnit);
+        k = c.k;
+        off = c.o;
+      } catch {
+        // Left identity; a dimension mismatch was already reported as an issue.
+      }
+    }
+    if (k === 1 && off === 0) Object.defineProperty(o, name, { get: () => buf[id], enumerable: true });
+    else if (off === 0) Object.defineProperty(o, name, { get: () => buf[id] * k, enumerable: true });
+    else Object.defineProperty(o, name, { get: () => buf[id] * k + off, enumerable: true });
   }
   return o;
 }

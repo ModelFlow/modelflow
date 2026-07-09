@@ -16,6 +16,8 @@ export interface BusAttach {
   readonly band?: number;
   /** Free-form label (task type / load class), surfaced in diagnostics. */
   readonly tag?: string;
+  /** Optional unit the model offers/requests in; documented in the catalog. */
+  readonly unit?: string;
 }
 
 /** A single demand submitted to a bus in the declare phase. */
