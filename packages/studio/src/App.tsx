@@ -13,21 +13,26 @@ import {
   type NodeProps,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Engine, catalog, type ModelDef, type ModelSpec, type InstanceView } from '@modelflow/core';
+import { Engine, catalog, modelSpec, type ModelDef, type ModelSpec, type InstanceView } from '@modelflow/core';
 import { microgrid, microgridRegistry } from './demo';
 import { layeredLayout } from './layout';
-import { Chart } from './Chart';
+import { Scope, type Trace } from './Scope';
 import './theme.css';
 
 const fmt = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+const fmtInt = (v: number) => Math.round(v).toLocaleString();
 
-const CHARTS = [
-  { id: 'sun', title: 'Solar irradiance', unit: 'W/m²', color: '#d97706' },
-  { id: 'bus.power.offered', title: 'Power available', unit: 'kW', color: '#2563eb' },
-  { id: 'bus.power.served', title: 'Power delivered', unit: 'kW', color: '#16a34a' },
-  { id: 'bus.power.unmet', title: 'Unmet demand', unit: 'kW', color: '#dc2626' },
-  { id: 'sv_isru', title: 'ISRU load', unit: 'kW', color: '#7c3aed' },
+// A run speed = target simulation steps per real second. ⏸ = 0, Max = uncapped.
+const SPEEDS = [
+  { label: '⏸', sps: 0 },
+  { label: '1×', sps: 12 },
+  { label: '4×', sps: 48 },
+  { label: '20×', sps: 240 },
+  { label: '100×', sps: 1200 },
+  { label: 'Max', sps: Infinity },
 ];
+const PALETTE = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777', '#65a30d'];
+const WINDOW = 220;
 
 function buildEngine(): Engine {
   const e = new Engine(microgrid.timestepSeconds, 0, microgrid.seed);
@@ -41,12 +46,13 @@ interface NodeData extends Record<string, unknown> {
   type: string;
   health: string;
   bus?: string;
+  sel?: boolean;
   fig?: readonly [string, number, string];
 }
 function FlowNode({ data }: NodeProps) {
   const d = data as NodeData;
   return (
-    <div className={`node ${d.health}${d.bus ? ' bus' : ''}`}>
+    <div className={`node ${d.health}${d.bus ? ' bus' : ''}${d.sel ? ' sel' : ''}`}>
       <Handle type="target" position={Position.Left} />
       <div className="node-name">{d.label}</div>
       <div className="node-type">{d.bus ? `${d.bus} bus` : d.type}</div>
@@ -60,7 +66,6 @@ function FlowNode({ data }: NodeProps) {
   );
 }
 const nodeTypes = { flow: FlowNode };
-
 const figOf = (v?: InstanceView) => v?.keyFigures[0];
 
 export function App({
@@ -74,12 +79,19 @@ export function App({
 }) {
   const engineRef = useRef<Engine>();
   if (!engineRef.current) engineRef.current = buildEngine();
-  const [running, setRunning] = useState(true);
   const [view, setView] = useState<'sim' | 'components'>('sim');
+  const [speedIdx, setSpeedIdx] = useState(1);
+  const [sps, setSps] = useState(0); // measured steps/sec (throughput readout)
+  const [selected, setSelected] = useState<string | null>(null);
+  const [traceIds, setTraceIds] = useState<string[]>(['bus.power.offered', 'bus.power.served', 'bus.power.unmet']);
   const [, setRender] = useState(0);
-  const [ver, setVer] = useState(0); // bumps when logic is edited/reset
+  const [ver, setVer] = useState(0);
 
-  // static topology (identical across rebuilds — same scenario)
+  const speedRef = useRef(SPEEDS[speedIdx].sps);
+  useEffect(() => {
+    speedRef.current = SPEEDS[speedIdx].sps;
+  }, [speedIdx]);
+
   const struct = useMemo(() => engineRef.current!.structure(), []);
   const positions = useMemo(() => layeredLayout(struct.nodes, struct.edges), [struct]);
 
@@ -91,11 +103,12 @@ export function App({
       data: { label: n.key, type: n.type, health: n.health, bus: n.providesBus },
     })),
   );
-  const [edges] = useEdgesState<Edge>(
+  const [edges, setEdges] = useEdgesState<Edge>(
     struct.edges.map((e) => ({
       id: e.id,
       source: e.source,
       target: e.target,
+      data: { net: e.net, kind: e.kind },
       animated: e.kind === 'bus',
       label: e.kind === 'signal' && e.unit ? e.unit : undefined,
       style: { stroke: e.kind === 'bus' ? 'var(--bus)' : 'var(--accent)', strokeWidth: 1.6, strokeDasharray: e.kind === 'bus' ? '5 4' : undefined },
@@ -105,24 +118,82 @@ export function App({
     })),
   );
 
-  // One calm clock: step + refresh together at 4 Hz (≈3 s per simulated day),
-  // so live numbers evolve smoothly and pausing is exact. No layout is touched.
+  // Stepping loop (requestAnimationFrame): step to hit the target rate, and
+  // measure the ACHIEVED steps/sec so it's obvious the pace is a choice, not a
+  // limit. "Max" is time-budgeted per frame to show the true ceiling.
+  useEffect(() => {
+    let raf = 0;
+    let last = performance.now();
+    let acc = 0;
+    let cnt = 0;
+    let winStart = last;
+    const loop = (now: number) => {
+      const dtR = Math.min(0.1, (now - last) / 1000);
+      last = now;
+      const target = speedRef.current;
+      const eng = engineRef.current!;
+      if (target === Infinity) {
+        const end = performance.now() + 9;
+        let n = 0;
+        while (performance.now() < end) {
+          eng.step();
+          if (++n >= 500000) break;
+        }
+        cnt += n;
+      } else if (target > 0) {
+        acc += target * dtR;
+        let n = Math.min(200000, Math.floor(acc));
+        acc -= n;
+        cnt += n;
+        while (n-- > 0) eng.step();
+      }
+      if (now - winStart >= 400) {
+        setSps(target === 0 ? 0 : Math.round(cnt / ((now - winStart) / 1000)));
+        cnt = 0;
+        winStart = now;
+      }
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  // Render throttle (~15 Hz): refresh node figures + trigger a re-render for the
+  // assets / inspector / scope. Decoupled from stepping so motion stays smooth.
   useEffect(() => {
     const id = setInterval(() => {
-      if (running) {
-        engineRef.current!.step();
-        engineRef.current!.step();
-      }
-      const views = engineRef.current!.instanceViews();
+      const eng = engineRef.current!;
+      const views = eng.instanceViews();
       const figs = new Map(views.map((v) => [v.key, figOf(v)] as const));
       const healths = new Map(views.map((v) => [v.key, v.health] as const));
-      setNodes((nds) =>
-        nds.map((n) => ({ ...n, data: { ...n.data, fig: figs.get(n.id), health: healths.get(n.id) ?? n.data.health } })),
-      );
+      setNodes((nds) => nds.map((n) => ({ ...n, data: { ...n.data, fig: figs.get(n.id), health: healths.get(n.id) ?? n.data.health } })));
       setRender((r) => r + 1);
-    }, 250);
+    }, 66);
     return () => clearInterval(id);
-  }, [running, setNodes]);
+  }, [setNodes]);
+
+  // selection highlight on nodes
+  useEffect(() => {
+    setNodes((nds) => nds.map((n) => ({ ...n, data: { ...n.data, sel: n.id === selected } })));
+  }, [selected, setNodes]);
+
+  // colour + thicken edges that are currently being scoped
+  useEffect(() => {
+    setEdges((eds) =>
+      eds.map((e) => {
+        const net = (e.data as { net?: string })?.net;
+        const kind = (e.data as { kind?: string })?.kind;
+        const idx = net ? traceIds.indexOf(net) : -1;
+        const plotted = idx >= 0;
+        const base = kind === 'bus' ? 'var(--bus)' : 'var(--accent)';
+        return {
+          ...e,
+          animated: plotted || kind === 'bus',
+          style: { ...e.style, stroke: plotted ? PALETTE[idx % PALETTE.length] : base, strokeWidth: plotted ? 3 : 1.6 },
+        };
+      }),
+    );
+  }, [traceIds, setEdges]);
 
   const engine = engineRef.current;
   const views = engine.instanceViews();
@@ -135,11 +206,24 @@ export function App({
     return m;
   }, []);
 
+  const toggleTrace = (net?: string) => {
+    if (!net) return;
+    setTraceIds((ids) => (ids.includes(net) ? ids.filter((x) => x !== net) : [...ids, net]));
+  };
+
   const rebuild = () => {
     engineRef.current = buildEngine();
+    setSelected(null);
     setVer((v) => v + 1);
     setRender((r) => r + 1);
   };
+
+  const traces: Trace[] = traceIds.map((id, i) => {
+    const s = engine.history.series(id);
+    return { id, label: s?.name ?? id, unit: s?.unit ?? '', color: PALETTE[i % PALETTE.length], values: s?.tail(WINDOW) ?? [] };
+  });
+  const scopeLen = traces.reduce((m, t) => Math.max(m, t.values.length), 0);
+  const scopeStart = Math.max(0, engine.stepIndex - scopeLen);
 
   return (
     <div className="app">
@@ -153,9 +237,23 @@ export function App({
         </button>
         <span className="chip">{microgrid.name}</span>
         <span className="readout tnum">
-          day {day} · {String(hour).padStart(2, '0')}:00 · step {engine.stepIndex}
+          day {day} · {String(hour).padStart(2, '0')}:00 · step {engine.stepIndex.toLocaleString()}
         </span>
         <div className="grow" />
+        {view === 'sim' && (
+          <>
+            <div className="seg speed" role="group" title="Playback speed (steps of simulated time per real second)">
+              {SPEEDS.map((s, i) => (
+                <button key={s.label} aria-selected={speedIdx === i} onClick={() => setSpeedIdx(i)}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+            <span className="throughput tnum" title="Simulation steps computed per real second — the pace is a choice, not a limit">
+              {fmtInt(sps)} steps/s
+            </span>
+          </>
+        )}
         <div className="seg" role="tablist">
           <button role="tab" aria-selected={view === 'sim'} onClick={() => setView('sim')}>
             Simulation
@@ -164,9 +262,6 @@ export function App({
             Components
           </button>
         </div>
-        <button className="pill" onClick={() => setRunning((r) => !r)}>
-          {running ? '❚❚ Pause' : '▶ Run'}
-        </button>
         <button className="pill secondary" onClick={rebuild}>
           Reset
         </button>
@@ -180,7 +275,7 @@ export function App({
           <aside className="assets">
             <div className="panel-h">Assets · {views.length}</div>
             {views.map((v) => (
-              <div className="asset" key={v.key}>
+              <button className={`asset${selected === v.key ? ' sel' : ''}`} key={v.key} onClick={() => setSelected(v.key)}>
                 <div className="a-l">
                   <div className="a-name">
                     <span className={`dot ${v.health}`} />
@@ -196,7 +291,7 @@ export function App({
                     </span>
                   ))}
                 </div>
-              </div>
+              </button>
             ))}
           </aside>
 
@@ -206,6 +301,9 @@ export function App({
               edges={edges}
               nodeTypes={nodeTypes}
               onNodesChange={onNodesChange}
+              onNodeClick={(_, n) => setSelected(n.id)}
+              onEdgeClick={(_, e) => toggleTrace((e.data as { net?: string })?.net)}
+              onPaneClick={() => setSelected(null)}
               fitView
               fitViewOptions={{ padding: 0.18 }}
               minZoom={0.4}
@@ -217,7 +315,7 @@ export function App({
             </ReactFlow>
             <div className="legend">
               <div className="row">
-                <span className="sw sig" /> Signal — one output → one input
+                <span className="sw sig" /> Signal — click an edge to scope it
               </div>
               <div className="row">
                 <span className="sw bus" /> Power bus — shared supply, split by priority
@@ -225,10 +323,26 @@ export function App({
             </div>
           </div>
 
-          <div className="charts">
-            {CHARTS.map((c) => (
-              <Chart key={c.id} title={c.title} unit={c.unit} color={c.color} values={engine.history.series(c.id)?.toArray().slice(-160) ?? []} />
-            ))}
+          <aside className="inspector">
+            {selected ? (
+              <AssetInspector
+                key={selected}
+                keyName={selected}
+                engine={engine}
+                view={views.find((v) => v.key === selected)}
+                def={defByType.get(views.find((v) => v.key === selected)?.type ?? '')}
+                traceIds={traceIds}
+                onToggle={toggleTrace}
+                onClose={() => setSelected(null)}
+                onViewLogic={() => setView('components')}
+              />
+            ) : (
+              <SignalPicker engine={engine} traceIds={traceIds} onToggle={toggleTrace} />
+            )}
+          </aside>
+
+          <div className="scope-wrap">
+            <Scope traces={traces} startStep={scopeStart} dt={microgrid.timestepSeconds} onRemove={(id) => toggleTrace(id)} />
           </div>
         </div>
       ) : (
@@ -246,6 +360,157 @@ export function App({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------- asset inspector ----------
+function AssetInspector({
+  keyName,
+  engine,
+  view,
+  def,
+  traceIds,
+  onToggle,
+  onClose,
+  onViewLogic,
+}: {
+  keyName: string;
+  engine: Engine;
+  view?: InstanceView;
+  def?: ModelDef;
+  traceIds: string[];
+  onToggle: (net: string) => void;
+  onClose: () => void;
+  onViewLogic: () => void;
+}) {
+  const inst = microgrid.instances.find((i) => i.key === keyName);
+  const spec = def ? modelSpec(def) : null;
+  const ports = Object.entries(def?.ports ?? {}).map(([name, pd]) => {
+    const net = inst?.connect?.[name] ?? `${keyName}.${name}`;
+    return { name, dir: pd.dir, unit: pd.unit, net, value: engine.netValue(net) };
+  });
+
+  return (
+    <div className="insp">
+      <div className="insp-head">
+        <div>
+          <div className="insp-name">{keyName}</div>
+          <div className="insp-type mono">{view?.type}</div>
+        </div>
+        <button className="iconbtn sm" onClick={onClose} title="Close">
+          ×
+        </button>
+      </div>
+      {spec?.description && <div className="insp-desc">{spec.description}</div>}
+
+      <div className="insp-meta">
+        <span className={`badge ${view?.health}`}>{view?.health ?? 'nominal'}</span>
+        <span className="badge muted">{view?.status ?? 'nominal'}</span>
+        <span className="badge muted">fidelity L{view?.fidelity ?? 1}</span>
+      </div>
+
+      {view && view.keyFigures.length > 0 && (
+        <>
+          <div className="insp-h">State</div>
+          {view.keyFigures.map(([l, val, u]) => (
+            <div className="kv" key={l}>
+              <span>{l}</span>
+              <b className="tnum">
+                {fmt(val)}
+                {u ? ` ${u}` : ''}
+              </b>
+            </div>
+          ))}
+        </>
+      )}
+
+      {ports.length > 0 && (
+        <>
+          <div className="insp-h">Ports — click to probe</div>
+          {ports.map((p) => {
+            const plotted = traceIds.includes(p.net);
+            return (
+              <button className={`port-row${plotted ? ' on' : ''}`} key={p.name} onClick={() => onToggle(p.net)}>
+                <span className={`dir ${p.dir}`}>{p.dir === 'in' ? '→' : '←'}</span>
+                <span className="pn mono">{p.name}</span>
+                <span className="pv tnum mono">
+                  {fmt(p.value)}
+                  {p.unit ? ` ${p.unit}` : ''}
+                </span>
+                <span className="probe">{plotted ? '● scoping' : '○ scope'}</span>
+              </button>
+            );
+          })}
+        </>
+      )}
+
+      {spec && spec.params.length > 0 && (
+        <>
+          <div className="insp-h">Parameters</div>
+          {spec.params.map((p) => {
+            const url = p.sourceUrl ?? p.sources?.find((s) => s.url)?.url;
+            const cite = p.source ?? p.sources?.find((s) => s.citation)?.citation;
+            return (
+              <div className="kv col" key={p.name}>
+                <div className="kv">
+                  <span className="mono">{p.name}</span>
+                  <b className="tnum">
+                    {fmt(p.value)} {p.unit}
+                  </b>
+                </div>
+                {p.notes && <div className="pnote">{p.notes}</div>}
+                {(url || cite) &&
+                  (url ? (
+                    <a className="src-link" href={url} target="_blank" rel="noreferrer">
+                      {cite ?? 'source'} ↗
+                    </a>
+                  ) : (
+                    <span className="src-cite">{cite}</span>
+                  ))}
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {def?.step && (
+        <button className="insp-logic" onClick={onViewLogic}>
+          View &amp; edit logic in Components →
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ---------- signal picker (shown when nothing is selected) ----------
+function SignalPicker({ engine, traceIds, onToggle }: { engine: Engine; traceIds: string[]; onToggle: (net: string) => void }) {
+  const [q, setQ] = useState('');
+  const series = engine.history.all
+    .filter((s) => s.id.toLowerCase().includes(q.toLowerCase()))
+    .sort((a, b) => a.id.localeCompare(b.id));
+  return (
+    <div className="insp">
+      <div className="insp-head">
+        <div className="insp-name">Signals</div>
+      </div>
+      <div className="insp-desc">Every net is a probe point. Toggle any to plot it on the scope — or click an asset / edge in the graph.</div>
+      <input className="sig-search" placeholder="filter signals…" value={q} onChange={(e) => setQ(e.target.value)} />
+      <div className="sig-list">
+        {series.map((s) => {
+          const on = traceIds.includes(s.id);
+          return (
+            <button key={s.id} className={`sig-row${on ? ' on' : ''}`} onClick={() => onToggle(s.id)}>
+              <span className="sig-dot" />
+              <span className="sig-name mono">{s.id}</span>
+              <span className="sig-val tnum mono">
+                {fmt(s.latest)}
+                {s.unit ? ` ${s.unit}` : ''}
+              </span>
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -268,8 +533,6 @@ function ComponentCard({ spec, def, onApply }: { spec: ModelSpec; def?: ModelDef
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(spec.source.step ?? '');
   const [note, setNote] = useState<{ ok: boolean; msg: string } | null>(null);
-  // Reset the editor only when switching to a different model — not when this
-  // model's own source updates after an Apply (which would wipe the confirmation).
   useEffect(() => {
     setText(spec.source.step ?? '');
     setNote(null);
@@ -350,7 +613,7 @@ function ComponentCard({ spec, def, onApply }: { spec: ModelSpec; def?: ModelDef
                     Cancel
                   </button>
                   <button className="code-btn primary" onClick={apply}>
-                    Apply & run
+                    Apply &amp; run
                   </button>
                 </>
               ) : (

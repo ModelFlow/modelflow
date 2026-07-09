@@ -47,6 +47,12 @@ export class TimeSeries {
   toArray(): number[] {
     return Array.from(this.buf.subarray(0, this.count));
   }
+
+  /** The last `n` recorded values (cheap window, no full copy). */
+  tail(n: number): number[] {
+    const start = Math.max(0, this.count - n);
+    return Array.from(this.buf.subarray(start, this.count));
+  }
 }
 
 export class History {
