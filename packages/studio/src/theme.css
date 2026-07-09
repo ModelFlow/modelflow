@@ -290,3 +290,40 @@ a.iconbtn { text-decoration: none; }
 .scope-tip .tip-row { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
 .scope-tip .tip-row b { color: var(--text); margin-left: 4px; }
 .scope-tip .tip-sw { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+
+/* ---------- fidelity selector (inspector) ---------- */
+.fid-seg { display: flex; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 8px; padding: 2px; gap: 2px; }
+.fid-seg button { flex: 1; background: transparent; border: 0; color: var(--text-muted); font-size: 12px; font-family: var(--mono); padding: 5px 10px; border-radius: 6px; cursor: pointer; }
+.fid-seg button[aria-selected='true'] { background: var(--bg); color: var(--accent); box-shadow: var(--shadow); font-weight: 600; }
+:root[data-theme='dark'] .fid-seg button[aria-selected='true'] { background: var(--border); }
+.fid-seg button:disabled { opacity: 0.5; cursor: default; }
+
+/* ---------- sensitivity ---------- */
+.sensi-controls { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; margin-bottom: 24px; }
+.sensi-field { display: flex; flex-direction: column; gap: 6px; }
+.sensi-field > span { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); font-weight: 600; }
+.sensi-field select { padding: 7px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font: inherit; font-size: 13px; }
+.sensi-field select:focus { outline: none; border-color: var(--accent); }
+.sensi-n { color: var(--text-faint); font-size: 11px; padding-bottom: 8px; }
+.sensi-empty { color: var(--text-muted); font-size: 13px; padding: 24px 0; max-width: 560px; line-height: 1.55; }
+
+.tornado { max-width: 900px; }
+.tor-row { display: grid; grid-template-columns: 184px 1fr 92px; gap: 12px; align-items: center; padding: 3px 0; }
+.tor-label { font-size: 11px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tor-track { position: relative; height: 20px; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 4px; }
+.tor-base { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--text-faint); }
+.tor-bar { position: absolute; top: 3px; height: 12px; }
+.tor-bar.minus { background: color-mix(in srgb, var(--accent) 42%, transparent); border-radius: 3px 0 0 3px; }
+.tor-bar.plus { background: var(--accent); border-radius: 0 3px 3px 0; }
+.tor-impact { font-size: 11.5px; color: var(--text); text-align: right; }
+.tor-pct { color: var(--text-faint); font-size: 10px; }
+.tor-axis { display: grid; grid-template-columns: 184px 1fr 92px; gap: 12px; margin-top: 6px; font-size: 10px; font-family: var(--mono); color: var(--text-faint); }
+.tor-axis span { grid-column: 2; }
+.tor-axis span:nth-child(1) { justify-self: start; }
+.tor-axis span:nth-child(2) { justify-self: center; }
+.tor-axis span:nth-child(3) { justify-self: end; }
+.tor-key { display: flex; gap: 18px; margin-top: 16px; font-size: 11px; color: var(--text-muted); align-items: center; }
+.tor-key .sw { display: inline-block; width: 12px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.tor-key .sw.minus { background: color-mix(in srgb, var(--accent) 42%, transparent); }
+.tor-key .sw.plus { background: var(--accent); }
+.tor-skip, .tor-empty, .tor-baselbl { color: var(--text-faint); }

@@ -17,7 +17,11 @@ import { Engine, catalog, modelSpec, type ModelDef, type ModelSpec, type Instanc
 import { microgrid, microgridRegistry } from './demo';
 import { layeredLayout } from './layout';
 import { Scope, type Trace } from './Scope';
+import { Tornado } from './Tornado';
+import { sensitivity, type SensiResult } from './sensitivity';
 import './theme.css';
+
+const STEP_H = microgrid.timestepSeconds / 3600; // hours of simulated time per step
 
 const fmt = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 2 });
 const fmtInt = (v: number) => Math.round(v).toLocaleString();
@@ -34,9 +38,13 @@ const SPEEDS = [
 const PALETTE = ['#2563eb', '#16a34a', '#d97706', '#dc2626', '#7c3aed', '#0891b2', '#db2777', '#65a30d'];
 const WINDOW = 220;
 
-function buildEngine(): Engine {
+function buildEngine(fid: Record<string, number> = {}): Engine {
+  const scn =
+    Object.keys(fid).length > 0
+      ? { ...microgrid, instances: microgrid.instances.map((i) => (fid[i.key] != null ? { ...i, fidelity: fid[i.key] as 0 | 1 | 2 } : i)) }
+      : microgrid;
   const e = new Engine(microgrid.timestepSeconds, 0, microgrid.seed);
-  e.build(microgrid, microgridRegistry);
+  e.build(scn, microgridRegistry);
   return e;
 }
 
@@ -77,9 +85,10 @@ export function App({
   setTheme: (t: 'light' | 'dark') => void;
   onBack?: () => void;
 }) {
+  const fidRef = useRef<Record<string, number>>({});
   const engineRef = useRef<Engine>();
-  if (!engineRef.current) engineRef.current = buildEngine();
-  const [view, setView] = useState<'sim' | 'components'>('sim');
+  if (!engineRef.current) engineRef.current = buildEngine(fidRef.current);
+  const [view, setView] = useState<'sim' | 'components' | 'sensitivity'>('sim');
   const [speedIdx, setSpeedIdx] = useState(1);
   const [sps, setSps] = useState(0); // measured steps/sec (throughput readout)
   const [selected, setSelected] = useState<string | null>(null);
@@ -212,8 +221,18 @@ export function App({
   };
 
   const rebuild = () => {
-    engineRef.current = buildEngine();
-    setSelected(null);
+    engineRef.current = buildEngine(fidRef.current);
+    setVer((v) => v + 1);
+    setRender((r) => r + 1);
+  };
+  const setFidelity = (key: string, level: number) => {
+    // Rebuild with the new fidelity but fast-forward to the SAME moment, so the
+    // output change is visible immediately (not reset to midnight).
+    const prevStep = Math.min(engineRef.current!.stepIndex, 200000);
+    fidRef.current = { ...fidRef.current, [key]: level };
+    const e = buildEngine(fidRef.current);
+    e.run(prevStep);
+    engineRef.current = e;
     setVer((v) => v + 1);
     setRender((r) => r + 1);
   };
@@ -236,6 +255,9 @@ export function App({
           {onBack && <span className="back-hint">← overview</span>}
         </button>
         <span className="chip">{microgrid.name}</span>
+        <span className="chip" title="How much simulated time one step advances">
+          Δt = {STEP_H} h / step
+        </span>
         <span className="readout tnum">
           day {day} · {String(hour).padStart(2, '0')}:00 · step {engine.stepIndex.toLocaleString()}
         </span>
@@ -261,6 +283,9 @@ export function App({
           <button role="tab" aria-selected={view === 'components'} onClick={() => setView('components')}>
             Components
           </button>
+          <button role="tab" aria-selected={view === 'sensitivity'} onClick={() => setView('sensitivity')}>
+            Sensitivity
+          </button>
         </div>
         <button className="pill secondary" onClick={rebuild}>
           Reset
@@ -273,7 +298,7 @@ export function App({
       {view === 'sim' ? (
         <div className="workspace">
           <aside className="assets">
-            <div className="panel-h">Assets · {views.length}</div>
+            <div className="panel-h">Models · {views.length}</div>
             {views.map((v) => (
               <button className={`asset${selected === v.key ? ' sel' : ''}`} key={v.key} onClick={() => setSelected(v.key)}>
                 <div className="a-l">
@@ -335,6 +360,7 @@ export function App({
                 onToggle={toggleTrace}
                 onClose={() => setSelected(null)}
                 onViewLogic={() => setView('components')}
+                onSetFidelity={setFidelity}
               />
             ) : (
               <SignalPicker engine={engine} traceIds={traceIds} onToggle={toggleTrace} />
@@ -345,6 +371,8 @@ export function App({
             <Scope traces={traces} startStep={scopeStart} dt={microgrid.timestepSeconds} onRemove={(id) => toggleTrace(id)} />
           </div>
         </div>
+      ) : view === 'sensitivity' ? (
+        <SensitivityView />
       ) : (
         <div className="components">
           <div className="components-inner">
@@ -374,6 +402,7 @@ function AssetInspector({
   onToggle,
   onClose,
   onViewLogic,
+  onSetFidelity,
 }: {
   keyName: string;
   engine: Engine;
@@ -383,7 +412,9 @@ function AssetInspector({
   onToggle: (net: string) => void;
   onClose: () => void;
   onViewLogic: () => void;
+  onSetFidelity: (key: string, level: number) => void;
 }) {
+  const maxFid = def?.maxFidelity ?? 1;
   const inst = microgrid.instances.find((i) => i.key === keyName);
   const spec = def ? modelSpec(def) : null;
   const ports = Object.entries(def?.ports ?? {}).map(([name, pd]) => {
@@ -407,8 +438,26 @@ function AssetInspector({
       <div className="insp-meta">
         <span className={`badge ${view?.health}`}>{view?.health ?? 'nominal'}</span>
         <span className="badge muted">{view?.status ?? 'nominal'}</span>
-        <span className="badge muted">fidelity L{view?.fidelity ?? 1}</span>
       </div>
+
+      {maxFid > 0 && (
+        <>
+          <div className="insp-h">Level of detail{maxFid <= 1 ? ' (single)' : ''}</div>
+          <div className="fid-seg">
+            {Array.from({ length: maxFid + 1 }, (_, l) => (
+              <button
+                key={l}
+                aria-selected={(view?.fidelity ?? 1) === l}
+                disabled={maxFid <= 1}
+                onClick={() => onSetFidelity(keyName, l)}
+                title={`L${l}`}
+              >
+                L{l}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {view && view.keyFigures.length > 0 && (
         <>
@@ -510,6 +559,85 @@ function SignalPicker({ engine, traceIds, onToggle }: { engine: Engine; traceIds
             </button>
           );
         })}
+      </div>
+    </div>
+  );
+}
+
+// ---------- sensitivity (parameter tornado) ----------
+const METRICS = [
+  { id: 'bus.power.served', label: 'Total power delivered (Σ served)' },
+  { id: 'bus.power.unmet', label: 'Total unmet demand (Σ unmet)' },
+  { id: 'bus.power.offered', label: 'Total power available (Σ offered)' },
+];
+const DELTAS = [0.1, 0.2, 0.5];
+
+function SensitivityView() {
+  const [metric, setMetric] = useState(METRICS[0].id);
+  const [delta, setDelta] = useState(0.2);
+  const [result, setResult] = useState<SensiResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const days = Math.round(microgrid.durationSeconds / 86400);
+
+  const run = () => {
+    setBusy(true);
+    setTimeout(() => {
+      try {
+        setResult(sensitivity(microgrid, microgridRegistry, { seriesId: metric, mode: 'sum', deltaPct: delta }));
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setBusy(false);
+      }
+    }, 20);
+  };
+
+  return (
+    <div className="components">
+      <div className="components-inner">
+        <p className="components-lead">
+          Fuzz every parameter one at a time by ±X% and rank which ones move the output the most — a sensitivity
+          tornado. (This is distinct from a Monte-Carlo sweep, which varies many parameters together to get a
+          distribution of outcomes.)
+        </p>
+        <div className="sensi-controls">
+          <label className="sensi-field">
+            <span>Output metric</span>
+            <select value={metric} onChange={(e) => setMetric(e.target.value)}>
+              {METRICS.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <div className="sensi-field">
+            <span>Perturbation</span>
+            <div className="seg">
+              {DELTAS.map((d) => (
+                <button key={d} aria-selected={delta === d} onClick={() => setDelta(d)}>
+                  ±{Math.round(d * 100)}%
+                </button>
+              ))}
+            </div>
+          </div>
+          <button className="pill" onClick={run} disabled={busy}>
+            {busy ? 'Running…' : 'Run sensitivity'}
+          </button>
+          {result && (
+            <span className="sensi-n mono">
+              {result.rows.length} params · summed over the {days}-day run
+            </span>
+          )}
+        </div>
+        {result ? (
+          <Tornado result={result} />
+        ) : (
+          <div className="sensi-empty">
+            Pick an output and run. Each bar shows how far the metric swings when that one parameter is nudged
+            ±{Math.round(delta * 100)}% — longest bars at the top are the parameters that matter most.
+          </div>
+        )}
       </div>
     </div>
   );
