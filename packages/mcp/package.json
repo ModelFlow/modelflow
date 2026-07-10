@@ -1,0 +1,19 @@
+{
+  "name": "@modelflow/mcp",
+  "version": "0.0.0",
+  "type": "module",
+  "description": "ModelFlow MCP server — query the cited object & model library over the Model Context Protocol.",
+  "bin": {
+    "modelflow-mcp": "./src/server.ts"
+  },
+  "scripts": {
+    "start": "bun run ./src/server.ts"
+  },
+  "dependencies": {
+    "@modelflow/core": "workspace:*",
+    "@modelflow/std": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "zod": "^3.23.8"
+  },
+  "license": "MIT"
+}

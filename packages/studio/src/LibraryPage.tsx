@@ -1,9 +1,14 @@
 import { useMemo, useState } from 'react';
 import type { ModelSpec } from '@modelflow/core';
+import { objects, searchObjects, type LibraryObject } from '@modelflow/std';
 import { seedModels, loadPublished, unpublishModel } from './library';
 import './theme.css';
 
-const fmt = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+const fmt = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 4 });
+const valueText = (v: number | string, unit?: string) =>
+  typeof v === 'number' ? `${fmt(v)}${unit ? ' ' + unit : ''}` : v;
+
+type View = 'objects' | 'models';
 
 export function Library({
   theme,
@@ -16,25 +21,29 @@ export function Library({
   onBack: () => void;
   onDemo: () => void;
 }) {
+  const [view, setView] = useState<View>('objects');
   const [q, setQ] = useState('');
   const [pubVer, setPubVer] = useState(0);
   const published = useMemo(() => loadPublished(), [pubVer]);
   const seeds = useMemo(() => seedModels(), []);
 
   const pubTypes = new Set(published.map((m) => m.type));
-  const all = [
+  const allModels = [
     ...published.map((m) => ({ spec: m, published: true })),
     ...seeds.filter((m) => !pubTypes.has(m.type)).map((m) => ({ spec: m, published: false })),
   ];
   const ql = q.trim().toLowerCase();
-  const shown = ql
-    ? all.filter(
+  const shownModels = ql
+    ? allModels.filter(
         ({ spec }) =>
           spec.type.toLowerCase().includes(ql) ||
           (spec.description ?? '').toLowerCase().includes(ql) ||
           spec.ports.some((p) => p.dimension.toLowerCase().includes(ql)),
       )
-    : all;
+    : allModels;
+  const shownObjects = ql ? searchObjects(ql) : objects;
+
+  const count = view === 'objects' ? shownObjects.length : shownModels.length;
 
   return (
     <div className="landing">
@@ -70,45 +79,145 @@ export function Library({
 
       <div className="lib">
         <div className="lib-head">
-          <div>
-            <h1>Model Library</h1>
+          <h1>Model Library</h1>
+          {view === 'objects' ? (
+            <p className="lede">
+              A cited parameter database of real-world objects. Every figure carries its unit and a link back to the
+              source of record — so you can pull a trustworthy number for a panel, a battery, or a rocket stage without
+              the datasheet scavenger hunt. Objects that map to a model can seed a live simulation directly.
+            </p>
+          ) : (
             <p className="lede">
               Reusable component models — each with a unit-clear interface and its logic in plain TypeScript. Drop any of
               these into a simulation; they compose because their ports declare real units and dimensions.
             </p>
-          </div>
-        </div>
-        <div className="lib-bar">
-          <input className="lib-search" placeholder="search models, dimensions…" value={q} onChange={(e) => setQ(e.target.value)} />
-          <span className="lib-count">{shown.length} models</span>
+          )}
         </div>
 
-        <div className="lib-grid">
-          {shown.map(({ spec, published }) => (
-            <LibraryCard
-              key={spec.type}
-              spec={spec}
-              published={published}
-              onUnpublish={() => {
-                unpublishModel(spec.type);
-                setPubVer((v) => v + 1);
-              }}
-            />
-          ))}
+        <div className="lib-tabs">
+          <div className="seg" role="tablist">
+            <button role="tab" aria-selected={view === 'objects'} onClick={() => setView('objects')}>
+              Objects · {objects.length}
+            </button>
+            <button role="tab" aria-selected={view === 'models'} onClick={() => setView('models')}>
+              Models · {allModels.length}
+            </button>
+          </div>
         </div>
+
+        <div className="lib-bar">
+          <input
+            className="lib-search"
+            placeholder={view === 'objects' ? 'search objects, makers, parameters…' : 'search models, dimensions…'}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+          <span className="lib-count">
+            {count} {view === 'objects' ? 'objects' : 'models'}
+          </span>
+        </div>
+
+        {view === 'objects' ? (
+          <div className="lib-grid">
+            {shownObjects.map((o) => (
+              <ObjectCard key={o.id} obj={o} />
+            ))}
+          </div>
+        ) : (
+          <div className="lib-grid">
+            {shownModels.map(({ spec, published }) => (
+              <ModelCard
+                key={spec.type}
+                spec={spec}
+                published={published}
+                onUnpublish={() => {
+                  unpublishModel(spec.type);
+                  setPubVer((v) => v + 1);
+                }}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function LibraryCard({ spec, published, onUnpublish }: { spec: ModelSpec; published: boolean; onUnpublish: () => void }) {
-  const [showSrc, setShowSrc] = useState(false);
+function CopyButton({ text, label = 'Copy JSON' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
-  const copy = () => {
-    navigator.clipboard?.writeText(JSON.stringify(spec, null, 2));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1400);
-  };
+  return (
+    <button
+      className="tbtn"
+      onClick={() => {
+        navigator.clipboard?.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1400);
+      }}
+    >
+      {copied ? 'Copied ✓' : label}
+    </button>
+  );
+}
+
+function ObjectCard({ obj }: { obj: LibraryObject }) {
+  return (
+    <div className="lib-card">
+      <div className="card-top">
+        <div className="lib-card-h">
+          <span className="card-name">{obj.name}</span>
+          <span className="lib-tag std">{obj.category}</span>
+        </div>
+        <div className="card-desc">{obj.summary}</div>
+        {(obj.maker || obj.model) && (
+          <div className="obj-maker">
+            {obj.maker}
+            {obj.maker && obj.model ? ' · ' : ''}
+            {obj.model && (
+              <>
+                seeds <code>{obj.model}</code>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+      <div className="card-body">
+        <div className="io-h">Parameters · {obj.params.length} cited</div>
+        {obj.params.map((p, i) => (
+          <div key={i}>
+            <div className="io p">
+              <span className="nm">{p.label}</span>
+              <span className="un">{valueText(p.value, p.unit)}</span>
+              <span className="dm">{p.mapsTo ? `→ ${p.mapsTo}` : ''}</span>
+            </div>
+            {(p.notes || p.url) && (
+              <div className="io-meta">
+                {p.notes && <span className="note">{p.notes}</span>}
+                {p.url ? (
+                  <a className="src-link" href={p.url} target="_blank" rel="noreferrer">
+                    {p.source ?? 'source'} ↗
+                  </a>
+                ) : (
+                  p.source && <span className="src-cite">{p.source}</span>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+      <div className="lib-actions">
+        <CopyButton text={JSON.stringify(obj, null, 2)} />
+        {obj.primarySource && (
+          <a className="tbtn" href={obj.primarySource.url} target="_blank" rel="noreferrer">
+            {obj.primarySource.citation} ↗
+          </a>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ModelCard({ spec, published, onUnpublish }: { spec: ModelSpec; published: boolean; onUnpublish: () => void }) {
+  const [showSrc, setShowSrc] = useState(false);
   return (
     <div className="lib-card">
       <div className="card-top">
@@ -169,9 +278,7 @@ function LibraryCard({ spec, published, onUnpublish }: { spec: ModelSpec; publis
         ))}
       </div>
       <div className="lib-actions">
-        <button className="tbtn" onClick={copy}>
-          {copied ? 'Copied ✓' : 'Copy spec'}
-        </button>
+        <CopyButton text={JSON.stringify(spec, null, 2)} label="Copy spec" />
         {spec.source.step && (
           <button className="tbtn" onClick={() => setShowSrc((s) => !s)}>
             {showSrc ? 'Hide logic' : 'View logic'}

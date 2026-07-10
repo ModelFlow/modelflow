@@ -16,18 +16,38 @@ export const Tank = defineModel({
   },
 });`;
 
+const MCP_SRC = `// An agent building a simulation asks the ModelFlow MCP server:
+
+search_objects({ query: "home battery" })
+→ [{ id: "tesla-powerwall-3", name: "Tesla Powerwall 3",
+     category: "Energy storage", model: "Storage" }, …]
+
+get_object({ id: "tesla-powerwall-3" })
+→ { name: "Tesla Powerwall 3", model: "Storage",
+    params: [
+      { label: "Usable energy", value: 13.5, unit: "kWh",
+        mapsTo: "capacity",
+        source: "Powerwall 3 Datasheet",
+        url: "https://energylibrary.tesla.com/…" },
+      { label: "Round-trip efficiency", value: 89, unit: "%", … },
+      …
+    ] }
+
+// Every figure is unit-tagged and sourced — ready to wire
+// straight into a scenario, no datasheet hunt required.`;
+
 const CONCEPTS: Array<{ t: string; d: string }> = [
   {
     t: 'Reusable & composable',
-    d: 'Model something once — a solar array, an electrolyzer, a crew member — then reuse and nest it. Small models compose into subsystems, and subsystems into an entire base.',
+    d: 'Model something once — a solar array, a pump, a battery — then reuse and nest it. Small models compose into subsystems, and subsystems into an entire plant.',
   },
   {
     t: 'Levels of detail, on demand',
     d: 'Run each model at the fidelity the question needs — a distilled coefficient for fast multi-year sweeps, or resolved physics when a single number decides the outcome. Swap detail without rewiring.',
   },
   {
-    t: 'Two ways to wire',
-    d: 'Typed ports for point-to-point signals, and named resource buses (power, water, O₂…) for shared supply that’s split between consumers by priority.',
+    t: 'Signals and shared hubs',
+    d: 'Typed ports wire point-to-point. Dynamic group ports let any number of models plug into a hub — a power bus that pools every source and splits it between consumers by priority is just an ordinary model, no special engine support.',
   },
   {
     t: 'Units convert themselves',
@@ -38,8 +58,8 @@ const CONCEPTS: Array<{ t: string; d: string }> = [
     d: 'One typed-array signal pool, a seeded RNG per model, a fixed timestep. Tens of millions of model-steps per second, and parameter sweeps fan out across every core.',
   },
   {
-    t: 'Agent-friendly',
-    d: 'Models are plain TypeScript; scenarios are JSON, validated with errors that name the fix. The whole surface is designed so a person — or an LLM — gets a new model right on the first try.',
+    t: 'Built for people and agents',
+    d: 'Models are plain TypeScript; scenarios are JSON, validated with errors that name the fix. The object library is reachable over MCP — so a person or an AI agent gets a real, sourced model right the first time.',
   },
 ];
 
@@ -93,12 +113,12 @@ export function Landing({
         <div className="hero-in">
           <div className="eyebrow">Model-Based Design for Models</div>
           <h1>
-            Model humanity’s <span className="accent">hardest systems.</span>
+            Model any system, then <span className="accent">trust the numbers.</span>
           </h1>
           <p className="sub">
-            ModelFlow builds simulations from reusable, composable models — each dialed to whatever level of detail the
-            question needs — to take on the toughest system problems: keeping people alive on Mars, powering a base on
-            the Moon, running a data center in orbit.
+            ModelFlow is a generic, composable simulation engine — reusable models in plain TypeScript, scenarios in
+            JSON, units that convert themselves — paired with a cited library of real-world objects, so every parameter
+            in your model traces back to a source. Built to be driven by engineers and AI agents alike.
           </p>
           <div className="hero-cta">
             <button className="pill lg" onClick={onLaunch}>
@@ -138,6 +158,71 @@ export function Landing({
         </div>
       </section>
 
+      <section className="codeblock alt">
+        <div className="wrap two">
+          <div>
+            <h2>One cited source of truth for real-world parameters</h2>
+            <p className="lede">
+              Modeling something real means hunting its numbers across datasheets, spec pages and Wikipedia tables — then
+              hoping you copied them right. The Model Library gathers real objects — a SunPower panel, a Tesla Powerwall,
+              a Starship stage — with every figure in its unit and a link back to the source of record. Objects that map
+              to a model seed a live simulation directly.
+            </p>
+            <button className="pill lg" onClick={onLibrary}>
+              Browse the Model Library →
+            </button>
+          </div>
+          <div className="lib-card peek">
+            <div className="card-top">
+              <div className="lib-card-h">
+                <span className="card-name">Tesla Powerwall 3</span>
+                <span className="lib-tag std">Energy storage</span>
+              </div>
+              <div className="obj-maker">
+                Tesla · seeds <code>Storage</code>
+              </div>
+            </div>
+            <div className="card-body">
+              <div className="io p">
+                <span className="nm">Usable energy</span>
+                <span className="un">13.5 kWh</span>
+                <span className="dm">→ capacity</span>
+              </div>
+              <div className="io-meta">
+                <a className="src-link" href="https://energylibrary.tesla.com/docs/Public/EnergyStorage/Powerwall/3/Datasheet/en-us/Powerwall-3-Datasheet.pdf" target="_blank" rel="noreferrer">
+                  Powerwall 3 Datasheet ↗
+                </a>
+              </div>
+              <div className="io p">
+                <span className="nm">Continuous power</span>
+                <span className="un">11.5 kW</span>
+                <span className="dm" />
+              </div>
+              <div className="io p">
+                <span className="nm">Round-trip efficiency</span>
+                <span className="un">89 %</span>
+                <span className="dm" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="codeblock">
+        <div className="wrap two">
+          <div>
+            <h2>Agents query it over MCP</h2>
+            <p className="lede">
+              ModelFlow ships an <b>MCP server</b> that exposes the object and model library as tools. An agent building
+              a simulation can look up a real component’s parameters — sourced and unit-tagged — and get back structured
+              data it can wire straight into a scenario. The library is the target audience’s single lookup for “what are
+              the real numbers for <i>this</i> thing?”
+            </p>
+          </div>
+          <pre className="hljs">{MCP_SRC}</pre>
+        </div>
+      </section>
+
       <section className="example" id="example">
         <div className="wrap">
           <div className="ex-head">
@@ -146,7 +231,7 @@ export function Landing({
               The sun drives two photovoltaic arrays that output <b>watts</b>. Inverters tie them to a shared power bus —
               and because each inverter declares its input in <b>kilowatts</b>, ModelFlow auto-converts W→kW on the wire.
               Three loads draw from the bus at different priorities; when the sun dips and supply falls short, the
-              lowest-priority load (an ISRU plant) is shed first. Everything is live — the same engine, running in your
+              lowest-priority load (EV charging) is shed first. Everything is live — the same engine, running in your
               browser.
             </p>
           </div>

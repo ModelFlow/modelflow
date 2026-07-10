@@ -7,10 +7,12 @@ system-simulation problems.
 
 ModelFlow builds a simulation of *any* system out of small, **reusable,
 composable** models, each dialable from a coarse estimate to full physics, and
-wires them together (with typed ports or shared resource buses) to take on the
-toughest problems: life support on Mars, power on the Moon, compute in orbit.
-Models are plain TypeScript objects; scenarios are plain JSON, so a person *or an
-LLM* can author them reliably.
+wires them together (with typed ports or dynamic group ports) to take on the
+toughest problems — from energy grids and life support to supply chains and
+spacecraft. Models are plain TypeScript objects; scenarios are plain JSON, so a
+person *or an AI agent* can author them reliably. A **cited library of
+real-world objects** — reachable over **MCP** — supplies the sourced parameters
+to fill them in.
 
 ### ▶ Live demo — [modelflow-microgrid.netlify.app](https://modelflow-microgrid.netlify.app)
 
@@ -27,14 +29,17 @@ inspector (connection graph, live charts, editable model logic).
 ```
 packages/
   core/       @modelflow/core   the engine — zero domain knowledge
-  std/        @modelflow/std     generic primitives + policies + parallel sweeps
+  std/        @modelflow/std     generic models + the cited object library + parallel sweeps
   studio/     @modelflow/studio  a generic Vite/React inspector UI (the live demo)
+  mcp/        @modelflow/mcp     an MCP server exposing the library to agents
   examples/                      runnable, domain-free demos + benchmarks
 tests/                           bun test
 ```
 
-`@modelflow/std` ships `Source`, `Sink`, `Storage`, `Converter`, `Controller`,
-`Constant`, and `arbitratedBus` with the `priorityProRata` allocation policy.
+`@modelflow/std` ships generic models — `Source`, `Sink`, `Storage`,
+`Controller`, `Constant`, `SolarPanel`, `Inverter`, and `arbitratedBus` (itself
+an ordinary model, no engine privilege) — plus `objects`, a cited database of
+real-world components (see below).
 
 ---
 
@@ -94,10 +99,12 @@ eng.instanceViews();                           // live params / status / key fig
 
 - **Ports** — a single `out → in` edge for point-to-point signals (a sensor into
   a controller). Statically validated, single-driver, diagrammable.
-- **Resource buses** — many-to-many shared commodities (power, water, labor…)
-  with **nearest-owner** binding, pluggable **arbitration policies** (priority
-  triage, reserves), subtree aggregation, and runtime re-parenting. One
-  `arbitratedBus('power')` replaces a hand-written power grid + labor pool.
+- **Group ports** — a dynamic-arity hub any number of models `join`. A model
+  declares one `groupPort`; members plug in at build time, and a `resolve` hook
+  arbitrates between them. `arbitratedBus('power')` is *just an ordinary model*
+  built this way — it pools every source and splits it across consumers by
+  priority band, with **no special engine support**. The same mechanism handles
+  a labor pool, a water main, or a shared budget.
 
 ## Levels of detail
 
@@ -134,11 +141,37 @@ dimension **and** provenance — so a model can be published and dropped into
 another simulation with its contract fully understood.
 
 ```
-SolarPanel — Photovoltaic array: irradiance + cell temperature → DC power.
+SolarPanel — Photovoltaic array: irradiance × area × efficiency → DC power.
   → irradiance   W/m^2   [power density]
-  → cellTemp     °C      [temperature]
   ← power        W       [power]
-  • efficiency   0.22    frac    [dimensionless]   src: Spectrolab XTJ Prime
+  • area         10      m^2     [area]
+  • efficiency   0.22    frac    [dimensionless]   src: NREL cell-efficiency chart
+```
+
+## The object library + MCP
+
+Modeling something real means hunting its numbers across datasheets and
+Wikipedia. `@modelflow/std` ships **`objects`** — a cited database of real-world
+components (a SunPower Maxeon panel, a Tesla Powerwall, a SpaceX Starship stage)
+where every figure carries its **unit**, a **source** citation, and a **link**.
+An object's `model` and each parameter's `mapsTo` say how its cited values seed a
+live simulation.
+
+```ts
+import { objectById } from '@modelflow/std';
+const pw = objectById('tesla-powerwall-3');
+// pw.model === 'Storage'
+// pw.params[0] === { label: 'Usable energy', value: 13.5, unit: 'kWh',
+//                    mapsTo: 'capacity', source: 'Powerwall 3 Datasheet', url: … }
+```
+
+**`@modelflow/mcp`** exposes this over the Model Context Protocol so an **agent**
+can look up sourced parameters for whatever it wants to model —
+`search_objects`, `get_object`, `list_models`, `get_model`, `list_categories`.
+See [`packages/mcp/README.md`](packages/mcp/README.md).
+
+```sh
+claude mcp add modelflow -- bun run "$PWD/packages/mcp/src/server.ts"
 ```
 
 ## Deterministic & fast
