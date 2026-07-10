@@ -160,7 +160,13 @@ function LibraryCard({ spec, published, onUnpublish }: { spec: ModelSpec; publis
             </div>
           );
         })}
-        {spec.providesBus && <div className="card-bus">provides the “{spec.providesBus}” bus</div>}
+        {spec.groupPorts.length > 0 && <div className="io-h">Group ports (dynamic)</div>}
+        {spec.groupPorts.map((g) => (
+          <div className="io g" key={g.name}>
+            <span className="nm">⇉ {g.name}</span>
+            <span className="dm">{g.channel.map((c) => `${c.field} ${c.dir === 'in' ? '←' : '→'}`).join('  ')}</span>
+          </div>
+        ))}
       </div>
       <div className="lib-actions">
         <button className="tbtn" onClick={copy}>

@@ -16,9 +16,10 @@ interface Case {
 
 function scenario(c: Case): Scenario {
   const instances: InstanceSpec[] = [{ key: 'grid', type: 'Bus:power' }];
-  for (let i = 0; i < 4; i++) instances.push({ key: `gen${i}`, type: 'Source:power', parent: 'grid', params: { supply: 30 } });
+  for (let i = 0; i < 4; i++)
+    instances.push({ key: `gen${i}`, type: 'Source:power', params: { supply: 30 }, join: [{ group: 'grid.sources' }] });
   for (let i = 0; i < 12; i++)
-    instances.push({ key: `load${i}`, type: 'Load:power', parent: 'grid', params: { demand: 3 + (i % 4), band: i % 3 }, connect: { served: `sv${i}` } });
+    instances.push({ key: `load${i}`, type: 'Load:power', params: { demand: 3 + (i % 4) }, connect: { served: `sv${i}` }, join: [{ group: 'grid.loads', meta: { band: i % 3 } }] });
   for (let i = 0; i < 5; i++) {
     instances.push({ key: `s${i}`, type: 'Source', params: { maxFlow: 5 }, connect: { cmd: `cmd${i}`, flow: `f${i}` } });
     instances.push({ key: `t${i}`, type: 'Tank', params: { capacity: 1000 }, connect: { inflow: `f${i}`, outflow: `d${i}`, level: `l${i}` } });

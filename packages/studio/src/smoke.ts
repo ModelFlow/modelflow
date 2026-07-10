@@ -10,7 +10,7 @@ console.log(`structure: ${s.nodes.length} nodes, ${s.edges.length} edges`);
 console.log('signal edges (unit-labelled):');
 for (const x of s.edges.filter((x) => x.kind === 'signal'))
   console.log(`  ${x.source}.${x.sourcePort} → ${x.target}.${x.targetPort}  [${x.unit || '·'}]`);
-console.log(`bus edges: ${s.edges.filter((x) => x.kind === 'bus').length}`);
+console.log(`group edges: ${s.edges.filter((x) => x.kind === 'group').length}`);
 
 console.log('\ninstance key figures:');
 for (const v of e.instanceViews())

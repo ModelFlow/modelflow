@@ -15,16 +15,15 @@ export {
   type Dimension,
   type ResolvedUnit,
 } from './units';
-export type { PortDecl, Net } from './signal';
-export { inPort, outPort } from './signal';
+export type { PortDecl, Net, ChannelField, GroupPortDecl, AnyPort } from './signal';
+export { inPort, outPort, groupPort, isGroupPort } from './signal';
 export type { ParamSpec, ParamSource } from './param';
 export { param } from './param';
 export type { CommoditySpec } from './commodity';
 export { CommodityRegistry } from './commodity';
-export type { BusAttach, BusRequest, ReserveView, AllocationPolicy, BusHandle } from './bus';
-export type { KeyFigure, ParamValues, ModelInstanceView, StepCtx, ModelDef } from './model';
+export type { KeyFigure, ParamValues, ModelInstanceView, StepCtx, ModelDef, Channel } from './model';
 export { defineModel, validateModelDef } from './model';
-export type { InstanceSpec, Scenario } from './scenario';
+export type { InstanceSpec, JoinSpec, Scenario } from './scenario';
 export { ModelRegistry, registry } from './registry';
 export type { Rng } from './rng';
 export { makeRng, hashSeed } from './rng';
@@ -59,6 +58,6 @@ export {
   catalog,
   type ModelSpec,
   type PortSpec,
+  type GroupPortSpec,
   type ParamPublicSpec,
-  type BusSpec,
 } from './catalog';

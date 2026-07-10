@@ -20,19 +20,22 @@ export const DiurnalIrradiance = defineModel({
 });
 
 /**
- * Inverter/tie: reads a panel's DC power (declared in kW, so ModelFlow
- * auto-converts the panel's W output) and offers it onto the power bus.
+ * Inverter: reads a panel's DC power (declared in kW, so ModelFlow auto-converts
+ * the panel's W output) and puts out AC power. It's joined to the bus's
+ * `sources` group in the scenario — the inverter itself knows nothing about buses.
  */
 export const Inverter = defineModel({
   type: 'Inverter',
-  description: 'DC→bus tie: reads panel power and offers it to the grid.',
-  ports: { dc: inPort('kW', { desc: 'Panel DC power (auto-converted from W)' }) },
-  buses: { grid: { commodity: 'power', role: 'offer', unit: 'kW' } },
+  description: 'DC→AC tie: converts panel DC power to grid AC power.',
+  ports: {
+    dc: inPort('kW', { desc: 'Panel DC power (auto-converted from W)' }),
+    ac: outPort('kW', { desc: 'AC power fed to the grid' }),
+  },
   params: { efficiency: param(0.96, 'frac', 'Inverter efficiency', { min: 0, max: 1 }) },
   state: () => ({}),
   declare(ctx) {
-    ctx.bus.grid.offer = ctx.in.dc * ctx.params.efficiency;
+    ctx.out.ac = ctx.in.dc * ctx.params.efficiency;
   },
   step() {},
-  keyFigures: (ctx) => [['Offering', ctx.in.dc * ctx.params.efficiency, 'kW']],
+  keyFigures: (ctx) => [['Offering', ctx.out.ac, 'kW']],
 });

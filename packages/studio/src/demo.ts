@@ -1,5 +1,5 @@
 import { registry, type Scenario } from '@modelflow/core';
-import { arbitratedBus, busLoad, priorityProRata } from '@modelflow/std';
+import { arbitratedBus, busLoad } from '@modelflow/std';
 import { SolarPanel } from '../../examples/src/solarPanel';
 import { DiurnalIrradiance, Inverter } from './demoModels';
 
@@ -13,7 +13,7 @@ import { DiurnalIrradiance, Inverter } from './demoModels';
  * priority arbitration in one legible demo.
  */
 export const microgridRegistry = registry(
-  arbitratedBus('power', priorityProRata()),
+  arbitratedBus('power'),
   SolarPanel,
   DiurnalIrradiance,
   Inverter,
@@ -33,10 +33,10 @@ export const microgrid: Scenario = {
     { key: 'sun', type: 'DiurnalIrradiance', parent: 'grid', connect: { irradiance: 'sun' } },
     { key: 'array_A', type: 'SolarPanel', parent: 'grid', params: { area: 45 }, connect: { irradiance: 'sun', power: 'dc_A' } },
     { key: 'array_B', type: 'SolarPanel', parent: 'grid', params: { area: 30 }, connect: { irradiance: 'sun', power: 'dc_B' } },
-    { key: 'inv_A', type: 'Inverter', parent: 'grid', connect: { dc: 'dc_A' } },
-    { key: 'inv_B', type: 'Inverter', parent: 'grid', connect: { dc: 'dc_B' } },
-    { key: 'essential', type: 'Load:power', parent: 'grid', params: { demand: 4, band: 0 }, connect: { served: 'sv_essential' } },
-    { key: 'hvac', type: 'Load:power', parent: 'grid', params: { demand: 3, band: 1 }, connect: { served: 'sv_hvac' } },
-    { key: 'ev_charging', type: 'Load:power', parent: 'grid', params: { demand: 12, band: 2 }, connect: { served: 'sv_ev' } },
+    { key: 'inv_A', type: 'Inverter', parent: 'grid', connect: { dc: 'dc_A' }, join: [{ group: 'grid.sources', wire: { supply: 'ac' } }] },
+    { key: 'inv_B', type: 'Inverter', parent: 'grid', connect: { dc: 'dc_B' }, join: [{ group: 'grid.sources', wire: { supply: 'ac' } }] },
+    { key: 'essential', type: 'Load:power', parent: 'grid', params: { demand: 4 }, connect: { served: 'sv_essential' }, join: [{ group: 'grid.loads', meta: { band: 0 } }] },
+    { key: 'hvac', type: 'Load:power', parent: 'grid', params: { demand: 3 }, connect: { served: 'sv_hvac' }, join: [{ group: 'grid.loads', meta: { band: 1 } }] },
+    { key: 'ev_charging', type: 'Load:power', parent: 'grid', params: { demand: 12 }, connect: { served: 'sv_ev' }, join: [{ group: 'grid.loads', meta: { band: 2 } }] },
   ],
 };

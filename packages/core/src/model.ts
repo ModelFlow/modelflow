@@ -1,9 +1,24 @@
 import type { Fidelity, Health, Severity } from './types';
-import type { PortDecl } from './signal';
+import type { AnyPort } from './signal';
+import { isGroupPort } from './signal';
 import type { ParamSpec } from './param';
-import type { AllocationPolicy, BusAttach, BusHandle } from './bus';
 import type { Rng } from './rng';
 import { ModelFlowError } from './validate';
+
+/**
+ * One member joined to a group port, seen from the HUB. `in` reads the member's
+ * driven net (unit-converted); `out` writes the member's read net; `meta` is the
+ * per-connection scalars the scenario set (e.g. priority band). This is how a
+ * hub model — a bus, a scheduler, a market clearer — loops over "everyone
+ * connected to me" in `resolve`.
+ */
+export interface Channel {
+  readonly index: number;
+  readonly key: string;
+  readonly in: Readonly<Record<string, number>>;
+  readonly out: Record<string, number>;
+  readonly meta: Readonly<Record<string, number>>;
+}
 
 /** A labelled scalar a model exposes for at-a-glance UIs: [label, value, unit]. */
 export type KeyFigure = readonly [label: string, value: number, unit: string];
@@ -37,9 +52,9 @@ export interface StepCtx<P = Record<string, number>, S = object> {
   readonly in: Record<string, number>;
   /** Writes the net bound to each output port. */
   readonly out: Record<string, number>;
-  /** One handle per declared bus attachment (keyed by attachment name). */
-  readonly bus: Record<string, BusHandle>;
   readonly rng: Rng;
+  /** Members joined to a declared group port, in scenario (deterministic) order. */
+  group(name: string): readonly Channel[];
   /** Record an extra time series not tied to a port. */
   emit(seriesId: string, value: number): void;
   log(sev: Severity, msg: string): void;
@@ -59,9 +74,9 @@ export interface ModelDef<
   readonly type: string;
   /** One-line human description for the component catalog. */
   readonly description?: string;
-  readonly ports?: Record<string, PortDecl>;
+  /** Scalar ports (inPort/outPort) and/or group ports (groupPort). */
+  readonly ports?: Record<string, AnyPort>;
   readonly params?: PS;
-  readonly buses?: Record<string, BusAttach>;
   /** Fresh state for each instance. */
   readonly state: () => S;
   /** Authoring fidelity if the scenario doesn't override (default 1). */
@@ -70,19 +85,17 @@ export interface ModelDef<
   readonly maxFidelity?: Fidelity;
   /** Env providers step first, so they fill shared nets before consumers read. */
   readonly isEnvProvider?: boolean;
-  /**
-   * If set, this model OWNS the bus for the named commodity within its subtree;
-   * descendants that attach to that commodity bind to it (nearest-owner). Set by
-   * the std `arbitratedBus` factory, not authored by hand.
-   */
-  readonly providesBus?: string;
-  /** Arbitration policy for the bus this model provides. */
-  readonly policy?: AllocationPolicy;
 
   /** Once, after wiring is resolved. */
   init?(ctx: StepCtx<ParamValues<PS>, S>): void;
-  /** Pre-step: write bus offers/demands only. */
+  /** Feeders write here: post supply/demand before anyone arbitrates. */
   declare?(ctx: StepCtx<ParamValues<PS>, S>): void;
+  /**
+   * Coordinators arbitrate here — a bus, scheduler, or market clearer loops over
+   * its group members (read their `declare`d values, write back grants). Runs
+   * after all `declare`s and before all `step`s.
+   */
+  resolve?(ctx: StepCtx<ParamValues<PS>, S>): void;
   /** The step: read inputs/grants, do work, write outputs. */
   step(ctx: StepCtx<ParamValues<PS>, S>): void;
 
@@ -123,12 +136,13 @@ export function validateModelDef(def: ModelDef): void {
 
   const ports = def.ports ?? {};
   const declared = Object.entries(ports);
-  const inNames = new Set(declared.filter(([, p]) => p.dir === 'in').map(([n]) => n));
-  const outNames = new Set(declared.filter(([, p]) => p.dir === 'out').map(([n]) => n));
+  const inNames = new Set(declared.filter(([, p]) => !isGroupPort(p) && p.dir === 'in').map(([n]) => n));
+  const outNames = new Set(declared.filter(([, p]) => !isGroupPort(p) && p.dir === 'out').map(([n]) => n));
+  const groupNames = new Set(declared.filter(([, p]) => isGroupPort(p)).map(([n]) => n));
   const allPortNames = Object.keys(ports).join(', ') || '(none)';
 
   const problems: string[] = [];
-  for (const fn of [def.step, def.declare, def.init]) {
+  for (const fn of [def.step, def.declare, def.resolve, def.init]) {
     if (typeof fn !== 'function') continue;
     const ctxName = firstParamName(fn);
     if (!ctxName) continue;
@@ -140,9 +154,13 @@ export function validateModelDef(def: ModelDef): void {
       const name = m[2];
       const ok = dir === 'in' ? inNames.has(name) : outNames.has(name);
       if (!ok) {
-        problems.push(
-          `reads ${ctxName}.${dir}.${name} but no ${dir} port "${name}" is declared.`,
-        );
+        problems.push(`reads ${ctxName}.${dir}.${name} but no ${dir} port "${name}" is declared.`);
+      }
+    }
+    const gre = new RegExp(`\\b${ctxName}\\.group\\(\\s*['"\`]([\\w$]+)['"\`]\\s*\\)`, 'g');
+    while ((m = gre.exec(src)) !== null) {
+      if (!groupNames.has(m[1])) {
+        problems.push(`calls ${ctxName}.group("${m[1]}") but no group port "${m[1]}" is declared.`);
       }
     }
   }

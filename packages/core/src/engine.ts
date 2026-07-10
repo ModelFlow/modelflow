@@ -1,9 +1,9 @@
 import type { Fidelity, Health, Severity } from './types';
 import type { Net } from './signal';
-import type { ModelDef, ModelInstanceView, StepCtx } from './model';
+import { isGroupPort } from './signal';
+import type { ModelDef, ModelInstanceView, StepCtx, Channel } from './model';
 import type { Scenario, InstanceSpec } from './scenario';
 import type { ModelRegistry } from './registry';
-import type { AllocationPolicy, BusAttach, BusHandle, BusRequest, ReserveView } from './bus';
 import { CommodityRegistry } from './commodity';
 import { History, TimeSeries } from './history';
 import { SimClock } from './clock';
@@ -13,8 +13,8 @@ import { conversion, parseUnit, describeDimension, dimEqual } from './units';
 
 /** Returns a problem string if two units can't be wired together, else null. */
 function unitMismatch(netUnit: string, portUnit: string): string | null {
-  // An empty unit is an unspecified "wildcard" — generic primitives (Source,
-  // Controller…) adopt whatever they're wired to. Declared units are strict.
+  // An empty unit is an unspecified "wildcard" — generic primitives adopt
+  // whatever they're wired to. Declared units are strict.
   if (netUnit === '' || portUnit === '') return null;
   let a, b;
   try {
@@ -33,105 +33,18 @@ function unitMismatch(netUnit: string, portUnit: string): string | null {
   return null;
 }
 
-/** Live handle backing `ctx.bus.<name>`; zero-alloc, reads/writes bus accumulators. */
-class BusHandleImpl implements BusHandle {
-  offer = 0;
-  demand = 0;
-  band: number;
-  reqIndex = -1;
-  bus: CompiledBus;
-  constructor(
-    bus: CompiledBus,
-    readonly attach: BusAttach,
-    readonly nodeKey: string,
-  ) {
-    this.bus = bus;
-    this.band = attach.band ?? 0;
-  }
-  get granted(): number {
-    return this.reqIndex >= 0 ? this.bus.grantFractions[this.reqIndex] : 0;
-  }
-  get served(): number {
-    return this.demand * this.granted;
-  }
-  get level(): number {
-    return this.bus.reserve ? this.bus.reserve.level : 0;
-  }
+/** A staged channel-field binding: which net it aliases + the hub's conversion. */
+interface FieldBinding {
+  field: string;
+  netId: number;
+  hubReads: boolean; // hub-in field (getter) vs hub-out field (setter)
+  k: number;
+  off: number;
 }
-
-/** One arbitrated bus for a commodity, owned by a node's subtree. */
-class CompiledBus {
-  readonly offerHandles: BusHandleImpl[] = [];
-  readonly requestHandles: BusHandleImpl[] = [];
-  readonly readHandles: BusHandleImpl[] = [];
-  grantFractions = new Float64Array(0);
-  private reqs: BusRequest[] = [];
-  reserve: ReserveView | null = null;
-  // Direct series handles (null when recording is off).
-  private tsOffered: TimeSeries | null = null;
-  private tsDemanded: TimeSeries | null = null;
-  private tsServed: TimeSeries | null = null;
-  private tsUnmet: TimeSeries | null = null;
-
-  constructor(
-    readonly commodity: string,
-    readonly ownerKey: string,
-    readonly policy: AllocationPolicy | null,
-  ) {}
-
-  finalize(): void {
-    const n = this.requestHandles.length;
-    this.grantFractions = new Float64Array(n);
-    this.reqs = this.requestHandles.map((h, i) => {
-      h.reqIndex = i;
-      return { amount: 0, band: h.band, tag: h.attach.tag ?? '' };
-    });
-  }
-
-  bindSeries(history: History): void {
-    const c = this.commodity;
-    this.tsOffered = history.ensure(`bus.${c}.offered`, `bus.${c}.offered`, '');
-    this.tsDemanded = history.ensure(`bus.${c}.demanded`, `bus.${c}.demanded`, '');
-    this.tsServed = history.ensure(`bus.${c}.served`, `bus.${c}.served`, '');
-    this.tsUnmet = history.ensure(`bus.${c}.unmet`, `bus.${c}.unmet`, '');
-  }
-
-  begin(): void {
-    for (const h of this.offerHandles) h.offer = 0;
-    for (const h of this.requestHandles) h.demand = 0;
-  }
-
-  resolve(dt: number): void {
-    let supply = 0;
-    for (const h of this.offerHandles) supply += h.offer;
-    let demanded = 0;
-    for (let i = 0; i < this.requestHandles.length; i++) {
-      const h = this.requestHandles[i];
-      this.reqs[i].amount = h.demand;
-      this.reqs[i].band = h.band;
-      demanded += h.demand;
-    }
-    const fr = this.policy
-      ? this.policy.allocate(supply, this.reqs, this.reserve, dt)
-      : proRata(supply, demanded, this.reqs.length);
-    this.grantFractions.set(fr);
-    if (this.tsOffered) {
-      let served = 0;
-      for (let i = 0; i < this.reqs.length; i++) served += this.grantFractions[i] * this.reqs[i].amount;
-      this.tsOffered.stage(supply);
-      this.tsDemanded!.stage(demanded);
-      this.tsServed!.stage(served);
-      this.tsUnmet!.stage(Math.max(0, demanded - served));
-    }
-  }
-}
-
-const _proRataBuf = { arr: new Float64Array(0) };
-function proRata(supply: number, demanded: number, n: number): Float64Array {
-  if (_proRataBuf.arr.length !== n) _proRataBuf.arr = new Float64Array(n);
-  const f = demanded > 0 ? Math.min(1, supply / demanded) : 0;
-  _proRataBuf.arr.fill(f);
-  return _proRataBuf.arr;
+interface ChannelBinding {
+  key: string;
+  meta: Record<string, number>;
+  fields: FieldBinding[];
 }
 
 /** Internal per-instance record. Also serves as the public ModelInstanceView. */
@@ -149,7 +62,8 @@ interface Node extends ModelInstanceView {
   outMap: Record<string, number>;
   inCursor: Record<string, number>;
   outCursor: Record<string, number>;
-  busHandles: Record<string, BusHandle>;
+  groupBindings: Record<string, ChannelBinding[]>;
+  groups: Record<string, Channel[]>;
   ctx: StepCtx;
 }
 
@@ -173,7 +87,8 @@ export interface GraphNode {
   parent: string | null;
   fidelity: Fidelity;
   health: Health;
-  providesBus?: string;
+  /** Names of any group ports this node hosts (e.g. a bus's "loads"/"sources"). */
+  groups?: string[];
 }
 
 /** An edge in the introspected wiring graph. */
@@ -183,10 +98,10 @@ export interface GraphEdge {
   sourcePort: string;
   target: string;
   targetPort: string;
-  /** Net name (signal) or `bus.<commodity>`. */
   net: string;
   unit: string;
-  kind: 'signal' | 'bus';
+  /** `signal` = a point-to-point port wire; `group` = a member↔hub group link. */
+  kind: 'signal' | 'group';
 }
 
 export interface InstanceView {
@@ -203,8 +118,9 @@ export interface InstanceView {
 /**
  * The simulation engine: flattens a scenario into a wired signal graph and
  * steps it deterministically at a fixed dt. Evaluation order is env-providers
- * first, then declared-instance order (no topological sort) — the property that
- * makes runs reproducible and re-parenting safe.
+ * first, then declared-instance order (no topological sort). Coordination
+ * (buses, schedulers) is not privileged: any model may implement `resolve`,
+ * which runs between all `declare`s and all `step`s.
  */
 export class Engine {
   readonly clock: SimClock;
@@ -218,9 +134,9 @@ export class Engine {
   private netHandles: TimeSeries[] = [];
   private nodes: Node[] = [];
   private order: Node[] = [];
+  private resolvers: Node[] = [];
   private byKey = new Map<string, Node>();
   private children = new Map<string, string[]>();
-  private buses: CompiledBus[] = [];
   private edges: GraphEdge[] = [];
   private scn!: Scenario;
 
@@ -275,7 +191,6 @@ export class Engine {
       }
     }
 
-    // --- create nodes (params resolved; wiring maps filled below) ---
     for (const { spec, def } of specs) {
       const node: Node = {
         key: spec.key,
@@ -291,7 +206,8 @@ export class Engine {
         outMap: {},
         inCursor: {},
         outCursor: {},
-        busHandles: {},
+        groupBindings: {},
+        groups: {},
         ctx: null as unknown as StepCtx,
       };
       this.nodes.push(node);
@@ -301,7 +217,7 @@ export class Engine {
       this.children.set(node.parent ?? '', sibs);
     }
 
-    // --- nets + port wiring ---
+    // --- nets + scalar port wiring ---
     type NetEntry = {
       net: Net;
       hasDriver: boolean;
@@ -311,10 +227,10 @@ export class Engine {
     };
     const netByName = new Map<string, NetEntry>();
     const initVals = new Map<number, number>();
-    const getNet = (name: string, unit: string, flow: boolean): NetEntry => {
+    const getNet = (name: string, unit: string): NetEntry => {
       let e = netByName.get(name);
       if (!e) {
-        const net: Net = { id: this.nets.length, name, unit, flow };
+        const net: Net = { id: this.nets.length, name, unit, flow: false };
         this.nets.push(net);
         e = { net, hasDriver: false, readers: 0, readerPorts: [] };
         netByName.set(name, e);
@@ -326,18 +242,20 @@ export class Engine {
       const node = this.byKey.get(spec.key)!;
       const ports = def.ports ?? {};
       for (const portName of Object.keys(spec.connect ?? {})) {
-        if (!ports[portName]) {
+        if (!ports[portName] || isGroupPort(ports[portName])) {
           const s = suggest(portName, Object.keys(ports));
           issues.push({
             path: `instances[${indexOf(scn, spec.key)}].connect.${portName}`,
-            message: `model "${def.type}" has no port "${portName}".${s ? ` Did you mean "${s}"?` : ''}`,
+            message: `model "${def.type}" has no scalar port "${portName}".${s ? ` Did you mean "${s}"?` : ''}`,
           });
         }
       }
-      for (const [portName, port] of Object.entries(ports)) {
+      for (const [portName, anyPort] of Object.entries(ports)) {
+        if (isGroupPort(anyPort)) continue; // group ports are wired via `join`
+        const port = anyPort;
         const connectedName = spec.connect?.[portName];
         if (connectedName) {
-          const e = getNet(connectedName, port.unit, false);
+          const e = getNet(connectedName, port.unit);
           if (port.dir === 'out') {
             if (e.hasDriver) {
               issues.push({
@@ -347,7 +265,6 @@ export class Engine {
             }
             e.hasDriver = true;
             e.driverRef = { key: spec.key, portName };
-            // The driver's output unit is the net's canonical unit; readers convert to it.
             (e.net as { unit: string }).unit = port.unit;
             node.outMap[portName] = e.net.id;
           } else {
@@ -356,9 +273,10 @@ export class Engine {
             node.inMap[portName] = e.net.id;
           }
         } else {
-          const priv = getNet(`${spec.key}.${portName}`, port.unit, false);
+          const priv = getNet(`${spec.key}.${portName}`, port.unit);
           if (port.dir === 'out') {
             priv.hasDriver = true;
+            priv.driverRef = { key: spec.key, portName };
             node.outMap[portName] = priv.net.id;
           } else {
             if (port.required) {
@@ -374,11 +292,73 @@ export class Engine {
       }
     }
 
+    // --- group ports: join members to hub group ports (buses, schedulers…) ---
+    const groupEdges: GraphEdge[] = [];
+    for (const { spec, def } of specs) {
+      const memberNode = this.byKey.get(spec.key)!;
+      for (const j of spec.join ?? []) {
+        const dot = j.group.indexOf('.');
+        const hubKey = dot >= 0 ? j.group.slice(0, dot) : j.group;
+        const groupName = dot >= 0 ? j.group.slice(dot + 1) : '';
+        const hub = this.byKey.get(hubKey);
+        const hubPort = hub?.def.ports?.[groupName];
+        if (!hub || !hubPort || !isGroupPort(hubPort)) {
+          issues.push({ path: `${spec.key}.join`, message: `no group port "${j.group}" (hub "${hubKey}" has no group port "${groupName}").` });
+          continue;
+        }
+        const binding: ChannelBinding = { key: spec.key, meta: Object.freeze({ ...(hubPort.meta ?? {}), ...(j.meta ?? {}) }), fields: [] };
+        for (const [field, cf] of Object.entries(hubPort.channel)) {
+          const memberPortName = j.wire?.[field] ?? field;
+          const memberPort = def.ports?.[memberPortName];
+          if (!memberPort || isGroupPort(memberPort)) {
+            issues.push({ path: `${spec.key}.join`, message: `channel "${field}" wires to member port "${memberPortName}", which doesn't exist.` });
+            continue;
+          }
+          const hubReads = cf.dir === 'in';
+          const wantDir = hubReads ? 'out' : 'in';
+          if (memberPort.dir !== wantDir) {
+            issues.push({ path: `${spec.key}.join`, message: `group field "${field}" (hub ${cf.dir}) must wire to a member ${wantDir} port; "${memberPortName}" is ${memberPort.dir}.` });
+            continue;
+          }
+          const netId = hubReads ? memberNode.outMap[memberPortName] : memberNode.inMap[memberPortName];
+          const net = this.nets[netId];
+          let k = 1;
+          let off = 0;
+          if (hubReads) {
+            // hub reads the member's driven net; convert its unit to the field unit
+            const problem = unitMismatch(net.unit, cf.unit);
+            if (problem) issues.push({ path: `${hubKey}.${groupName}.${field}`, message: `group unit mismatch: ${problem}.` });
+            if (cf.unit && net.unit && cf.unit !== net.unit) {
+              try {
+                const c = conversion(net.unit, cf.unit);
+                k = c.k;
+                off = c.o;
+              } catch {
+                /* dimension mismatch already reported */
+              }
+            }
+            groupEdges.push({ id: `g:${hubKey}.${groupName}:${spec.key}.${field}`, source: spec.key, sourcePort: memberPortName, target: hubKey, targetPort: `${groupName}.${field}`, net: net.name, unit: net.unit, kind: 'group' });
+          } else {
+            // hub drives the member's read net; the hub's field unit is canonical
+            (net as { unit: string }).unit = cf.unit;
+            const e = netByName.get(net.name);
+            if (e) {
+              e.hasDriver = true;
+              e.driverRef = { key: hubKey, portName: `${groupName}.${field}` };
+            }
+            groupEdges.push({ id: `g:${hubKey}.${groupName}:${spec.key}.${field}`, source: hubKey, sourcePort: `${groupName}.${field}`, target: spec.key, targetPort: memberPortName, net: net.name, unit: cf.unit, kind: 'group' });
+          }
+          binding.fields.push({ field, netId, hubReads, k, off });
+        }
+        (hub.groupBindings[groupName] ??= []).push(binding);
+      }
+    }
+
+    // --- undriven-net + unit-safety checks ---
     for (const [name, e] of netByName) {
-      if (!e.net.flow && !e.hasDriver && e.readers > 0) {
+      if (!e.hasDriver && e.readers > 0) {
         issues.push({ path: `net "${name}"`, message: `net "${name}" has readers but no driver (no output port connects to it).` });
       }
-      // Unit-safety: every reader must be dimensionally compatible with the net.
       for (const rp of e.readerPorts) {
         const problem = unitMismatch(e.net.unit, rp.unit);
         if (problem) {
@@ -391,32 +371,6 @@ export class Engine {
       }
     }
 
-    // --- buses: owners then nearest-owner attachment binding ---
-    for (const node of this.nodes) {
-      if (node.def.providesBus) {
-        this.buses.push(new CompiledBus(node.def.providesBus, node.key, node.def.policy ?? null));
-      }
-    }
-    for (const node of this.nodes) {
-      for (const [attachName, attach] of Object.entries(node.def.buses ?? {})) {
-        const owner = this.nearestBus(node.key, attach.commodity);
-        if (!owner) {
-          issues.push({
-            path: `model "${node.type}" (${node.key})`,
-            message: `attaches to commodity "${attach.commodity}" but no ancestor provides that bus.`,
-            fix: `add an arbitratedBus('${attach.commodity}') at or above "${node.parent ?? 'root'}".`,
-          });
-          continue;
-        }
-        const h = new BusHandleImpl(owner, attach, node.key);
-        node.busHandles[attachName] = h;
-        if (attach.role === 'offer') owner.offerHandles.push(h);
-        else if (attach.role === 'request') owner.requestHandles.push(h);
-        else owner.readHandles.push(h);
-      }
-    }
-    for (const b of this.buses) b.finalize();
-
     if (issues.length) throw new AggregateValidationError(scn.name, issues);
 
     // --- allocate signal pool + init defaults ---
@@ -424,27 +378,38 @@ export class Engine {
     for (const [id, v] of initVals) this.buf[id] = v;
     const buf = this.buf;
 
-    // --- cursors (closed over the concrete buffer) + series handles ---
+    // --- cursors (closed over the buffer) + group channels + series ---
     for (const node of this.nodes) {
       node.inCursor = buildInCursor(node, buf, this.nets);
       node.outCursor = buildCursor(node.outMap, buf, true);
+      for (const [gname, binds] of Object.entries(node.groupBindings)) {
+        node.groups[gname] = binds.map((b, index) => {
+          const inRec: Record<string, number> = {};
+          const outRec: Record<string, number> = {};
+          for (const f of b.fields) {
+            if (f.hubReads) chanGetter(inRec, f.field, buf, f.netId, f.k, f.off);
+            else chanSetter(outRec, f.field, buf, f.netId);
+          }
+          return { index, key: b.key, in: inRec, out: outRec, meta: b.meta };
+        });
+      }
     }
     if (this.record) {
       this.netHandles = this.nets.map((n) => this.history.ensure(n.name, n.name, n.unit));
-      for (const b of this.buses) b.bindSeries(this.history);
     }
 
-    // --- eval order + ctx + init ---
+    // --- eval order + resolvers + ctx + init ---
     this.order = [
       ...this.nodes.filter((n) => n.def.isEnvProvider),
       ...this.nodes.filter((n) => !n.def.isEnvProvider),
     ];
+    this.resolvers = this.order.filter((n) => typeof n.def.resolve === 'function');
     for (const node of this.nodes) node.ctx = new Ctx(this, node);
     for (const node of this.order) node.def.init?.(node.ctx);
 
-    // --- introspection graph (signal edges + bus edges) ---
+    // --- introspection graph: signal edges + group edges ---
     for (const [name, e] of netByName) {
-      if (e.net.flow || !e.driverRef) continue;
+      if (!e.driverRef) continue;
       for (const rp of e.readerPorts) {
         this.edges.push({
           id: `s:${name}:${rp.key}.${rp.portName}`,
@@ -458,25 +423,25 @@ export class Engine {
         });
       }
     }
-    for (const b of this.buses) {
-      for (const h of b.offerHandles)
-        this.edges.push({ id: `bo:${b.commodity}:${h.nodeKey}`, source: h.nodeKey, sourcePort: 'offer', target: b.ownerKey, targetPort: b.commodity, net: `bus.${b.commodity}`, unit: '', kind: 'bus' });
-      for (const h of b.requestHandles)
-        this.edges.push({ id: `br:${b.commodity}:${h.nodeKey}`, source: b.ownerKey, sourcePort: b.commodity, target: h.nodeKey, targetPort: 'request', net: `bus.${b.commodity}`, unit: '', kind: 'bus' });
-    }
+    this.edges.push(...groupEdges);
   }
 
   /** The wiring graph — nodes + typed edges — for a generic inspector UI. */
   structure(): { nodes: GraphNode[]; edges: GraphEdge[] } {
     return {
-      nodes: this.nodes.map((n) => ({
-        key: n.key,
-        type: n.type,
-        parent: n.parent,
-        fidelity: n.fidelity,
-        health: n.health,
-        providesBus: n.def.providesBus,
-      })),
+      nodes: this.nodes.map((n) => {
+        const groups = Object.entries(n.def.ports ?? {})
+          .filter(([, p]) => isGroupPort(p))
+          .map(([name]) => name);
+        return {
+          key: n.key,
+          type: n.type,
+          parent: n.parent,
+          fidelity: n.fidelity,
+          health: n.health,
+          groups: groups.length ? groups : undefined,
+        };
+      }),
       edges: this.edges,
     };
   }
@@ -514,25 +479,17 @@ export class Engine {
     return out;
   }
 
-  private nearestBus(key: string, commodity: string): CompiledBus | null {
-    let cur: string | null = key;
-    while (cur !== null) {
-      const owner = this.buses.find((b) => b.ownerKey === cur && b.commodity === commodity);
-      if (owner) return owner;
-      cur = this.byKey.get(cur)?.parent ?? null;
-    }
-    return null;
-  }
-
-  /** Advance one fixed timestep. */
+  /**
+   * Advance one fixed timestep. Feeders write in `declare`, coordinators
+   * arbitrate in `resolve`, consumers read in `step` — the generic replacement
+   * for the old engine-privileged bus phase.
+   */
   step(): void {
-    const dt = this.dt;
     const order = this.order;
-    for (const b of this.buses) b.begin();
     for (const n of order) if (n.def.isEnvProvider) n.def.declare?.(n.ctx);
     for (const n of order) if (n.def.isEnvProvider) n.def.step(n.ctx);
     for (const n of order) if (!n.def.isEnvProvider) n.def.declare?.(n.ctx);
-    for (const b of this.buses) b.resolve(dt);
+    for (const n of this.resolvers) n.def.resolve!(n.ctx);
     for (const n of order) if (!n.def.isEnvProvider) n.def.step(n.ctx);
     if (this.record) {
       const buf = this.buf;
@@ -571,27 +528,6 @@ export class Engine {
     const sibs = this.children.get(newParent ?? '') ?? [];
     sibs.push(key);
     this.children.set(newParent ?? '', sibs);
-    this.rebindBuses();
-  }
-
-  private rebindBuses(): void {
-    for (const b of this.buses) {
-      b.offerHandles.length = 0;
-      b.requestHandles.length = 0;
-      b.readHandles.length = 0;
-    }
-    for (const node of this.nodes) {
-      for (const [attachName, attach] of Object.entries(node.def.buses ?? {})) {
-        const owner = this.nearestBus(node.key, attach.commodity);
-        if (!owner) continue;
-        const h = node.busHandles[attachName] as BusHandleImpl;
-        h.bus = owner;
-        if (attach.role === 'offer') owner.offerHandles.push(h);
-        else if (attach.role === 'request') owner.requestHandles.push(h);
-        else owner.readHandles.push(h);
-      }
-    }
-    for (const b of this.buses) b.finalize();
   }
 
   find(pred: (m: ModelInstanceView) => boolean): ModelInstanceView | undefined {
@@ -617,6 +553,21 @@ function indexOf(scn: Scenario, key: string): number {
   return scn.instances.findIndex((s) => s.key === key);
 }
 
+function chanGetter(o: Record<string, number>, field: string, buf: Float64Array, id: number, k: number, off: number): void {
+  if (k === 1 && off === 0) Object.defineProperty(o, field, { get: () => buf[id], enumerable: true });
+  else if (off === 0) Object.defineProperty(o, field, { get: () => buf[id] * k, enumerable: true });
+  else Object.defineProperty(o, field, { get: () => buf[id] * k + off, enumerable: true });
+}
+function chanSetter(o: Record<string, number>, field: string, buf: Float64Array, id: number): void {
+  Object.defineProperty(o, field, {
+    get: () => buf[id],
+    set: (v: number) => {
+      buf[id] = v;
+    },
+    enumerable: true,
+  });
+}
+
 function buildCursor(map: Record<string, number>, buf: Float64Array, writable: boolean): Record<string, number> {
   const o: Record<string, number> = {};
   for (const name in map) {
@@ -639,26 +590,25 @@ function buildCursor(map: Record<string, number>, buf: Float64Array, writable: b
 /**
  * Input cursor with automatic unit conversion. The buffer holds each net's
  * value in the driver's (canonical) unit; a reader whose port declares a
- * different-but-compatible unit gets it converted on read. Identity reads keep
- * the bare `buf[id]` fast path; scale-only reads are one multiply.
+ * different-but-compatible unit gets it converted on read.
  */
 function buildInCursor(node: Node, buf: Float64Array, nets: Net[]): Record<string, number> {
   const o: Record<string, number> = {};
   const ports = node.def.ports ?? {};
   for (const name in node.inMap) {
     const id = node.inMap[name];
-    const portUnit = ports[name]?.unit ?? '';
+    const p = ports[name];
+    const portUnit = p && !isGroupPort(p) ? p.unit : '';
     const netUnit = nets[id].unit;
     let k = 1;
     let off = 0;
-    // '' is a wildcard (passthrough); only convert when both units are declared.
     if (portUnit !== netUnit && portUnit !== '' && netUnit !== '') {
       try {
         const c = conversion(netUnit, portUnit);
         k = c.k;
         off = c.o;
       } catch {
-        // Left identity; a dimension mismatch was already reported as an issue.
+        /* dimension mismatch already reported as an issue */
       }
     }
     if (k === 1 && off === 0) Object.defineProperty(o, name, { get: () => buf[id], enumerable: true });
@@ -672,7 +622,6 @@ function buildInCursor(node: Node, buf: Float64Array, nets: Net[]): Record<strin
 class Ctx implements StepCtx {
   readonly in: Record<string, number>;
   readonly out: Record<string, number>;
-  readonly bus: Record<string, BusHandle>;
   readonly params: Record<string, number>;
   readonly state: object;
   readonly rng: Rng;
@@ -682,7 +631,6 @@ class Ctx implements StepCtx {
   ) {
     this.in = node.inCursor;
     this.out = node.outCursor;
-    this.bus = node.busHandles;
     this.params = node.params;
     this.state = node.state;
     this.rng = node.rng;
@@ -699,6 +647,9 @@ class Ctx implements StepCtx {
   get fidelity(): Fidelity {
     return this.node.fidelity;
   }
+  group(name: string): readonly Channel[] {
+    return this.node.groups[name] ?? EMPTY;
+  }
   emit(id: string, value: number): void {
     if (this.eng.record) this.eng.history.record(id, id, '', value);
   }
@@ -709,3 +660,4 @@ class Ctx implements StepCtx {
     return this.eng.aggregate(this.node.key, field);
   }
 }
+const EMPTY: readonly Channel[] = Object.freeze([]);

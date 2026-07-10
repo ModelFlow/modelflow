@@ -1,94 +1,114 @@
-import {
-  defineModel,
-  outPort,
-  param,
-  type AllocationPolicy,
-  type BusRequest,
-  type ModelDef,
-  type ReserveView,
-} from '@modelflow/core';
+import { defineModel, groupPort, inPort, outPort, param, type ModelDef } from '@modelflow/core';
 
 /**
- * Priority pro-rata allocation. Requests are served band-by-band (band 0 first,
- * so band 0 sheds LAST); within a band, if supply is short it is split
- * pro-rata by demand. Deterministic and order-stable.
+ * A commodity bus — now just an ordinary model. It declares two group ports
+ * (`sources` and `loads`) and, in `resolve`, loops over whatever is connected:
+ * it sums supply, then distributes to loads band-by-band (band 0 served first,
+ * so band 0 sheds LAST), splitting pro-rata by demand within a band on
+ * shortfall. No engine privilege — this logic is right here, editable, in the
+ * Model Library like any other model.
  */
-export function priorityProRata(): AllocationPolicy {
-  let buf = new Float64Array(0);
-  return {
-    allocate(supply: number, requests: readonly BusRequest[], _reserve: ReserveView | null, _dt: number): Float64Array {
-      const n = requests.length;
-      if (buf.length !== n) buf = new Float64Array(n);
-      buf.fill(0);
-      const idx = [...requests.keys()].sort((a, b) => requests[a].band - requests[b].band);
-      let remaining = supply;
-      let i = 0;
-      while (i < idx.length) {
-        const band = requests[idx[i]].band;
-        let groupDemand = 0;
-        let j = i;
-        while (j < idx.length && requests[idx[j]].band === band) {
-          groupDemand += Math.max(0, requests[idx[j]].amount);
-          j++;
-        }
-        const frac = groupDemand > 0 ? Math.min(1, Math.max(0, remaining) / groupDemand) : 0;
-        for (let k = i; k < j; k++) buf[idx[k]] = requests[idx[k]].amount > 0 ? frac : 0;
-        remaining -= frac * groupDemand;
-        i = j;
-      }
-      return buf;
-    },
-  };
-}
-
-/** Create a bus owner for a commodity within its subtree. */
-export function arbitratedBus(commodity: string, policy: AllocationPolicy = priorityProRata()): ModelDef {
+export function arbitratedBus(commodity: string): ModelDef {
   return defineModel({
     type: `Bus:${commodity}`,
-    providesBus: commodity,
-    policy,
-    state: () => ({}),
-    step() {
-      /* arbitration is handled by the engine's bus phase */
+    description: `${commodity} bus: sums supply and sheds the lowest-priority band first.`,
+    ports: {
+      sources: groupPort({ channel: { supply: { dir: 'in', unit: '' } }, desc: 'Suppliers feeding the bus' }),
+      loads: groupPort({
+        channel: { demand: { dir: 'in', unit: '' }, grant: { dir: 'out', unit: '' } },
+        meta: { band: 0 },
+        desc: 'Prioritised consumers (meta.band: 0 = highest priority)',
+      }),
     },
-  });
-}
+    state: () => ({ supply: 0, demanded: 0, served: 0, order: null as number[] | null }),
 
-/** A model that offers a fixed supply of `commodity` to its nearest bus. */
-export function busSource(commodity: string): ModelDef {
-  return defineModel({
-    type: `Source:${commodity}`,
-    buses: { p: { commodity, role: 'offer' } },
-    params: { supply: param(0, '', 'Supply offered to the bus') },
-    state: () => ({}),
-    declare(ctx) {
-      ctx.bus.p.offer = ctx.params.supply;
+    resolve(ctx) {
+      const sources = ctx.group('sources');
+      const loads = ctx.group('loads');
+
+      let supply = 0;
+      for (let i = 0; i < sources.length; i++) supply += sources[i].in.supply;
+
+      // Stable order by band (band 0 first). Cached — bands are static join meta.
+      const order = (ctx.state.order ??= loads.map((_, i) => i).sort((a, b) => loads[a].meta.band - loads[b].meta.band));
+
+      let remaining = supply;
+      let demanded = 0;
+      let served = 0;
+      let i = 0;
+      while (i < order.length) {
+        const band = loads[order[i]].meta.band;
+        let bandDemand = 0;
+        let j = i;
+        while (j < order.length && loads[order[j]].meta.band === band) {
+          bandDemand += Math.max(0, loads[order[j]].in.demand);
+          j++;
+        }
+        const frac = bandDemand > 0 ? Math.min(1, Math.max(0, remaining) / bandDemand) : 0;
+        for (let k = i; k < j; k++) {
+          const l = loads[order[k]];
+          const g = l.in.demand > 0 ? l.in.demand * frac : 0;
+          l.out.grant = g;
+          served += g;
+        }
+        remaining -= frac * bandDemand;
+        demanded += bandDemand;
+        i = j;
+      }
+
+      ctx.state.supply = supply;
+      ctx.state.demanded = demanded;
+      ctx.state.served = served;
+      // The Studio charts read these series (unchanged names).
+      ctx.emit(`bus.${commodity}.offered`, supply);
+      ctx.emit(`bus.${commodity}.demanded`, demanded);
+      ctx.emit(`bus.${commodity}.served`, served);
+      ctx.emit(`bus.${commodity}.unmet`, Math.max(0, demanded - served));
     },
+
     step() {},
+    status: (ctx) => (ctx.state.demanded - ctx.state.served > 1e-6 ? 'degraded' : 'nominal'),
+    keyFigures: (ctx) => [
+      ['Supply', ctx.state.supply, ''],
+      ['Served', ctx.state.served, ''],
+      ['Unmet', Math.max(0, ctx.state.demanded - ctx.state.served), ''],
+    ],
   });
 }
 
 /**
- * A prioritised load on `commodity`. Sets its demand + band each step and
- * reports the amount actually served on the `served` output port.
+ * A prioritised load. Posts its demand in `declare`, receives a grant during the
+ * bus's `resolve`, and reports what it got in `step`. Priority (`band`) is set
+ * where it belongs — on the join in the scenario, not baked into the model.
  */
 export function busLoad(commodity: string): ModelDef {
   return defineModel({
     type: `Load:${commodity}`,
-    ports: { served: outPort('') },
-    buses: { p: { commodity, role: 'request' } },
-    params: {
-      demand: param(0, '', 'Amount requested from the bus'),
-      band: param(0, '', 'Priority band (0 = highest, sheds last)'),
-    },
+    description: `A prioritised load on the ${commodity} bus.`,
+    ports: { demand: outPort(''), grant: inPort(''), served: outPort('') },
+    params: { demand: param(0, '', 'Requested amount') },
     state: () => ({}),
     declare(ctx) {
-      ctx.bus.p.demand = ctx.params.demand;
-      ctx.bus.p.band = ctx.params.band;
+      ctx.out.demand = ctx.params.demand;
     },
     step(ctx) {
-      ctx.out.served = ctx.bus.p.served;
+      ctx.out.served = ctx.in.grant;
     },
-    keyFigures: (ctx) => [['Served', ctx.bus.p.served, '']],
+    keyFigures: (ctx) => [['Served', ctx.in.grant, '']],
+  });
+}
+
+/** A supplier: offers a fixed amount of the commodity to the bus each step. */
+export function busSource(commodity: string): ModelDef {
+  return defineModel({
+    type: `Source:${commodity}`,
+    description: `A ${commodity} supplier feeding the bus.`,
+    ports: { supply: outPort('') },
+    params: { supply: param(0, '', 'Supply offered') },
+    state: () => ({}),
+    declare(ctx) {
+      ctx.out.supply = ctx.params.supply;
+    },
+    step() {},
   });
 }

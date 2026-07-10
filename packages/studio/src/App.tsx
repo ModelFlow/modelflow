@@ -13,7 +13,7 @@ import {
   type NodeProps,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Engine, catalog, modelSpec, type ModelDef, type ModelSpec, type InstanceView } from '@modelflow/core';
+import { Engine, catalog, modelSpec, isGroupPort, type ModelDef, type ModelSpec, type InstanceView } from '@modelflow/core';
 import { microgrid, microgridRegistry } from './demo';
 import { layeredLayout } from './layout';
 import { Scope, type Trace } from './Scope';
@@ -136,7 +136,7 @@ export function App({
       id: n.key,
       type: 'flow',
       position: positions.get(n.key) ?? { x: 0, y: 0 },
-      data: { label: n.key, type: n.type, health: n.health, bus: n.providesBus },
+      data: { label: n.key, type: n.type, health: n.health, bus: n.groups?.length ? n.type.replace(/^Bus:/, '') || 'hub' : undefined },
     })),
   );
   const [edges, setEdges] = useEdgesState<Edge>(
@@ -145,12 +145,12 @@ export function App({
       source: e.source,
       target: e.target,
       data: { net: e.net, kind: e.kind },
-      animated: e.kind === 'bus',
+      animated: e.kind === 'group',
       label: e.kind === 'signal' && e.unit ? e.unit : undefined,
-      style: { stroke: e.kind === 'bus' ? 'var(--bus)' : 'var(--accent)', strokeWidth: 1.6, strokeDasharray: e.kind === 'bus' ? '5 4' : undefined },
+      style: { stroke: e.kind === 'group' ? 'var(--bus)' : 'var(--accent)', strokeWidth: 1.6, strokeDasharray: e.kind === 'group' ? '5 4' : undefined },
       labelStyle: { fill: 'var(--text-muted)', fontSize: 9, fontFamily: 'var(--mono)' },
       labelBgStyle: { fill: 'var(--bg-elev)', fillOpacity: 0.9 },
-      markerEnd: { type: MarkerType.ArrowClosed, color: e.kind === 'bus' ? 'var(--bus)' : 'var(--accent)' },
+      markerEnd: { type: MarkerType.ArrowClosed, color: e.kind === 'group' ? 'var(--bus)' : 'var(--accent)' },
     })),
   );
 
@@ -221,10 +221,10 @@ export function App({
         const kind = (e.data as { kind?: string })?.kind;
         const idx = net ? traceIds.indexOf(net) : -1;
         const plotted = idx >= 0;
-        const base = kind === 'bus' ? 'var(--bus)' : 'var(--accent)';
+        const base = kind === 'group' ? 'var(--bus)' : 'var(--accent)';
         return {
           ...e,
-          animated: plotted || kind === 'bus',
+          animated: plotted || kind === 'group',
           style: { ...e.style, stroke: plotted ? PALETTE[idx % PALETTE.length] : base, strokeWidth: plotted ? 3 : 1.6 },
         };
       }),
@@ -541,10 +541,13 @@ function AssetInspector({
   const maxFid = def?.maxFidelity ?? 1;
   const inst = microgrid.instances.find((i) => i.key === keyName);
   const spec = def ? modelSpec(def) : null;
-  const ports = Object.entries(def?.ports ?? {}).map(([name, pd]) => {
-    const net = inst?.connect?.[name] ?? `${keyName}.${name}`;
-    return { name, dir: pd.dir, unit: pd.unit, net, value: engine.netValue(net) };
-  });
+  const ports = Object.entries(def?.ports ?? {})
+    .filter(([, pd]) => !isGroupPort(pd))
+    .map(([name, anyPort]) => {
+      const pd = anyPort as { dir: 'in' | 'out'; unit: string };
+      const net = inst?.connect?.[name] ?? `${keyName}.${name}`;
+      return { name, dir: pd.dir, unit: pd.unit, net, value: engine.netValue(net) };
+    });
 
   return (
     <div className="insp">
@@ -1045,7 +1048,13 @@ function ComponentCard({ spec, def, onApply }: { spec: ModelSpec; def?: ModelDef
             </div>
           );
         })}
-        {spec.providesBus && <div className="card-bus">provides the “{spec.providesBus}” bus</div>}
+        {spec.groupPorts.length > 0 && <div className="io-h">Group ports (dynamic)</div>}
+        {spec.groupPorts.map((g) => (
+          <div className="io g" key={g.name}>
+            <span className="nm">⇉ {g.name}</span>
+            <span className="dm">{g.channel.map((c) => `${c.field} ${c.dir === 'in' ? '←' : '→'}`).join('  ')}</span>
+          </div>
+        ))}
       </div>
       {spec.source.step && (
         <div className="code">

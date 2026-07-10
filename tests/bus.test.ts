@@ -4,7 +4,7 @@ import { arbitratedBus, busSource, busLoad } from '@modelflow/std';
 
 const reg = registry(arbitratedBus('power'), busSource('power'), busLoad('power'));
 
-test('arbitrated bus serves high-priority band first, pro-rata on shortfall', () => {
+test('the bus (an ordinary model) serves the high-priority band first, pro-rata on shortfall', () => {
   const scn: Scenario = {
     version: 1,
     name: 'bus-test',
@@ -15,9 +15,9 @@ test('arbitrated bus serves high-priority band first, pro-rata on shortfall', ()
     commodities: [{ id: 'power', name: 'Power', unit: 'kW', kind: 'flow' }],
     instances: [
       { key: 'grid', type: 'Bus:power' },
-      { key: 'gen', type: 'Source:power', parent: 'grid', params: { supply: 10 } },
-      { key: 'crit', type: 'Load:power', parent: 'grid', params: { demand: 6, band: 0 }, connect: { served: 'crit_served' } },
-      { key: 'low', type: 'Load:power', parent: 'grid', params: { demand: 8, band: 1 }, connect: { served: 'low_served' } },
+      { key: 'gen', type: 'Source:power', params: { supply: 10 }, join: [{ group: 'grid.sources' }] },
+      { key: 'crit', type: 'Load:power', params: { demand: 6 }, connect: { served: 'crit_served' }, join: [{ group: 'grid.loads', meta: { band: 0 } }] },
+      { key: 'low', type: 'Load:power', params: { demand: 8 }, connect: { served: 'low_served' }, join: [{ group: 'grid.loads', meta: { band: 1 } }] },
     ],
   };
   const eng = new Engine(1, 0, 1);
@@ -25,14 +25,16 @@ test('arbitrated bus serves high-priority band first, pro-rata on shortfall', ()
   eng.run();
 
   // Supply 10: band-0 critical (demand 6) fully served; band-1 low gets the
-  // remaining 4 of its 8 (pro-rata within the leftover).
+  // remaining 4 of its 8 (pro-rata within the leftover). Identical to the old
+  // engine-privileged bus — the numbers must not move.
   expect(eng.netValue('crit_served')).toBeCloseTo(6, 6);
   expect(eng.netValue('low_served')).toBeCloseTo(4, 6);
   expect(eng.history.series('bus.power.unmet')!.latest).toBeCloseTo(4, 6);
   expect(eng.history.series('bus.power.served')!.latest).toBeCloseTo(10, 6);
+  expect(eng.history.series('bus.power.offered')!.latest).toBeCloseTo(10, 6);
 });
 
-test('attaching to a commodity with no bus owner is a validation error', () => {
+test('joining a group that does not exist is a validation error', () => {
   const scn: Scenario = {
     version: 1,
     name: 'orphan-load',
@@ -40,7 +42,7 @@ test('attaching to a commodity with no bus owner is a validation error', () => {
     timestepSeconds: 1,
     durationSeconds: 1,
     sampleEverySteps: 1,
-    instances: [{ key: 'load', type: 'Load:power', params: { demand: 5 } }],
+    instances: [{ key: 'load', type: 'Load:power', params: { demand: 5 }, join: [{ group: 'grid.loads' }] }],
   };
   const eng = new Engine(1, 0, 1);
   let err: unknown;
@@ -50,5 +52,5 @@ test('attaching to a commodity with no bus owner is a validation error', () => {
     err = e;
   }
   expect(err).toBeInstanceOf(AggregateValidationError);
-  expect(String(err)).toContain('no ancestor provides that bus');
+  expect(String(err)).toContain('no group port');
 });

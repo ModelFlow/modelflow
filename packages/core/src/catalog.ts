@@ -8,6 +8,7 @@
 import type { ModelDef } from './model';
 import type { ModelRegistry } from './registry';
 import type { ParamSource } from './param';
+import { isGroupPort } from './signal';
 import { parseUnit, describeDimension } from './units';
 
 export interface PortSpec {
@@ -18,6 +19,14 @@ export interface PortSpec {
   desc?: string;
   default?: number;
   required?: boolean;
+}
+
+/** A dynamic-arity group port (e.g. a bus's "loads") in a published spec. */
+export interface GroupPortSpec {
+  name: string;
+  desc?: string;
+  channel: { field: string; dir: 'in' | 'out'; unit: string; dimension: string }[];
+  meta?: Record<string, number>;
 }
 
 export interface ParamPublicSpec {
@@ -35,25 +44,16 @@ export interface ParamPublicSpec {
   max?: number;
 }
 
-export interface BusSpec {
-  name: string;
-  commodity: string;
-  role: 'offer' | 'request' | 'read';
-  band?: number;
-  unit?: string;
-}
-
 export interface ModelSpec {
   type: string;
   description?: string;
   fidelity: number;
   maxFidelity: number;
-  providesBus?: string;
   ports: PortSpec[];
+  groupPorts: GroupPortSpec[];
   params: ParamPublicSpec[];
-  buses: BusSpec[];
   /** The model's actual logic, as source, for viewing/editing. */
-  source: { step?: string; declare?: string; init?: string };
+  source: { step?: string; declare?: string; resolve?: string; init?: string };
 }
 
 function dimOf(unit: string): string {
@@ -66,15 +66,24 @@ function dimOf(unit: string): string {
 
 /** Describe one model as a publishable component spec. */
 export function modelSpec(def: ModelDef): ModelSpec {
-  const ports: PortSpec[] = Object.entries(def.ports ?? {}).map(([name, p]) => ({
-    name,
-    dir: p.dir,
-    unit: p.unit,
-    dimension: dimOf(p.unit),
-    desc: p.desc,
-    default: p.default,
-    required: p.required,
-  }));
+  const entries = Object.entries(def.ports ?? {});
+  const ports: PortSpec[] = entries
+    .filter(([, p]) => !isGroupPort(p))
+    .map(([name, p]) => {
+      const sp = p as { dir: 'in' | 'out'; unit: string; desc?: string; default?: number; required?: boolean };
+      return { name, dir: sp.dir, unit: sp.unit, dimension: dimOf(sp.unit), desc: sp.desc, default: sp.default, required: sp.required };
+    });
+  const groupPorts: GroupPortSpec[] = entries
+    .filter(([, p]) => isGroupPort(p))
+    .map(([name, p]) => {
+      const gp = p as { channel: Record<string, { dir: 'in' | 'out'; unit: string }>; meta?: Record<string, number>; desc?: string };
+      return {
+        name,
+        desc: gp.desc,
+        meta: gp.meta,
+        channel: Object.entries(gp.channel).map(([field, cf]) => ({ field, dir: cf.dir, unit: cf.unit, dimension: dimOf(cf.unit) })),
+      };
+    });
   const params: ParamPublicSpec[] = Object.entries(def.params ?? {}).map(([name, ps]) => ({
     name,
     value: ps.value,
@@ -89,25 +98,18 @@ export function modelSpec(def: ModelDef): ModelSpec {
     min: ps.min,
     max: ps.max,
   }));
-  const buses: BusSpec[] = Object.entries(def.buses ?? {}).map(([name, b]) => ({
-    name,
-    commodity: b.commodity,
-    role: b.role,
-    band: b.band,
-    unit: b.unit,
-  }));
   return {
     type: def.type,
     description: def.description,
     fidelity: def.fidelity ?? 1,
     maxFidelity: def.maxFidelity ?? 1,
-    providesBus: def.providesBus,
     ports,
+    groupPorts,
     params,
-    buses,
     source: {
       step: def.step ? def.step.toString() : undefined,
       declare: def.declare ? def.declare.toString() : undefined,
+      resolve: def.resolve ? def.resolve.toString() : undefined,
       init: def.init ? def.init.toString() : undefined,
     },
   };
